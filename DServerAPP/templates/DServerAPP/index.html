@@ -31,19 +31,29 @@
 				    <form>
 				    	<div class="form-group">
 						    <label for="account">账号：</label>
-						    <input type="text" class="form-control" name="account" id="account" placeholder="账号">
-						  </div>
+						    <input type="text" class="form-control" name="username" id="account" placeholder="账号">
+							</div>
+							{% if account == 1 %}
 						  <div class="alert alert-danger alert-dismissible" role="alert">
 						  	<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 							  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
 							  <span class="sr-only">Error:</span>
-							  请输入账号
+							  {{ acct }}
 							</div>
+							{% endif %}
 						  <div class="form-group">
 						    <label for="pwd">密码：</label>
-						    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="密码">
-						  </div>
-						  <button type="button" class="btn btn-primary center-block btn-lg">登录</button>
+						    <input type="password" class="form-control" id="pwd" name="password" placeholder="密码">
+							</div>
+							{% if pwd == 1 %}
+						  <div class="alert alert-danger alert-dismissible" role="alert">
+						  	<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+							  <span class="sr-only">Error:</span>
+							  {{ pwct }}
+							</div>
+							{% endif %}
+						  <button type="submit" class="btn btn-primary center-block btn-lg">登录</button>
 				    </form>
 				  </div>
 				  <div class="panel-footer text-right">
@@ -54,14 +64,4 @@
 		</div>
 	</div>
 </body>
-<script>
-	$(function() {
-		$('.btn-primary').click(clk);
-	});
-	
-	function clk() {
-		bAlert('account', '请输入账号');
-	}
-	
-</script>
 </html>
