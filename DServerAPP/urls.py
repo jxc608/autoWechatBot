@@ -9,4 +9,5 @@ urlpatterns = [
     path('login_password', views.login_password, name='login_password'),
     path('login_smscode', views.login_smscode, name='login_smscode'),
     path('bind_wechat', views.bind_wechat, name='bind_wechat'),
+    path('add_time', views.add_time, name='add_time'),
 ]

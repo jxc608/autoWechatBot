@@ -16,13 +16,15 @@ class Clubs(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_name = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
-    expired_time = models.DateTimeField('expired Time')
+    expired_time = models.DecimalField(max_digits=19, decimal_places=6)
 
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
     wechat_id = models.CharField(max_length=200)
     wechat_nick_name = models.CharField(max_length=50)
-    current_Score = models.CharField(max_length=20)
+    current_score = models.IntegerField(default=0)
+    history_profit = models.IntegerField(default=0)
+    introducer = models.CharField(max_length=50, default='none')
 
 class GameID(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)

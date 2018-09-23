@@ -4,6 +4,10 @@ from .models import Clubs
 import uuid
 from django.utils import timezone
 from . import messageType
+import itchat
+import _thread
+from . import wechatManager
+import time
 
 def index(request):
     return render(request, 'DServerAPP/index.html')
@@ -29,7 +33,7 @@ def register(request):
         return HttpResponse(messageType.createMessage('success', messageType.USER_NAME_ALREADY_USED, 'the userName has already been used'))
     except Clubs.DoesNotExist:
         password=request.POST.get('password','')
-        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=timezone.now())
+        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=time.time())
         club.save()
         return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'register completed'))
 
@@ -51,8 +55,30 @@ def login_smscode(request):
     smscode=request.POST.get('smscode','')
     return HttpResponse('username='+username+"&password="+password)
 
-def bind_wechat(request):
+def add_time(request):
     username=request.POST.get('username','')
-    smscode=request.POST.get('smscode','')
-    return HttpResponse('username='+username+"&password="+password)
+    cdkey=request.POST.get('cdkey','')
+    try:
+        clubInstance = Clubs.objects.get(user_name=username)
+        clubInstance.expired_time = time.time() + 2592000
+        clubInstance.save()
+        return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'add time succeed'))
+    except Clubs.DoesNotExist:
+        return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
+
+def bind_wechat(request):
+     club = request.POST.get('club','')
+     try:
+        clubInstance = Clubs.objects.get(user_name=club)
+        if clubInstance.expired_time > time.time():
+             uuid = itchat.get_QRuuid()
+             print('uuid is:' + uuid + ' . club is:' + club)
+             thread = wechatManager.wechatInstance(uuid, clubInstance)
+             thread.start()
+             print('get here?????')
+             return HttpResponse('uuid='+uuid)
+        else:
+             return HttpResponse(messageType.createMessage('success', messageType.CLUB_EXPIRED, '用户需要付费'))
+     except Clubs.DoesNotExist:
+        return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
 
