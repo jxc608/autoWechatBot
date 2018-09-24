@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 import uuid
 
@@ -21,10 +22,10 @@ class Clubs(models.Model):
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
     wechat_id = models.CharField(max_length=200)
-    wechat_nick_name = models.CharField(max_length=50)
+    wechat_nick_name = models.CharField(max_length=200)
     current_score = models.IntegerField(default=0)
     history_profit = models.IntegerField(default=0)
-    introducer = models.CharField(max_length=50, default='none')
+    introducer = models.CharField(max_length=200, default='none')
 
 class GameID(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -36,6 +37,13 @@ class Score(models.Model):
     score = models.IntegerField(default=0)
     create_time = models.DateTimeField('create time')
     room_id = models.CharField(max_length=20)
+
+class HistoryGame(models.Model):
+    club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
+    room_id = models.CharField(max_length=10)
+    master_name = models.CharField(max_length=20)
+    round_number = models.IntegerField(default=0)
+    start_time = models.CharField(max_length=20)
 
 
 

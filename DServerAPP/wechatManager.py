@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import itchat
 from itchat.content import *
 import time
@@ -54,71 +55,65 @@ class wechatInstance(threading.Thread):
         @self.itchat_instance.msg_register(itchat.content.TEXT)
         def simple_reply(msg):
             if msg['ToUserName'] == 'filehelper':
-                self.itchat_instance.send(msg['Content'],'filehelper')
                 if msg['Type'] == 'Text':
                     contentSplit = msg['Content'].split('**')
 
-                    for stringContent in contentSplit:
-                        print(stringContent)
-                        
                     if contentSplit[0] == '注册':
                          if len(contentSplit) != 2:
-                             self.itchat_instance.send('参数错误', msg.fromUserName)   
+                             self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1])
-                             self.itchat_instance.send('用户:' + contentSplit[1] + ' 已经存在。', msg.fromUserName)
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'))
+                             self.itchat_instance.send('用户:' + contentSplit[1] + ' 已经存在。', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
                          except Player.DoesNotExist:
-                             player = Player(wechat_nick_name=contentSplit[1], club=self.club, current_score=0, history_profit=0)
+                             player = Player(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club, current_score=0, history_profit=0)
                              player.save()
-                             self.itchat_instance.send('注册用户:' + contentSplit[1], msg.fromUserName)
+                             self.itchat_instance.send('注册用户:' + player.wechat_nick_name.decode('utf8'), 'filehelper')
                              return '命令执行完成: %s' % msg['Content']
 
                     elif contentSplit[0] == '绑定游戏id':
                          if  len(contentSplit) != 4:
-                             self.itchat_instance.send('参数错误', msg.fromUserName)   
+                             self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club__user_name__exact=self.club)
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
                          except Player.DoesNotExist:
-                             player = Player(wechat_nick_name=contentSplit[1], club=self.club, current_score=0, history_profit=0)
-                             player.save()
-                             self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', msg.fromUserName)
+                             self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
 
                          try:
-                             gameID = GameID.objects.get(player__wechat_nick_name__exact=contentSplit[1], gameid=contentSplit[2])
-                             self.itchat_instance.send('游戏id已绑定', msg.fromUserName)   
+                             gameID = GameID.objects.get(gameid=contentSplit[2])
+                             self.itchat_instance.send('游戏id已绑定', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
                          except GameID.DoesNotExist:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1])
-                             gameID = GameID(player=player, gameid=contentSplit[2], game_nick_name=contentSplit[3])
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
+                             gameID = GameID(player=player, gameid=contentSplit[2], game_nick_name=contentSplit[3].encode('utf8'))
                              gameID.save()
-                             self.itchat_instance.send('游戏id绑定成功', msg.fromUserName)   
+                             self.itchat_instance.send('游戏id绑定成功', 'filehelper')   
                              return '命令执行成功: %s' % msg['Content']     
                     elif contentSplit[0] == '上分':
-                         self.itchat_instance.send('上分:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('上分:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '下分':
-                         self.itchat_instance.send('下分:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('下分:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '查看单个用户战绩':
-                         self.itchat_instance.send('查看单个用户战绩:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('查看单个用户战绩:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '查看所有战绩':
-                         self.itchat_instance.send('查看所有战绩:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('查看所有战绩:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '设置手续费模式':
-                         self.itchat_instance.send('设置手续费模式:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('设置手续费模式:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '查看整体盈利':
-                         self.itchat_instance.send('查看整体盈利:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('查看整体盈利:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '用户改名':
-                         self.itchat_instance.send('查看整体盈利:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('查看整体盈利:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '自动检测改名':
-                         self.itchat_instance.send('查看整体盈利:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('查看整体盈利:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '新增介绍人':
-                         self.itchat_instance.send('新增介绍人:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('新增介绍人:' + contentSplit[1], 'filehelper')
                     elif contentSplit[0] == '查看介绍人':
-                         self.itchat_instance.send('查看介绍人:' + contentSplit[1], msg.fromUserName)
+                         self.itchat_instance.send('查看介绍人:' + contentSplit[1], 'filehelper')
 
 
                     return '命令执行完成: %s' % msg['Content']

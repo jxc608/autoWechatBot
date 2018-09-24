@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Clubs
@@ -20,13 +21,13 @@ def register(request):
     password=request.POST.get('password','')
     cpassword=request.POST.get('cpassword','')
 
-    if(username == "") {
+    if username == None:
         return render(request, 'DServerAPP/index.html', {"account": 1, "acct":"账号为空" })
-    } else if(password == "") {
+    elif password == '': 
         return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "密码为空"})
-    } else if(1 == 0) {
+    elif  password != cpassword:
         return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "两次密码不一致"})
-    }
+    
 
     try:
         club = Clubs.objects.get(user_name=username)
@@ -40,15 +41,22 @@ def register(request):
 def login_password(request):
     username=request.POST.get('username','')
     password=request.POST.get('password','')
-    if(username == "") {
+    if username == '':
         return render(request, 'DServerAPP/index.html', {"account": 1, "acct":"账号为空" })
-    } else if(password == "") {
+    elif password == '':
         return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "密码为空"})
-    } else if(1 == 0) {
-        return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "密码错误"})
-    }
-    #登录成功之后，渲染页面
-    return render(request, 'DServerAPP/login_succ.html', {"codeSrc": "https://gss0.bdstatic.com/94o3dSag_xI4khGkpoWK1HF6hhy/baike/s%3D220/sign=660c358c4aed2e73f8e9812eb700a16d/08f790529822720e5c8538f27bcb0a46f21fab6b.jpg"})
+    else:
+        try:
+            club = Clubs.objects.get(user_name=username)
+            if club.password != password:
+                return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "密码错误"})
+            else:
+                #登录成功之后，渲染页面
+                return render(request, 'DServerAPP/login_succ.html', {"codeSrc": "https://gss0.bdstatic.com/94o3dSag_xI4khGkpoWK1HF6hhy/baike/s%3D220/sign=660c358c4aed2e73f8e9812eb700a16d/08f790529822720e5c8538f27bcb0a46f21fab6b.jpg"})
+        except Clubs.DoesNotExist:
+            return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "账号不存在"})
+    
+   
 
 def login_smscode(request):
     username=request.POST.get('username','')
