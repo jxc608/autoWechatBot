@@ -18,6 +18,9 @@ class Clubs(models.Model):
     user_name = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
     expired_time = models.DecimalField(max_digits=19, decimal_places=6)
+    cost_mode = models.IntegerField(default=0)#抽水模式 固定 还是 百分比
+    cost_param = models.CharField(max_length=200, default='none')
+    profit = models.IntegerField(default=0)
 
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
@@ -26,6 +29,7 @@ class Player(models.Model):
     current_score = models.IntegerField(default=0)
     history_profit = models.IntegerField(default=0)
     introducer = models.CharField(max_length=200, default='none')
+    today_hoster_number = models.IntegerField(default=0)
 
 class GameID(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -41,9 +45,12 @@ class Score(models.Model):
 class HistoryGame(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
     room_id = models.CharField(max_length=10)
-    master_name = models.CharField(max_length=20)
+    hoster_name = models.CharField(max_length=20)
+    hoster_id = models.IntegerField(default=0)
     round_number = models.IntegerField(default=0)
     start_time = models.CharField(max_length=20)
+    player_data = models.CharField(max_length=1000,default='none')#playerResult.playerData的数组
+    create_time = models.DateTimeField('create time')
 
 
 

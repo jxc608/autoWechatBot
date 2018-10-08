@@ -76,15 +76,12 @@ def add_time(request):
 
 def bind_wechat(request):
      club = request.POST.get('club','')
+     thread = wechatManager.wechatInstance(club)
+     thread.start()
      try:
         clubInstance = Clubs.objects.get(user_name=club)
         if clubInstance.expired_time > time.time():
-             uuid = itchat.get_QRuuid()
-             print('uuid is:' + uuid + ' . club is:' + club)
-             thread = wechatManager.wechatInstance(uuid, clubInstance)
-             thread.start()
-             print('get here?????')
-             return HttpResponse('uuid='+uuid)
+             return HttpResponse('club='+club)
         else:
              return HttpResponse(messageType.createMessage('success', messageType.CLUB_EXPIRED, '用户需要付费'))
      except Clubs.DoesNotExist:
