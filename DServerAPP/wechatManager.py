@@ -15,7 +15,7 @@ SECRET_KEY = 'tGoNHGV0ZuhEVFob1EubxgghoT9B9FPz'
 
 # 初始化文字识别分类器
 aipOcr=AipOcr(APP_ID, API_KEY, SECRET_KEY)
-
+    
 # 读取图片  
 def get_file_content(filePath):
     with open(filePath, 'rb') as fp:
@@ -104,44 +104,36 @@ def getPlayerScore(nickName, itchatInstance):
         itchatInstance.send('用户:' + nickName + '不存在，请先注册用户', 'filehelper')
         return '命令执行失败: %s' % msg['Content']
 
+#itchat 实例列表
+_list = {}
 
-class wechatInstance(threading.Thread):
-     def __init__(self,uuid):
-        threading.Thread.__init__(self)
+class wechatInstance():
+
+    def __init__(self,uuid):
         clubInstance = None
-        qrid = None
+        self.qrid = itchat.get_QRuuid()
+        self.logined = False
+        '''
+        self.qrid = None
         try:
             clubInstance = Clubs.objects.get(user_name=uuid)
             if clubInstance.expired_time > time.time():
-                qrid = itchat.get_QRuuid()
+                self.qrid = itchat.get_QRuuid()
                 print('get qrcode:' + qrid)
             else:
                 return 
         except Clubs.DoesNotExist:
             return 
-
+        '''
+        clubInstance = Clubs.objects.get(user_name=uuid)
         self.itchat_instance = itchat.new_instance()
         self.club = clubInstance
-        waitForConfirm = False
-        while 1:
-            status = self.itchat_instance.check_login(qrid)
-            if status == '200':
-                break
-            elif status == '201':
-                if waitForConfirm:
-                    output_info('Please press confirm')
-                    waitForConfirm = True
-            elif status == '408':
-                waitForConfirm = False
-        userInfo = self.itchat_instance.web_init()
-        self.itchat_instance.show_mobile_login()
-        self.itchat_instance.get_contact()
-        output_info('Login successfully as %s'%userInfo['User']['NickName'])
-        self.itchat_instance.start_receiving()
 
         # 接受文字命令的 逻辑处理
         @self.itchat_instance.msg_register(itchat.content.TEXT)
         def simple_reply(msg):
+            self.itchat_instance.send('msg:' + msg.text, 'filehelper')
+
             if msg['ToUserName'] == 'filehelper':
                 if msg['Type'] == 'Text':
                     contentSplit = msg['Content'].split('**')
@@ -228,10 +220,10 @@ class wechatInstance(threading.Thread):
                              self.itchat_instance.send('类型错误，请检查上分参数', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
 
-                        self.itchat_instance.send('用户:' + contentSplit[1] + '下分成功, 下分数量' + str(contentSplit[2])\
-                        + '当前分数：' + , 'filehelper')   
-                        return '命令执行成功: %s' % msg['Content']  
- 
+                         self.itchat_instance.send('用户:' + contentSplit[1] + '下分成功, 下分数量' + str(contentSplit[2])\
+                         + '当前分数：' + '' , 'filehelper')   
+                         return '命令执行成功: %s' % msg['Content']  
+
 
                     #查看单个用户战绩
                     elif contentSplit[0] == '查看单个用户战绩':
@@ -245,7 +237,7 @@ class wechatInstance(threading.Thread):
 
                     #查看所有用户战绩
                     elif contentSplit[0] == '查看所有用户战绩':
-                         players[] = Player.objects.get(club=self.club)
+                         players = Player.objects.get(club=self.club)
                          for num in range(0, len(players)):
                             getPlayerScore(player[num].wechat_nick_name.decode('utf8'), self.itchat_instance)
 
@@ -315,7 +307,7 @@ class wechatInstance(threading.Thread):
                              return '命令执行失败: %s' % msg['Content']
 
                     elif contentSplit[0] == '查看房主':
-                        players[] = Player.objects.get(club=self.club)
+                         players = Player.objects.get(club=self.club)
                          for num in range(0, len(players)):
                              if player[num].today_hoster_number > 0:
                                 getPlayerScore(player[num].wechat_nick_name.decode('utf8') + '今日房主数量：' + str(player[num].today_hoster_number) , self.itchat_instance)
@@ -577,8 +569,39 @@ class wechatInstance(threading.Thread):
             #self.itchat_instance.send(finalStr, msg.fromUserName)
             return '@%s@%s' % (typeSymbol, msg.fileName)
 
-     def run(self):
-         print('thread start')
-         self.itchat_instance.run()
+    @classmethod
+    def new_instance(cls, uuid):
+        print(_list)
+        if not _list.get(uuid): 
+            _list[uuid] = wechatInstance(uuid)
+        return _list[uuid]
+
+    def check_login(self):
+
+        status = self.itchat_instance.check_login(self.qrid)
+
+        if self.logined == False and status == '200':
+            self.logined = True
+            userInfo = self.itchat_instance.web_init()
+            self.itchat_instance.show_mobile_login()
+            self.itchat_instance.get_contact()
+            output_info('Login successfully as %s'%userInfo['User']['NickName'])
+            self.itchat_instance.start_receiving()
+            self.itchat_instance.run(blockThread=False)
+            print('start itchat....')
+
+        if status == '200':
+            return True, self.qrid
+        elif status == '201':
+            return True, self.qrid
+        else:
+            self.qrid = itchat.get_QRuuid()
+            return False, self.qrid
+
+
+
+    def run(self):
+        print('thread start')
+        self.itchat_instance.run()
 
 

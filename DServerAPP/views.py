@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from .models import Clubs
 import uuid
 from django.utils import timezone
@@ -20,6 +20,7 @@ def register(request):
     username=request.POST.get('username','')
     password=request.POST.get('password','')
     cpassword=request.POST.get('cpassword','')
+    print(username)
 
     if username == None:
         return render(request, 'DServerAPP/index.html', {"account": 1, "acct":"账号为空" })
@@ -75,7 +76,17 @@ def add_time(request):
         return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
 
 def bind_wechat(request):
-     club = request.POST.get('club','')
+    club = request.GET.get('club','')
+
+    bot = wechatManager.wechatInstance.new_instance(club)
+    logined, qrid = bot.check_login()
+    print('logined:'+str(logined))
+    return HttpResponseRedirect('https://wx.qq.com/qrcode/'+qrid)
+    #return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "两次密码不一致"})
+
+    #return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, qrid))
+
+    '''
      thread = wechatManager.wechatInstance(club)
      thread.start()
      try:
@@ -86,4 +97,4 @@ def bind_wechat(request):
              return HttpResponse(messageType.createMessage('success', messageType.CLUB_EXPIRED, '用户需要付费'))
      except Clubs.DoesNotExist:
         return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
-
+    '''

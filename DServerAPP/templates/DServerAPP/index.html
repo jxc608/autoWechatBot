@@ -1,3 +1,4 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,7 +18,7 @@
     	}
     </style>
     <title>登录</title>
-    <script src="common.js"></script>
+    <script src="{% static "common.js" %}"></script>
 </head>
 <body>
 	<div class="container-fluid">
@@ -57,7 +58,7 @@
 				    </form>
 				  </div>
 				  <div class="panel-footer text-right">
-				  	<a class="btn btn-link" href="http://localhost/DServerAPP/registerPage">注册新账号</a>
+				  	<a class="btn btn-link" href="/DServerAPP/registerPage">注册新账号</a>
 				  </div>
 				</div>
 			</div>
