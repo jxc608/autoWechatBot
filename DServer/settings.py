@@ -25,7 +25,7 @@ SECRET_KEY = 'r62_a1o23l0j+-^u)q^37*t3e0sdltax5e11dv0vq)#jmha(3m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['212.64.42.169']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -83,6 +83,7 @@ DATABASES = {
         'PASSWORD': 'autoAccounting1989',
         'HOST': '127.0.0.1',
         'PORT': '3306',
+        'CHARSET': 'utf8'
     }
 }
 

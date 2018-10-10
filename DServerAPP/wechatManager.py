@@ -95,7 +95,7 @@ def updatePlayerScore(gameid, score):
     except GameID.DoesNotExist:
         return -1
 
-def getPlayerScore(nickName, itchatInstance):
+def getPlayerScore(nickName, itchatInstance, self):
     try:
         player = Player.objects.get(wechat_nick_name=nickName.encode('utf8'), club=self.club)
         itchatInstance.send('用户当前分数：' + str(player.current_score) + \
@@ -144,13 +144,13 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'))
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1])
                              self.itchat_instance.send('用户:' + contentSplit[1] + ' 已经存在。', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
                          except Player.DoesNotExist:
-                             player = Player(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club, current_score=0, history_profit=0)
+                             player = Player(wechat_nick_name=contentSplit[1], club=self.club, current_score=0, history_profit=0)
                              player.save()
-                             self.itchat_instance.send('注册用户:' + player.wechat_nick_name.decode('utf8'), 'filehelper')
+                             self.itchat_instance.send('注册用户:' + player.wechat_nick_name, 'filehelper')
                              return '命令执行完成: %s' % msg['Content']
 
 
@@ -203,7 +203,7 @@ class wechatInstance():
                          if  len(contentSplit) != 3:
                              self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
-
+                         current_score = 0
                          try:
                              player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
                              downNumber = int(contentSplit[2])
@@ -211,7 +211,7 @@ class wechatInstance():
                                  self.itchat_instance.send('用户分数不足,当前分数：' + str(player.current_score), 'filehelper')
                                  return '命令执行失败: %s' % msg['Content']
                              else :
-                                 player.current_score = player.current_score - downNumber
+                                 current_score = player.current_score = player.current_score - downNumber
                                  player.save()
                          except Player.DoesNotExist:
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
@@ -221,7 +221,7 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']
 
                          self.itchat_instance.send('用户:' + contentSplit[1] + '下分成功, 下分数量' + str(contentSplit[2])\
-                         + '当前分数：' + '' , 'filehelper')   
+                         + '当前分数：' + str(current_score) , 'filehelper')   
                          return '命令执行成功: %s' % msg['Content']  
 
 
@@ -231,16 +231,19 @@ class wechatInstance():
                              self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
                          
-                         getPlayerScore(contentSplit[1], self.itchat_instance)
+                         getPlayerScore(contentSplit[1], self.itchat_instance, self)
                          
                          return '命令执行成功: %s' % msg['Content']  
 
                     #查看所有用户战绩
                     elif contentSplit[0] == '查看所有用户战绩':
-                         players = Player.objects.get(club=self.club)
-                         for num in range(0, len(players)):
-                            getPlayerScore(player[num].wechat_nick_name.decode('utf8'), self.itchat_instance)
-
+                         players = Player.objects.filter(club=self.club)
+                         result = '';
+                         for player in players:
+                            nickName = bytes(player.wechat_nick_name)
+                            result += nickName.decode('utf8') + '当前分数：' + str(player.current_score) + \
+                                            nickName.decode('utf8') + '历史战绩：' + str(player.history_profit) + '\n\n';
+                         self.itchat_instance.send(result, 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
 
                     #设置抽水模式
@@ -259,7 +262,7 @@ class wechatInstance():
                          self.itchat_instance.send('设置手续费模式:' + contentSplit[1], 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
                     elif contentSplit[0] == '查看整体盈利':
-                         self.itchat_instance.send('查看整体盈利:' + self.clup.profit, 'filehelper')
+                         self.itchat_instance.send('查看整体盈利:' + str(self.club.profit), 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
                     elif contentSplit[0] == '用户改名':
                          if  len(contentSplit) != 3:
@@ -268,9 +271,9 @@ class wechatInstance():
 
                          try:
                              player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
-                             player.wechat_nick_name = wechat_nick_name=contentSplit[2].encode('utf8')
+                             player.wechat_nick_name = contentSplit[2].encode('utf8')
                              player.save()
-                             self.itchat_instance.send('设置手续费模式:' + contentSplit[1], 'filehelper')
+                             self.itchat_instance.send('用户改名:' + contentSplit[1], 'filehelper')
                              return '命令执行成功: %s' % msg['Content']  
                          except Player.DoesNotExist:
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
@@ -282,7 +285,6 @@ class wechatInstance():
                          if  len(contentSplit) != 3:
                              self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
-
                          try:
                              player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
                              player.introducer = contentSplit[2].encode('utf8')
