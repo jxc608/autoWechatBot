@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import itchat
 from itchat.content import *
-import time
+import time, json
 import threading
 from aip import AipOcr
 from .models import *
@@ -97,7 +97,7 @@ def updatePlayerScore(gameid, score):
 
 def getPlayerScore(nickName, itchatInstance, self):
     try:
-        player = Player.objects.get(wechat_nick_name=nickName.encode('utf8'), club=self.club)
+        player = Player.objects.get(wechat_nick_name=nickName, club=self.club)
         itchatInstance.send('用户当前分数：' + str(player.current_score) + \
         '用户历史战绩：' + str(player.history_profit), 'filehelper')
     except Player.DoesNotExist:
@@ -132,7 +132,6 @@ class wechatInstance():
         # 接受文字命令的 逻辑处理
         @self.itchat_instance.msg_register(itchat.content.TEXT)
         def simple_reply(msg):
-            self.itchat_instance.send('msg:' + msg.text, 'filehelper')
 
             if msg['ToUserName'] == 'filehelper':
                 if msg['Type'] == 'Text':
@@ -160,7 +159,7 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
                          except Player.DoesNotExist:
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
@@ -170,8 +169,8 @@ class wechatInstance():
                              self.itchat_instance.send('游戏id已绑定', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
                          except GameID.DoesNotExist:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
-                             gameID = GameID(player=player, gameid=contentSplit[2], game_nick_name=contentSplit[3].encode('utf8'))
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
+                             gameID = GameID(player=player, gameid=contentSplit[2], game_nick_name=contentSplit[3])
                              gameID.save()
                              self.itchat_instance.send('游戏id绑定成功', 'filehelper')   
                              return '命令执行成功: %s' % msg['Content']     
@@ -183,7 +182,7 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
                              player.current_score = player.current_score + int(contentSplit[2])
                              player.save()
                          except Player.DoesNotExist:
@@ -205,7 +204,7 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']  
                          current_score = 0
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
                              downNumber = int(contentSplit[2])
                              if player.current_score < downNumber:
                                  self.itchat_instance.send('用户分数不足,当前分数：' + str(player.current_score), 'filehelper')
@@ -240,9 +239,8 @@ class wechatInstance():
                          players = Player.objects.filter(club=self.club)
                          result = '';
                          for player in players:
-                            nickName = bytes(player.wechat_nick_name)
-                            result += nickName.decode('utf8') + '当前分数：' + str(player.current_score) + \
-                                            nickName.decode('utf8') + '历史战绩：' + str(player.history_profit) + '\n\n';
+                            result += player.wechat_nick_name + '当前分数：' + str(player.current_score) + '\n' + \
+                                            player.wechat_nick_name + '历史战绩：' + str(player.history_profit) + '\n\n';
                          self.itchat_instance.send(result, 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
 
@@ -270,8 +268,8 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
-                             player.wechat_nick_name = contentSplit[2].encode('utf8')
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
+                             player.wechat_nick_name = contentSplit[2]
                              player.save()
                              self.itchat_instance.send('用户改名:' + contentSplit[1], 'filehelper')
                              return '命令执行成功: %s' % msg['Content']  
@@ -286,10 +284,10 @@ class wechatInstance():
                              self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
-                             player.introducer = contentSplit[2].encode('utf8')
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
+                             player.introducer = contentSplit[2]
                              player.save()
-                             self.itchat_instance.send('设置介绍人成功！' + player.wechat_nick_name.decode('utf8') + ' 现在的介绍人是：' + player.introducer.decode('utf8') , 'filehelper')
+                             self.itchat_instance.send('设置介绍人成功！' + player.wechat_nick_name + ' 现在的介绍人是：' + player.introducer , 'filehelper')
                              return '命令执行成功: %s' % msg['Content']  
                          except Player.DoesNotExist:
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
@@ -301,19 +299,22 @@ class wechatInstance():
                              return '命令执行失败: %s' % msg['Content']  
 
                          try:
-                             player = Player.objects.get(wechat_nick_name=contentSplit[1].encode('utf8'), club=self.club)
-                             self.itchat_instance.send(player.wechat_nick_name.decode('utf8') + '现在的介绍人是：' + player.introducer.decode('utf8') , 'filehelper')
+                             player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
+                             self.itchat_instance.send(player.wechat_nick_name + '现在的介绍人是：' + player.introducer , 'filehelper')
                              return '命令执行成功: %s' % msg['Content']  
                          except Player.DoesNotExist:
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
 
                     elif contentSplit[0] == '查看房主':
-                         players = Player.objects.get(club=self.club)
-                         for num in range(0, len(players)):
-                             if player[num].today_hoster_number > 0:
-                                getPlayerScore(player[num].wechat_nick_name.decode('utf8') + '今日房主数量：' + str(player[num].today_hoster_number) , self.itchat_instance)
+                         players = Player.objects.filter(club=self.club)
+                         for player in players:
+                             if player.today_hoster_number > 0:
+                                getPlayerScore(player[num].wechat_nick_name + '今日房主数量：' + str(player[num].today_hoster_number) , self.itchat_instance)
 
+                    elif contentSplit[0] == '注销':
+                        self.itchat_instance.send('再见！', 'filehelper')   
+                        self.itchat_instance.logout()
                     return '命令执行完成: %s' % msg['Content']
 
         # 接受图片的逻辑处理
@@ -553,9 +554,12 @@ class wechatInstance():
                 except GameID.DoesNotExist:
                     self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册', 'filehelper')
 
+            playerData = []
+            for d in room_data.playerData:
+                playerData.append(d.dumps())
             historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,\
             hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, \
-            player_data=json.dumps(room_data.playerData), create_time=timezone.now())
+            player_data=json.dumps(playerData), create_time=timezone.now())
             historyGame.save()
             room_data.toString()
             self.itchat_instance.send('房间ID：' + str(room_data.roomId), 'filehelper')
@@ -572,35 +576,51 @@ class wechatInstance():
             return '@%s@%s' % (typeSymbol, msg.fileName)
 
     @classmethod
-    def new_instance(cls, uuid):
-        print(_list)
-        if not _list.get(uuid): 
-            _list[uuid] = wechatInstance(uuid)
-        return _list[uuid]
+    def new_instance(cls, club):
+        if not _list.get(club): 
+            _list[club] = wechatInstance(club)
+        return _list[club]
 
-    def check_login(self):
-
-        status = self.itchat_instance.check_login(self.qrid)
-
-        if self.logined == False and status == '200':
-            self.logined = True
-            userInfo = self.itchat_instance.web_init()
-            self.itchat_instance.show_mobile_login()
-            self.itchat_instance.get_contact()
-            output_info('Login successfully as %s'%userInfo['User']['NickName'])
-            self.itchat_instance.start_receiving()
-            self.itchat_instance.run(blockThread=False)
-            print('start itchat....')
-
-        if status == '200':
-            return True, self.qrid
-        elif status == '201':
-            return True, self.qrid
+    @classmethod
+    def check_alive(self, club):
+        if _list.get(club) and _list.get(club).itchat_instance.alive:
+            return True
         else:
-            self.qrid = itchat.get_QRuuid()
-            return False, self.qrid
+            return False
 
+    def is_login(self):
+        if self.itchat_instance.alive:
+            return True
+        else:
+            return False
 
+    def get_uuid(self):
+        return self.itchat_instance.get_QRuuid()
+
+    def check_login(self, uuid):
+        self.checked = False
+        def _check():
+            while  not self.checked:
+                status = self.itchat_instance.check_login(uuid)
+                print('check login.'+status)
+
+                if status == '200':
+                    userInfo = self.itchat_instance.web_init()
+                    self.itchat_instance.show_mobile_login()
+                    self.itchat_instance.get_contact()
+                    output_info('Login successfully as %s'%userInfo['User']['NickName'])
+                    self.itchat_instance.start_receiving()
+                    self.itchat_instance.run(blockThread=False)
+                    print('start itchat....')
+                    self.checked = True
+                elif status == '201':
+                    pass
+                else:
+                    self.checked = True
+                time.sleep(1)
+        t = threading.Thread(target=_check)
+        t.setDaemon(True)
+        t.start()
 
     def run(self):
         print('thread start')

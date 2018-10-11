@@ -6,6 +6,12 @@ class playerData:
         self.id = 0  # id
         self.score = 0 # 分数
 
+    def dumps(self):
+        return {
+            'name':self.name,
+            'id':self.id,
+            'score':self.score
+        }
 
 class roomData:
     def __init__(self):
