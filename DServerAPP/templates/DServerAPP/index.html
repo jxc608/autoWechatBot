@@ -31,14 +31,55 @@
 					</div>
 				  <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
-                        <li class="list-group-item" style="background-color:#f5f5f5"><b>CD KEY 有效期至</b></li>
-                        <li class="list-group-item">{{club.expired_time}}</li>
+                        <li class="list-group-item" style="background-color:#f5f5f5"><b>生成CD KEY</b></li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="key_type">类型</label>
+                                <select class="form-control" id="key_type">
+                                    <option value="1" seleced>有效期1天</option>
+                                    <option value="2" seleced>有效期1周</option>
+                                    <option value="3" seleced>有效期1个月</option>
+                                </select>
+                              </div>
+                              <div class="form-group">
+                                <label for="num">个数</label>
+                                <input type="email" class="form-control" id="num" placeholder="10" value="10">
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="create_cdkey()">生成</button>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="get_cdkey()">获取</button>
+                              </div>
+                            </form>
+                            <div id="keys">
+                            </div>
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5"><b>CD KEY</b></li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="key_type">有效期:</label>
+                                <span>{{club.expired_time_desc}}</span>
+                              </div>
+                              <div class="form-group">
+                                <label for="num">CD KEY</label>
+                                <input type="email" class="form-control" id="cdkey" placeholder="请输入CD KEY">
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="add_time()">延长</button>
+                              </div>
+                            </form>
+                        </li>
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>机器人状态</b></li>
                         <li class="list-group-item">
-                            {% if wx_login == False %}
+                            {% if club.expired == True %}
+                                CD KEY 已失效。 请延长后继续使用。
+                            {% elif wx_login == False %}
                             <div align="center" id="qrcode"></div>
                             <div align="center" >
-                              扫描成功后请刷新
+                              请微信扫码登录
                             </div>
                             {% else %}
                              已登录
@@ -65,7 +106,6 @@
           correctLevel : QRCode.CorrectLevel.H
         });
         var timer = null;
-        /*
         //短信验证码重新获取  
         function check_login() {
             $.post("/check_wx_login",{},function(data){
@@ -76,9 +116,49 @@
             },"json");
         }
 
-        timer = setInterval("check_login()", 10000);*/
+        timer = setInterval("check_login()", 10000);
         {% endif %}
         
+        function create_cdkey(){
+            if($('#num').val()==''){
+                alert("请输入数量。");
+                return;
+            }
+            $.post("/create_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
+                if(data.result == true){
+                     alert("生成成功！");
+                }
+            },"json");
+        }
+
+        function get_cdkey(){
+            if($('#num').val()==''){
+                alert("请输入数量。");
+                return;
+            }
+            $.post("/get_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
+                var keys = '';
+                for(var i=0;i<data.result.length;i++)
+                    keys += data.result[i]+'<br/>';
+                $('#keys').html(keys);
+            },"json");
+        }
+
+        function add_time(){
+            if($('#cdkey').val()==''){
+                alert("请输入CD KEY。");
+                return;
+            }
+            $.post("/add_time",{cdkey:$('#cdkey').val()},function(data){
+                if(data.messageCode == 10005){
+                     alert("CD KEY 已使用！");
+                }else if(data.messageCode == 10004){
+                     alert("CD KEY 不存在！");
+                }else if(data.messageCode == 0){
+                    window.location.reload();
+                }
+            },"json");
+        }
     </script>
 </body>
 </html>

@@ -7,6 +7,7 @@ from aip import AipOcr
 from .models import *
 from . import playerResult
 from django.utils import timezone
+from django.db import connection
 
 # 定义常量  
 APP_ID = '11756002'
@@ -113,18 +114,6 @@ class wechatInstance():
         clubInstance = None
         self.qrid = itchat.get_QRuuid()
         self.logined = False
-        '''
-        self.qrid = None
-        try:
-            clubInstance = Clubs.objects.get(user_name=uuid)
-            if clubInstance.expired_time > time.time():
-                self.qrid = itchat.get_QRuuid()
-                print('get qrcode:' + qrid)
-            else:
-                return 
-        except Clubs.DoesNotExist:
-            return 
-        '''
         clubInstance = Clubs.objects.get(user_name=uuid)
         self.itchat_instance = itchat.new_instance()
         self.club = clubInstance
@@ -132,7 +121,11 @@ class wechatInstance():
         # 接受文字命令的 逻辑处理
         @self.itchat_instance.msg_register(itchat.content.TEXT)
         def simple_reply(msg):
-
+            clubInstance = Clubs.objects.get(user_name=self.club.user_name)
+            if clubInstance.expired_time < time.time():
+                self.itchat_instance.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
+                self.itchat_instance.logout()
+                return
             if msg['ToUserName'] == 'filehelper':
                 if msg['Type'] == 'Text':
                     contentSplit = msg['Content'].split('**')
@@ -315,12 +308,34 @@ class wechatInstance():
                     elif contentSplit[0] == '注销':
                         self.itchat_instance.send('再见！', 'filehelper')   
                         self.itchat_instance.logout()
+                    elif contentSplit[0] == '查看游戏用户战绩':
+                        if len(contentSplit) != 2:
+                            self.itchat_instance.send('参数错误', 'filehelper')   
+                            return '命令执行失败: %s' % msg['Content'] 
+                        cursor=connection.cursor()
+                        sql = " select player.* from DServerAPP_player player , DServerAPP_gameid gameid"
+                        sql+= " where player.id=gameid.player_id and gameid='"+contentSplit[1]+"'"
+                        cursor.execute(sql)
+                        players = cursor.fetchall()
+                        print(players)
+                        result = '';
+                        for player in players:
+                           result += player[2] + '当前分数：' + str(player[4]) + '\n' + \
+                                           player[2] + '历史战绩：' + str(player[5]) + '\n\n';
+                        self.itchat_instance.send(result, 'filehelper')
+                        return '命令执行成功: %s' % msg['Content']  
+
                     return '命令执行完成: %s' % msg['Content']
 
         # 接受图片的逻辑处理
         @self.itchat_instance.msg_register([PICTURE])
         def download_files(msg):
-            print('picture')
+            clubInstance = Clubs.objects.get(user_name=self.club.user_name)
+            if clubInstance.expired_time < time.time():
+                self.itchat_instance.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
+                self.itchat_instance.logout()
+                return
+
             msg.download(msg.fileName)
             typeSymbol = {
                 PICTURE: 'img',

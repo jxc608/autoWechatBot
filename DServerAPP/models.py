@@ -52,5 +52,10 @@ class HistoryGame(models.Model):
     player_data = models.CharField(max_length=1000,default='none')#playerResult.playerData的数组
     create_time = models.DateTimeField('create time')
 
+class Cdkey(models.Model):
+    cdkey = models.CharField(primary_key=True, max_length=50)
+    key_type = models.IntegerField(default=0) #1 -1天，2 - 1周， 3- 1个月
+    status = models.IntegerField(default=0)
+    create_time = models.IntegerField(default=0)
 
 

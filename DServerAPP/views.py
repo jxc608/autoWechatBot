@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import Clubs
+from .models import Clubs, Cdkey
 import uuid
 from django.utils import timezone
 from . import messageType
@@ -30,12 +30,17 @@ def index(request):
     if is_login(request) == False:
         return HttpResponseRedirect('/login')
     club = Clubs.objects.get(user_name=request.session['club'])
-    club.expired_time = timestamp2string(club.expired_time)
+    club.expired = False
+    if club.expired_time < time.time():
+        club.expired_time_desc = '已失效'
+        club.expired = True
+    else:
+        club.expired_time_desc = timestamp2string(club.expired_time)
 
     bot = wechatManager.wechatInstance.new_instance(club.user_name)
     wx_login = bot.is_login()
     uuid = None
-    if not wx_login:
+    if not wx_login and not club.expired:
         uuid = bot.get_uuid()
         bot.check_login(uuid)
     return render(request, 'DServerAPP/index.html', {'club':club, 'wx_login':wx_login, 'uuid':uuid})
@@ -102,12 +107,31 @@ def login_smscode(request):
     return HttpResponse('username='+username+"&password="+password)
 
 def add_time(request):
-    username=request.POST.get('username','')
-    cdkey=request.POST.get('cdkey','')
+    username=request.session['club'];
+    cdkey=request.POST.get('cdkey')
+    try:
+        keyInstance = Cdkey.objects.get(cdkey=cdkey)
+        if keyInstance.status == 1:
+            return HttpResponse(messageType.createMessage('success', messageType.CDKEY_USED, 'the cdkey used'))
+        time_add = 0
+        if keyInstance.key_type == 1:
+            time_add = 3600
+        elif keyInstance.key_type == 2:
+            time_add = 3600 * 24 * 7
+        elif keyInstance.key_type == 3:
+            time_add = 3600 * 24 * 30
+    except Cdkey.DoesNotExist:
+        return HttpResponse(messageType.createMessage('success', messageType.CDKEY_NOT_EXIST, 'the cdkey not exist'))
+
     try:
         clubInstance = Clubs.objects.get(user_name=username)
-        clubInstance.expired_time = time.time() + 2592000
+        if clubInstance.expired_time < time.time():
+            clubInstance.expired_time = time.time() + time_add
+        else:
+            clubInstance.expired_time += time_add 
         clubInstance.save()
+        keyInstance.status = 1
+        keyInstance.save()
         return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'add time succeed'))
     except Clubs.DoesNotExist:
         return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
@@ -115,9 +139,30 @@ def add_time(request):
 
 def check_wx_login(request):
     bot = wechatManager.wechatInstance.new_instance(request.session['club'])
-    wx_login, uuid = bot.check_login()
+    wx_login = bot.is_login()
 
     return HttpResponse(json.dumps({'login': wx_login}), content_type="application/json")
+
+def create_cdkey(request):
+    key_type = int(request.POST.get('key_type'))
+    num = int(request.POST.get('num'))
+    for x in range(0, num):
+        key = Cdkey()
+        key.cdkey = str(uuid.uuid1())[:8]
+        key.key_type = key_type
+        key.status = 0
+        key.create_time = int(time.time())
+        key.save()
+    return HttpResponse(json.dumps({'result': True}), content_type="application/json")
+
+def get_cdkey(request):
+    key_type = int(request.POST.get('key_type'))
+    num = int(request.POST.get('num'))
+    keys = Cdkey.objects.filter(status=0, key_type=key_type)[:num]
+    result = []
+    for key in keys:
+        result.append(key.cdkey)
+    return HttpResponse(json.dumps({'result': result}), content_type="application/json")
 
 def bind_wechat(request):
     club = request.GET.get('club','')
