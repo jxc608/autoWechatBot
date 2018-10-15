@@ -14,4 +14,7 @@ urlpatterns = [
     path('add_time', views.add_time, name='add_time'),
     path('create_cdkey', views.create_cdkey, name='create_cdkey'),
     path('get_cdkey', views.get_cdkey, name='get_cdkey'),
+    path('get_uuid', views.get_uuid, name='get_uuid'),
+    path('wx_logout', views.wx_logout, name='wx_logout'),
+
 ]

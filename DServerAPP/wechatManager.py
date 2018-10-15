@@ -568,22 +568,28 @@ class wechatInstance():
                     self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) ,player.wechat_nick_name)
                 except GameID.DoesNotExist:
                     self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册', 'filehelper')
-
-            playerData = []
-            for d in room_data.playerData:
-                playerData.append(d.dumps())
-            historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,\
-            hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, \
-            player_data=json.dumps(playerData), create_time=timezone.now())
-            historyGame.save()
-            room_data.toString()
-            self.itchat_instance.send('房间ID：' + str(room_data.roomId), 'filehelper')
-            self.itchat_instance.send('房主：' + str(room_data.roomHoster), 'filehelper')
-            self.itchat_instance.send('房主ID：' + str(room_data.roomHosterId), 'filehelper')
-            self.itchat_instance.send('局数：' + str(room_data.roundCounter), 'filehelper')
-            self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper')      
-            for num in range(0, len(room_data.playerData)):
-                self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '---分数：' + str(room_data.playerData[num].score), 'filehelper')      
+            try:
+                HistoryGame.objects.get(room_id=room_data.roomId, start_time=startTime)
+                self.itchat_instance.send('数据已入库！', 'filehelper')      
+            except HistoryGame.DoesNotExist:
+                playerData = []
+                for d in room_data.playerData:
+                    playerData.append(d.dumps())
+                historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,\
+                hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, \
+                player_data=json.dumps(playerData), create_time=timezone.now())
+                historyGame.save()
+                room_data.toString()
+                self.itchat_instance.send('房间ID：' + str(room_data.roomId), 'filehelper')
+                self.itchat_instance.send('房主：' + str(room_data.roomHoster), 'filehelper')
+                self.itchat_instance.send('房主ID：' + str(room_data.roomHosterId), 'filehelper')
+                self.itchat_instance.send('局数：' + str(room_data.roundCounter), 'filehelper')
+                self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper') 
+                total = 0     
+                for num in range(0, len(room_data.playerData)):
+                    self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '---分数：' + str(room_data.playerData[num].score), 'filehelper')      
+                    total += room_data.playerData[num].score
+                self.itchat_instance.send('总分数：' + str(total), 'filehelper')      
 
 
             #self.itchat_instance.send(str(result), msg.fromUserName)
@@ -636,6 +642,9 @@ class wechatInstance():
         t = threading.Thread(target=_check)
         t.setDaemon(True)
         t.start()
+
+    def logout(self):
+        self.itchat_instance.logout()
 
     def run(self):
         print('thread start')

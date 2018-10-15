@@ -43,7 +43,17 @@ def index(request):
     if not wx_login and not club.expired:
         uuid = bot.get_uuid()
         bot.check_login(uuid)
-    return render(request, 'DServerAPP/index.html', {'club':club, 'wx_login':wx_login, 'uuid':uuid})
+    is_admin = False
+    if club.user_name == '18811333964':
+        is_admin = True
+    return render(request, 'DServerAPP/index.html', {'club':club, 'wx_login':wx_login, 'uuid':uuid, 'is_admin':is_admin})
+
+def get_uuid(request):
+    bot = wechatManager.wechatInstance.new_instance(request.session['club'])
+    bot.checked = False
+    uuid = bot.get_uuid()
+    bot.check_login(uuid)
+    return HttpResponse(json.dumps({'uuid': uuid}), content_type="application/json")
 
 def login(request):
     return render(request, 'DServerAPP/login.html')
@@ -90,7 +100,7 @@ def login_password(request):
         try:
             club = Clubs.objects.get(user_name=username)
             if club.password != password:
-                return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "密码错误"})
+                return render(request, 'DServerAPP/login.html', {"pwd": 1, "pwct": "密码错误"})
             else:
                 request.session['login'] = True;
                 request.session['club'] = username;
@@ -98,7 +108,7 @@ def login_password(request):
                 return HttpResponseRedirect('/')
                 #return render(request, 'DServerAPP/login_succ.html', {"codeSrc": "https://gss0.bdstatic.com/94o3dSag_xI4khGkpoWK1HF6hhy/baike/s%3D220/sign=660c358c4aed2e73f8e9812eb700a16d/08f790529822720e5c8538f27bcb0a46f21fab6b.jpg"})
         except Clubs.DoesNotExist:
-            return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "账号不存在"})
+            return render(request, 'DServerAPP/login.html', {"pwd": 1, "pwct": "账号不存在"})
     
    
 def login_smscode(request):
@@ -143,7 +153,15 @@ def check_wx_login(request):
 
     return HttpResponse(json.dumps({'login': wx_login}), content_type="application/json")
 
+def wx_logout(request):
+    bot = wechatManager.wechatInstance.new_instance(request.session['club'])
+    bot.logout()
+    return HttpResponse(json.dumps({'result': True}), content_type="application/json")
+
 def create_cdkey(request):
+    if request.session['club'] != '18811333964':
+        return
+        
     key_type = int(request.POST.get('key_type'))
     num = int(request.POST.get('num'))
     for x in range(0, num):

@@ -31,6 +31,7 @@
 					</div>
 				  <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
+                        {% if is_admin == True %}
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>生成CD KEY</b></li>
                         <li class="list-group-item">
                             <form class="form-inline">
@@ -56,6 +57,7 @@
                             <div id="keys">
                             </div>
                         </li>
+                        {% endif %}
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>CD KEY</b></li>
                         <li class="list-group-item">
                             <form class="form-inline">
@@ -77,12 +79,15 @@
                             {% if club.expired == True %}
                                 CD KEY 已失效。 请延长后继续使用。
                             {% elif wx_login == False %}
+                            <div align="center" >
+                              <a href="javascript:void(0)" onclick="get_uuid()">刷新二维码</a>
+                            </div>
                             <div align="center" id="qrcode"></div>
                             <div align="center" >
                               请微信扫码登录
                             </div>
                             {% else %}
-                             已登录
+                             已登录&nbsp;&nbsp;<a href="javascript:void(0)" onclick="wx_logout()">注销</a>
                             {% endif %}
                         </li>
                     </ul>
@@ -117,8 +122,22 @@
         }
 
         timer = setInterval("check_login()", 10000);
+        //刷新二维码
+        function get_uuid(){
+            $.post("/get_uuid",{},function(data){
+                if (data.uuid)
+                    qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
+            },"json");
+        }
+
+
         {% endif %}
-        
+        //注销
+        function wx_logout(){
+            $.post("/wx_logout",{},function(data){
+               window.location.reload()
+            },"json");
+        }
         function create_cdkey(){
             if($('#num').val()==''){
                 alert("请输入数量。");
