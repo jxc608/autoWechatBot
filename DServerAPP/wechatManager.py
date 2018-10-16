@@ -130,6 +130,7 @@ class wechatInstance():
                 if msg['Type'] == 'Text':
                     contentSplit = msg['Content'].split('**')
 
+                    #注册用户
                     if contentSplit[0] == '注册':
                          if len(contentSplit) != 2:
                              self.itchat_instance.send('参数错误', 'filehelper')   
@@ -145,12 +146,13 @@ class wechatInstance():
                              self.itchat_instance.send('注册用户:' + player.wechat_nick_name, 'filehelper')
                              return '命令执行完成: %s' % msg['Content']
 
-
+                    #绑定游戏id
                     elif contentSplit[0] == '绑定游戏id':
                          if  len(contentSplit) != 4:
                              self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
 
+                         player = None
                          try:
                              player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
                          except Player.DoesNotExist:
@@ -159,8 +161,14 @@ class wechatInstance():
 
                          try:
                              gameID = GameID.objects.get(gameid=contentSplit[2])
-                             self.itchat_instance.send('游戏id已绑定', 'filehelper')   
-                             return '命令执行失败: %s' % msg['Content']  
+                             if gameID.player.wechat_nick_name == 'tempUser':
+                                 gameID.player.wechat_nick_name = contentSplit[1]
+                                 gameID.player.save()
+                                 self.itchat_instance.send('游戏id绑定成功', 'filehelper') 
+                                 return '命令执行成功: %s' % msg['Content']     
+                             else :
+                                 self.itchat_instance.send('游戏id已绑定', 'filehelper')   
+                                 return '命令执行失败: %s' % msg['Content']  
                          except GameID.DoesNotExist:
                              player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
                              gameID = GameID(player=player, gameid=contentSplit[2], game_nick_name=contentSplit[3])
@@ -238,7 +246,7 @@ class wechatInstance():
                          return '命令执行成功: %s' % msg['Content']  
 
                     #设置抽水模式
-                    elif contentSplit[0] == '设置手续费模式':#0：百分比模式，1：分数段模式， 2：1 2名模式
+                    elif contentSplit[0] == '设置手续费模式':#0：固定分数段模式，1：百分比模式， 
                          if  len(contentSplit) != 3:
                              self.itchat_instance.send('参数错误', 'filehelper')   
                              return '命令执行失败: %s' % msg['Content']  
@@ -252,9 +260,14 @@ class wechatInstance():
 
                          self.itchat_instance.send('设置手续费模式:' + contentSplit[1], 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
+                    
+                    
+                    #查看盈利
                     elif contentSplit[0] == '查看整体盈利':
                          self.itchat_instance.send('查看整体盈利:' + str(self.club.profit), 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
+                    
+                    #用户改名
                     elif contentSplit[0] == '用户改名':
                          if  len(contentSplit) != 3:
                              self.itchat_instance.send('参数错误', 'filehelper')   
@@ -272,6 +285,8 @@ class wechatInstance():
 
                          self.itchat_instance.send('用户改名:' + contentSplit[1], 'filehelper')
                          return '命令执行成功: %s' % msg['Content']  
+                    
+                    #新增介绍人
                     elif contentSplit[0] == '新增介绍人':
                          if  len(contentSplit) != 3:
                              self.itchat_instance.send('参数错误', 'filehelper')   
@@ -286,6 +301,7 @@ class wechatInstance():
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
 
+                    #查看介绍人
                     elif contentSplit[0] == '查看介绍人':
                          if  len(contentSplit) != 2:
                              self.itchat_instance.send('参数错误', 'filehelper')   
@@ -299,15 +315,19 @@ class wechatInstance():
                              self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
                              return '命令执行失败: %s' % msg['Content']
 
+                    #查看房主
                     elif contentSplit[0] == '查看房主':
                          players = Player.objects.filter(club=self.club)
                          for player in players:
                              if player.today_hoster_number > 0:
                                 getPlayerScore(player[num].wechat_nick_name + '今日房主数量：' + str(player[num].today_hoster_number) , self.itchat_instance)
 
+                    #注销
                     elif contentSplit[0] == '注销':
                         self.itchat_instance.send('再见！', 'filehelper')   
                         self.itchat_instance.logout()
+                    
+                    #查看用户战绩
                     elif contentSplit[0] == '查看游戏用户战绩':
                         if len(contentSplit) != 2:
                             self.itchat_instance.send('参数错误', 'filehelper')   
@@ -324,6 +344,17 @@ class wechatInstance():
                                            player[2] + '历史战绩：' + str(player[5]) + '\n\n';
                         self.itchat_instance.send(result, 'filehelper')
                         return '命令执行成功: %s' % msg['Content']  
+                    
+                    elif len(contentSplit) == 1:
+                        try :
+                            theID = int(contentSplit[0])
+                            gameID = GameID(gameid=theID)
+                            self.itchat_instance.send('用户当前分数：' + str(gameID.player.current_score) + \
+                            '用户历史战绩：' + str(gameID.player.history_profit), 'filehelper')
+                        except GameID.DoesNotExist:
+                            self.itchat_instance.send('用户' + str(theID) + '不存在', 'filehelper')
+                        except:
+                            self.itchat_instance.send('发生异常', 'filehelper')
 
                     return '命令执行完成: %s' % msg['Content']
 
@@ -555,22 +586,11 @@ class wechatInstance():
                     wholeScoreSum = wholeScoreSum - room_data.playerData[num].score
                 else:
                     room_data.playerData[num].score = -room_data.playerData[num].score
-                  
-                try:
-                    gameid = GameID.objects.get(gameid=room_data.playerData[num].id)
-                    player = gameid.player  
-                    score = Score(player=player, score=room_data.playerData[num].score, create_time=timezone.now(), room_id=room_data.roomId)
-                    score.save()
-                    player.current_score = player.current_score  + room_data.playerData[num].score
-                    player.history_profit = player.history_profit + room_data.playerData[num].score
-                    player.save()
-
-                    self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) ,player.wechat_nick_name)
-                except GameID.DoesNotExist:
-                    self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册', 'filehelper')
+                
             try:
                 HistoryGame.objects.get(room_id=room_data.roomId, start_time=startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
+                return ''
             except HistoryGame.DoesNotExist:
                 playerData = []
                 for d in room_data.playerData:
@@ -585,15 +605,77 @@ class wechatInstance():
                 self.itchat_instance.send('房主ID：' + str(room_data.roomHosterId), 'filehelper')
                 self.itchat_instance.send('局数：' + str(room_data.roundCounter), 'filehelper')
                 self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper') 
-                total = 0     
+
+                rules = self.club.cost_param.split('_')
+                costMode = self.club.cost_mode
+                clubProfit = 0
+              
                 for num in range(0, len(room_data.playerData)):
-                    self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '---分数：' + str(room_data.playerData[num].score), 'filehelper')      
-                    total += room_data.playerData[num].score
-                self.itchat_instance.send('总分数：' + str(total), 'filehelper')      
+                    costed = False
+                    gameid = None
+                    player = None
+                    playserScore = room_data.playerData[num].score 
+
+                    try:
+                        gameid = GameID.objects.get(gameid=room_data.playerData[num].id)
+                        player = gameid.player  
+                    except GameID.DoesNotExist:
+                        self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：tempUser', 'filehelper')
+                        player = Player.objects.get(wechat_nick_name='tempUser', club=self.club)
+                        gameid = GameID(player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
+                   
+                    try:
+                        if num < len(rules):
+                            if costMode == 0:
+                                #固定模式 1000|20_500|10
+                                params = rules[num].split('|')
+                                valve = int(params[0])
+                                cost = int(params[1])
+                                if playserScore > valve:
+                                    score = Score(player=player, score=playserScore - cost, create_time=timezone.now(), room_id=room_data.roomId)
+                                    score.save()
+                                    player.current_score = player.current_score + room_data.playerData[num].score - cost 
+                                    player.history_profit = player.history_profit + room_data.playerData[num].score
+                                    player.save()
+                                    costed = True
+                                    clubProfit += cost
+                                    self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '---分数：' + str(room_data.playerData[num].score) + \
+                                    '---抽水：' + str(cost) + '---总分数：' + str(player.current_score), 'filehelper')    
+                                    self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '---抽水：' + str(cost) ,player.wechat_nick_name)
+                            elif costMode == 1:
+                                #百分比模式
+                                if playserScore >= 100:
+                                    param = float(rules[num])
+                                    cost = playserScore * param
+                                    score = Score(player=player, score=playserScore - cost, create_time=timezone.now(), room_id=room_data.roomId)
+                                    score.save()
+                                    player.current_score = player.current_score + room_data.playerData[num].score - cost 
+                                    player.history_profit = player.history_profit + room_data.playerData[num].score
+                                    player.save()
+                                    costed = True
+                                    clubProfit += cost
+                                    self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '---分数：' + str(room_data.playerData[num].score) + \
+                                    '---抽水：' + str(cost) + '---总分数：' + str(player.current_score), 'filehelper') 
+                                    self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '---抽水：' + str(cost) ,player.wechat_nick_name)
 
 
-            #self.itchat_instance.send(str(result), msg.fromUserName)
-            #self.itchat_instance.send(finalStr, msg.fromUserName)
+                        if costed == False:
+                            score = Score(player=player, score=playserScore, create_time=timezone.now(), room_id=room_data.roomId)
+                            score.save()
+                            player.current_score = player.current_score + room_data.playerData[num].score 
+                            player.history_profit = player.history_profit + room_data.playerData[num].score
+                            player.save()
+                            self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '---分数：' + str(room_data.playerData[num].score) + \
+                            '---总分数：' + str(player.current_score), 'filehelper')      
+                            self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) ,player.wechat_nick_name)
+                    except:
+                        self.itchat_instance.send('发生异常！', 'filehelper')
+                        continue
+
+          
+            self.club.profit += clubProfit
+            self.club.save()
+            self.itchat_instance.send('获得抽水：' + str(clubProfit), 'filehelper') 
             return '@%s@%s' % (typeSymbol, msg.fileName)
 
     @classmethod
