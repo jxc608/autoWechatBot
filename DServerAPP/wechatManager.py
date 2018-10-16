@@ -525,6 +525,7 @@ class wechatInstance():
                             break
                     else:
                         if managedData[num][0].leftAnchor < playerNameLeftPos:
+                            self.itchat_instance.send('检测到没用的字符识别', 'filehelper')
                             continue
                         else:
                             print('length 2---leftAnchor:' + str(managedData[num][0].leftAnchor)+', playerIDLeftPos:' + str(playerIDLeftPos))
