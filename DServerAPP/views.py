@@ -73,21 +73,22 @@ def register(request):
     print(username)
 
     if username == None:
-        return render(request, 'DServerAPP/index.html', {"account": 1, "acct":"账号为空" })
+        return render(request, 'DServerAPP/register.html', {"account": 1, "acct":"账号为空" })
     elif password == '': 
-        return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "密码为空"})
+        return render(request, 'DServerAPP/register.html', {"pwd": 1, "pwct": "密码为空"})
     elif  password != cpassword:
-        return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "两次密码不一致"})
-    
+        return render(request, 'DServerAPP/register.html', {"pwd": 1, "pwct": "两次密码不一致"})
 
     try:
         club = Clubs.objects.get(user_name=username)
-        return HttpResponse(messageType.createMessage('success', messageType.USER_NAME_ALREADY_USED, 'the userName has already been used'))
+        return render(request, 'DServerAPP/register.html', {"account": 1, "acct":"账号已注册" })
+        #return HttpResponse(messageType.createMessage('success', messageType.USER_NAME_ALREADY_USED, 'the userName has already been used'))
     except Clubs.DoesNotExist:
         password=request.POST.get('password','')
         club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=time.time())
         club.save()
-        return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'register completed'))
+        return render(request, 'DServerAPP/register.html', {"account": 2, "acct":"注册成功！" })
+        #return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'register completed'))
 
 def login_password(request):
     username=request.POST.get('username','')
@@ -161,7 +162,7 @@ def wx_logout(request):
 def create_cdkey(request):
     if request.session['club'] != '18811333964':
         return
-        
+
     key_type = int(request.POST.get('key_type'))
     num = int(request.POST.get('num'))
     for x in range(0, num):
