@@ -387,6 +387,10 @@ class wechatInstance():
                 self.itchat_instance.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
                 self.itchat_instance.logout()
                 return
+
+            if msg['ToUserName'] != 'filehelper':
+                return
+
             club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
@@ -614,9 +618,15 @@ class wechatInstance():
                             break
                             
             if wrong_img or room_data.startTime == '' or room_data.roomId == 0\
-                     or room_data.roomHosterId == 0 or self.roomHoster == ''\
+                     or room_data.roomHoster == ''\
                      or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
-                print('wrong imgage' + str(room_data.roomId))
+                print('roomId:' + str(room_data.roomId))
+                print('startTime:' + str(room_data.startTime))
+                print('roomHosterId:' + str(room_data.roomHosterId))
+                print('roomHoster:' + str(room_data.roomHoster))
+                print('roundCounter:' + str(room_data.roundCounter))
+                print('players:' + str(len(room_data.playerData)))
+
                 wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
                 return
@@ -630,6 +640,7 @@ class wechatInstance():
                     room_data.playerData[num].score = -room_data.playerData[num].score
             
             try:
+                print('roomId:'+str(room_data.roomId)+',startTime:'+str(startTime))
                 HistoryGame.objects.get(room_id=room_data.roomId, start_time=startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
                 return ''
