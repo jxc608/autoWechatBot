@@ -58,4 +58,10 @@ class Cdkey(models.Model):
     status = models.IntegerField(default=0)
     create_time = models.IntegerField(default=0)
 
+class WrongImage(models.Model):
+    id = models.IntegerField(primary_key=True)
+    club_name = models.CharField(max_length=20)
+    image = models.CharField(max_length=100)
+    create_time = models.IntegerField(default=0)
+
 

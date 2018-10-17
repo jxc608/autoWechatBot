@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import itchat
 from itchat.content import *
-import time, json
+import time, json, os, datetime
 import threading
 from aip import AipOcr
 from .models import *
 from . import playerResult
 from django.utils import timezone
 from django.db import connection
+from django.conf import settings
 
 # 定义常量  
 APP_ID = '11756002'
@@ -337,14 +338,34 @@ class wechatInstance():
                         sql+= " where player.id=gameid.player_id and gameid='"+contentSplit[1]+"'"
                         cursor.execute(sql)
                         players = cursor.fetchall()
-                        print(players)
                         result = '';
                         for player in players:
                            result += player[2] + '当前分数：' + str(player[4]) + '\n' + \
                                            player[2] + '历史战绩：' + str(player[5]) + '\n\n';
                         self.itchat_instance.send(result, 'filehelper')
                         return '命令执行成功: %s' % msg['Content']  
-                    
+                    #错误图片
+                    elif contentSplit[0] == '错误图片':
+                        date = None
+                        club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
+
+                        if len(contentSplit) == 2:
+                            date = contentSplit[1]
+                        else:
+                            date = datetime.datetime.now().strftime('%Y-%m-%d')
+                        cursor=connection.cursor()
+                        sql = " select image from DServerAPP_wrongimage"
+                        sql+= " where club_name='" +self.club.user_name+ "' and from_unixtime(create_time,'%Y-%m-%d')='"+date+"'"
+                        print(sql)
+                        cursor.execute(sql)
+                        objs = cursor.fetchall()
+
+                        for obj in objs:
+                            img_file = club_path + obj[0]
+                            self.itchat_instance.send_image(img_file, 'filehelper')
+                        if len(objs) == 0:
+                            self.itchat_instance.send("无错误图片", 'filehelper')
+
                     elif len(contentSplit) == 1:
                         try :
                             theID = int(contentSplit[0])
@@ -366,8 +387,11 @@ class wechatInstance():
                 self.itchat_instance.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
                 self.itchat_instance.logout()
                 return
-
-            msg.download(msg.fileName)
+            club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
+            if not os.path.exists(club_path):
+                os.mkdir(club_path)
+            img_file = club_path + msg.fileName
+            msg.download(img_file)
             typeSymbol = {
                 PICTURE: 'img',
                 }.get(msg.type, 'fil')
@@ -375,7 +399,7 @@ class wechatInstance():
 
             
             # 网络图片文字文字识别接口
-            result = aipOcr.accurate(get_file_content(msg.fileName),options)
+            result = aipOcr.accurate(get_file_content(img_file),options)
 
             #从识别的文本中抓取最终结果
             resultDir = result['direction']#0:是正常方向，3是顺时针90度
@@ -477,6 +501,8 @@ class wechatInstance():
             addedPlayer = 0
             findHosterProgress = 0
             IDCharacterWidth = 30
+            wrong_img = False
+            startTime = None
             #开始抓取信息
             for num in range(0, len(managedData)):
                 if findTitle == False:
@@ -504,6 +530,7 @@ class wechatInstance():
                         playerScoreLeftPos = int(managedData[num][2].leftAnchor)
                     elif len(managedData[num]) == 2:
                         if playerIDLeftPos == 0:
+                            wrong_img = True
                             self.itchat_instance.send('图片识别错误', 'filehelper')
                             break
                 elif len(managedData[num]) == 2:
@@ -529,6 +556,7 @@ class wechatInstance():
                             continue
                         else:
                             print('length 2---leftAnchor:' + str(managedData[num][0].leftAnchor)+', playerIDLeftPos:' + str(playerIDLeftPos))
+                            wrong_img = True
                             self.itchat_instance.send('图片识别错误', 'filehelper')
                             break
                 elif len(managedData[num]) == 3:
@@ -550,6 +578,7 @@ class wechatInstance():
                             break
                     else:
                         print('length 3---leftAnchor:' + str(managedData[num][1].leftAnchor)+', playerIDLeftPos:' + str(playerIDLeftPos))
+                        wrong_img = True
                         self.itchat_instance.send('图片识别错误', 'filehelper')
                         break
                 elif len(managedData[num]) > 3:
@@ -580,9 +609,17 @@ class wechatInstance():
                             findHosterProgress = 1
                         else :
                             print('hoster wrong')
+                            wrong_img = True
                             self.itchat_instance.send('图片识别错误', 'filehelper')
                             break
                             
+            if wrong_img or room_data.startTime == '' or room_data.roomId == 0\
+                     or room_data.roomHosterId == 0 or self.roomHoster == ''\
+                     or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
+                print('wrong imgage' + str(room_data.roomId))
+                wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
+                wrong_image.save()
+                return
             #计算玩家分数正负号
             wholeScoreSum = wholeScoreSum / 2
             for num in range(0, len(room_data.playerData)) :
@@ -591,7 +628,7 @@ class wechatInstance():
                     wholeScoreSum = wholeScoreSum - room_data.playerData[num].score
                 else:
                     room_data.playerData[num].score = -room_data.playerData[num].score
-                
+            
             try:
                 HistoryGame.objects.get(room_id=room_data.roomId, start_time=startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
