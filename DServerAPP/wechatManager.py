@@ -390,6 +390,8 @@ class wechatInstance():
             if msg['ToUserName'] != 'filehelper':
                 return
 
+            self.itchat_instance.send('正在识别...', 'filehelper')
+
             club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
@@ -399,8 +401,6 @@ class wechatInstance():
                 PICTURE: 'img',
                 }.get(msg.type, 'fil')
 
-
-            
             # 网络图片文字文字识别接口
             result = aipOcr.accurate(get_file_content(img_file),options)
 
@@ -652,14 +652,30 @@ class wechatInstance():
                 player_data=json.dumps(playerData), create_time=timezone.now())
                 historyGame.save()
                 room_data.toString()
+                pic_msg = '房间ID：' + str(room_data.roomId) + '\n'
+                pic_msg+= '房主：' + str(room_data.roomHoster) + '\n'
+                pic_msg+= '房主ID：' + str(room_data.roomHosterId) + '\n'
+                pic_msg+= '局数：' + str(room_data.roundCounter) + '\n'
+                pic_msg+= '开始时间：' + str(room_data.startTime) + '\n'
+                pic_msg+= '-------------------------------------\n'
+                '''
                 self.itchat_instance.send('房间ID：' + str(room_data.roomId), 'filehelper')
                 self.itchat_instance.send('房主：' + str(room_data.roomHoster), 'filehelper')
                 self.itchat_instance.send('房主ID：' + str(room_data.roomHosterId), 'filehelper')
                 self.itchat_instance.send('局数：' + str(room_data.roundCounter), 'filehelper')
                 self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper') 
-
-                rules = self.club.cost_param.split('_')
+                '''
+                rules = []
+                if self.club.cost_param == None or self.club.cost_param == 'none':
+                    if self.club.cost_mode == 0:
+                        rules = '1000|20_500|10'
+                    elif self.club.cost_mode == 1:
+                        rules = '0.1_0.2'
+                else:
+                    rules = self.club.cost_param
+                rules = rules.split('_')
                 costMode = self.club.cost_mode
+
                 clubProfit = 0
                 
                 for num in range(0, len(room_data.playerData)):
@@ -693,8 +709,10 @@ class wechatInstance():
                                     player.save()
                                     costed = True
                                     clubProfit += cost
-                                    self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
-                                    '  抽水：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper')    
+                                    pic_msg+= '玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    '  抽水：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
+                                    #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    #'  抽水：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper')    
                                     self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  抽水：' + str(cost) ,player.wechat_nick_name)
                             elif costMode == 1:
                                 #百分比模式
@@ -708,8 +726,10 @@ class wechatInstance():
                                     player.save()
                                     costed = True
                                     clubProfit += cost
-                                    self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
-                                    '  抽水：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
+                                    pic_msg+= '玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    '  抽水：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
+                                    #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    #'  抽水：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
                                     self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  抽水：' + str(cost) ,player.wechat_nick_name)
 
 
@@ -719,8 +739,10 @@ class wechatInstance():
                             player.current_score = player.current_score + room_data.playerData[num].score 
                             player.history_profit = player.history_profit + room_data.playerData[num].score
                             player.save()
-                            self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
-                            '  总分数：' + str(player.current_score), 'filehelper')      
+                            pic_msg+= '玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
+                            '  总分数：' + str(player.current_score) + '\n'
+                            #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
+                            #'  总分数：' + str(player.current_score), 'filehelper')      
                             self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) ,player.wechat_nick_name)
                     except:
                         traceback.print_exc()
@@ -730,7 +752,9 @@ class wechatInstance():
           
             self.club.profit += clubProfit
             self.club.save()
-            self.itchat_instance.send('获得抽水：' + str(clubProfit), 'filehelper') 
+            pic_msg+= '-------------------------------------\n'
+            pic_msg+= '获得抽水：' + str(clubProfit)
+            self.itchat_instance.send(pic_msg, 'filehelper') 
             return '@%s@%s' % (typeSymbol, msg.fileName)
 
     @classmethod
