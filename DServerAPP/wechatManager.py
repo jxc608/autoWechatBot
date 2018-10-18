@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import itchat
 from itchat.content import *
-import time, json, os, datetime
+import time, json, os, datetime, traceback
 import threading
 from aip import AipOcr
 from .models import *
@@ -356,7 +356,6 @@ class wechatInstance():
                         cursor=connection.cursor()
                         sql = " select image from DServerAPP_wrongimage"
                         sql+= " where club_name='" +self.club.user_name+ "' and from_unixtime(create_time,'%Y-%m-%d')='"+date+"'"
-                        print(sql)
                         cursor.execute(sql)
                         objs = cursor.fetchall()
 
@@ -641,7 +640,7 @@ class wechatInstance():
             
             try:
                 print('roomId:'+str(room_data.roomId)+',startTime:'+str(startTime))
-                HistoryGame.objects.get(room_id=room_data.roomId, start_time=startTime)
+                HistoryGame.objects.get(club_id=self.club.uuid, room_id=room_data.roomId, start_time=startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
                 return ''
             except HistoryGame.DoesNotExist:
@@ -724,6 +723,7 @@ class wechatInstance():
                             '  总分数：' + str(player.current_score), 'filehelper')      
                             self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) ,player.wechat_nick_name)
                     except:
+                        traceback.print_exc()
                         self.itchat_instance.send('发生异常！', 'filehelper')
                         continue
 

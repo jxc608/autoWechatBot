@@ -16,5 +16,8 @@ urlpatterns = [
     path('get_cdkey', views.get_cdkey, name='get_cdkey'),
     path('get_uuid', views.get_uuid, name='get_uuid'),
     path('wx_logout', views.wx_logout, name='wx_logout'),
-
+    path('room_data', views.room_data, name='room_data'),
+    path('player_data', views.player_data, name='player_data'),
+    path('update_player', views.update_player, name='update_player'),
+    path('wrong_image', views.wrong_image, name='wrong_image'),
 ]

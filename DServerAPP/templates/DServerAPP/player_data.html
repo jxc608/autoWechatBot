@@ -1,0 +1,127 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        .top_panel {
+            margin-top: 100px;
+        }
+        .btn {
+            width: 100%;
+        }
+    </style>
+    <title>登录</title>
+    <script src="{% static "common.js" %}"></script>
+    <script src="{% static "qrcode.min.js" %}"></script>
+</head>
+<body>
+    <div class="container-fluid" style="margin:0px;padding:0px">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title text-center">用户数据</h3>
+                    </div>
+                  <div class="panel-body" style="padding:0px;margin:0px">
+                    <ul class="list-group">
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <b>总计</b>
+                        </li>
+                        <li class="list-group-item">
+                             <b>玩家数:</b>{{total}}
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5"><b>查询</b></li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="nickname">微信昵称:</label>
+                                <input type="email" class="form-control" id="nickname" placeholder="请输入微信昵称" value="{{nickname}}">
+                              </div>
+                              <div class="form-group">
+                                <label for="gameid">gameid:</label>
+                                <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="search()">查询</button>
+                              </div>
+                            </form>
+                        </li>
+                        <li class="list-group-item">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>微信昵称</th>
+                                    <th>gameid</th>
+                                    <th>总分数</th>
+                                    <th>操作</th>
+                                    <th>历史总盈亏</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player in players %}
+                                    <tr>
+                                        <td>
+                                            <input type="email" class="form-control" id="nickname_{{player.id}}" value="{{player.wechat_nick_name}}">
+                                        </td>
+                                        <td>{{player.gameid}}</td>
+                                        <td>
+                                            <input type="email" class="form-control" id="score_{{player.id}}" value="{{player.current_score}}">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-default" onclick="update({{player.id}})">修改</button>
+                                        </td>
+                                        <td>
+                                            {{player.history_profit}}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </li>
+                    </ul>
+                  </div>
+                  <div class="panel-footer text-right">
+                    <a class="btn btn-link" href="/">返回</a>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function search(){
+            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+        }
+
+        function update(player_id){
+            if($('#nickname_'+player_id).val()==''){
+                alert("请输入微信昵称。");
+                return;
+            }
+            if($('#score_'+player_id).val()==''){
+                alert("请输入当前分数。");
+                return;
+            }
+            /*if($('#profit_'+player_id).val()==''){
+                alert("请输入盈利状况。");
+                return;
+            }*/
+            $.post("/update_player",{
+                id:player_id,
+                nickname:$('#nickname_'+player_id).val(),
+                score:$('#score_'+player_id).val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0)
+                    alert('修改成功！')
+            },"json");
+        }
+    </script>
+</body>
+</html>

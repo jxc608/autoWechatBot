@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import Clubs, Cdkey
+from .models import *
 import uuid
 from django.utils import timezone
 from . import messageType
@@ -9,6 +9,8 @@ import itchat
 import _thread
 from . import wechatManager
 import time,datetime,json
+from django.db import connection
+from django.conf import settings
 
 def timestamp2string(timeStamp): 
   try: 
@@ -183,26 +185,79 @@ def get_cdkey(request):
         result.append(key.cdkey)
     return HttpResponse(json.dumps({'result': result}), content_type="application/json")
 
-def bind_wechat(request):
-    club = request.GET.get('club','')
+def room_data(request):
+    return render(request, 'DServerAPP/room_data.html')
 
-    bot = wechatManager.wechatInstance.new_instance(club)
-    logined, qrid = bot.check_login()
-    print(qrid)
-    return HttpResponseRedirect('https://wx.qq.com/qrcode/'+qrid)
-    #return render(request, 'DServerAPP/index.html', {"pwd": 1, "pwct": "两次密码不一致"})
+def player_data(request):
+    nickname_search = request.GET.get('nickname','')
+    gameid_search = request.GET.get('gameid', '')
+    club = Clubs.objects.get(user_name=request.session['club'])
 
-    #return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, qrid))
+    cursor=connection.cursor()
+    sql = " select player.*,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql+= " on player.id=gameid.player_id"
+    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
+    if nickname_search:
+        sql+= " and wechat_nick_name like '%"+nickname_search+"%'"
+    if gameid_search:
+        sql+= " and gameid='"+gameid_search+"'"
+    print(sql)
+    cursor.execute(sql)
+    players = cursor.fetchall()
+    list_ = []
+    for player in players:
+        gameid = player[8]
+        if gameid == None:
+            gameid = '-'
+        data = {
+            "id":player[0],
+            "wechat_nick_name":player[2],
+            "current_score":player[4],
+            "history_profit":player[5],
+            "gameid":gameid
+        }
+        list_.append(data)
+    total = len(list_)
+    return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
-    '''
-     thread = wechatManager.wechatInstance(club)
-     thread.start()
-     try:
-        clubInstance = Clubs.objects.get(user_name=club)
-        if clubInstance.expired_time > time.time():
-             return HttpResponse('club='+club)
-        else:
-             return HttpResponse(messageType.createMessage('success', messageType.CLUB_EXPIRED, '用户需要付费'))
-     except Clubs.DoesNotExist:
-        return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
-    '''
+
+def update_player(request):
+    player_id = int(request.POST.get('id'))
+    nickname = request.POST.get('nickname')
+    score = int(request.POST.get('score'))
+    #profit = int(request.POST.get('profit'))
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+    player = Player.objects.get(id=player_id)
+    if player.club_id != club.uuid:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+    player.wechat_nick_name = nickname
+    player.current_score = score
+    #player.history_profit = profit
+    player.save()
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def wrong_image(request):
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    cursor=connection.cursor()
+    sql = " select id, image, create_time from DServerAPP_wrongimage"
+    sql+= " where club_name='" +club.user_name + "'"
+    cursor.execute(sql)
+    objs = cursor.fetchall()
+
+    list_ = []
+    for obj in objs:
+        timeArray = time.localtime(obj[2])
+        create_time = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+        club_path = settings.STATIC_URL + 'upload/' + club.user_name + '/'
+
+        data = {
+            "id":obj[0],
+            "image":club_path + obj[1],
+            "create_time":create_time,
+        }
+        list_.append(data)
+    total = len(list_)
+    return render(request, 'DServerAPP/wrong_image.html', {'club':club, 'list':list_})
+
