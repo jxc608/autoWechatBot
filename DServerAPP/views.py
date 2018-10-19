@@ -2,6 +2,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import *
+import re
 import uuid
 from django.utils import timezone
 from . import messageType
@@ -198,28 +199,52 @@ def player_data(request):
     sql+= " on player.id=gameid.player_id"
     sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
-        sql+= " and wechat_nick_name like '%"+nickname_search+"%'"
+        sql+= " and nick_name like '%"+nickname_search+"%'"
     if gameid_search:
         sql+= " and gameid='"+gameid_search+"'"
-    print(sql)
+    sql+= " order by current_score desc, history_profit desc"
     cursor.execute(sql)
     players = cursor.fetchall()
     list_ = []
     for player in players:
-        gameid = player[8]
+        gameid = player[9]
         if gameid == None:
             gameid = '-'
         data = {
             "id":player[0],
             "wechat_nick_name":player[2],
-            "current_score":player[4],
-            "history_profit":player[5],
+            "nick_name":player[3],
+            "current_score":player[5],
+            "history_profit":player[6],
             "gameid":gameid
         }
         list_.append(data)
     total = len(list_)
     return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
+def add_player(request):
+    nickname = request.POST.get('nickname')
+    gameid = int(request.POST.get('gameid'))
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    player = None
+    try:
+        player = Player.objects.get(nick_name=nickname, club=club)
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+    except Player.DoesNotExist:
+        pass
+
+    gameID = GameID.objects.filter(gameid=gameid)
+    if len(gameID) > 0:
+        return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+
+    player = Player(wechat_nick_name='tempUser', nick_name=nickname, club=club, current_score=0, history_profit=0)
+    player.save()
+    gameid = GameID(player=player, gameid=gameid, game_nick_name=nickname)
+    gameid.save()
+
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def update_player(request):
     player_id = int(request.POST.get('id'))
@@ -231,7 +256,7 @@ def update_player(request):
     player = Player.objects.get(id=player_id)
     if player.club_id != club.uuid:
         return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-    player.wechat_nick_name = nickname
+    player.nick_name = nickname
     player.current_score = score
     #player.history_profit = profit
     player.save()
@@ -260,4 +285,83 @@ def wrong_image(request):
         list_.append(data)
     total = len(list_)
     return render(request, 'DServerAPP/wrong_image.html', {'club':club, 'list':list_})
+
+def delete_wrongimage(request):
+    wrong_id = request.POST.get('id')
+    del_all = request.POST.get('all', 0)
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    cursor=connection.cursor()
+    sql = " delete from DServerAPP_wrongimage"
+    sql+= " where club_name='" +club.user_name + "'"
+    if wrong_id:
+        sql+= " and id=" + wrong_id
+    cursor.execute(sql)
+
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def setting(request):
+    club = Clubs.objects.get(user_name=request.session['club'])
+    return render(request, 'DServerAPP/setting.html', {'club':club})
+
+def is_number(num):
+
+    regex = re.compile(r"^(-?\d+)(\.\d*)?$")
+
+    if re.match(regex,num):
+        return True
+    else:
+        return False
+
+def update_cost_mode(request):
+    mode = int(request.POST.get('mode'))
+    param = request.POST.get('param')
+
+    #if param.find('_') == -1:
+    #    return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+
+    list_ = param.split('_')
+    if mode == 0:
+        for x in list_:
+            if x.find('|') == -1:
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+            xx = x.split('|')
+            if len(xx) != 2:
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+            for x_ in xx:
+                if not x_.isdigit():
+                    return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+    elif mode == 1:
+        for x in list_:
+            if not is_number(x):
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+            if float(x) > 1:
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+    club.cost_mode = mode
+    club.cost_param = param
+    club.save()
+
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def del_data(request):
+    club = Clubs.objects.get(user_name=request.session['club'])
+    cursor=connection.cursor()
+    sql = " delete from DServerAPP_historygame"
+    sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
+    print(sql)
+    cursor.execute(sql)
+    sql = " update DServerAPP_player"
+    sql+= " set current_score=0,history_profit=0,today_hoster_number=0"
+    sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
+    cursor.execute(sql)
+    sql = " delete from DServerAPP_score"
+    sql+= " where player_id in ("
+    sql+= " select id from DServerAPP_player where club_id='" +str(club.uuid).replace('-','') + "'"
+    sql+= ")"
+    print(sql)
+    cursor.execute(sql)
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
 

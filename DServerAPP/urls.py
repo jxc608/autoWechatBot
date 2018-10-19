@@ -18,6 +18,10 @@ urlpatterns = [
     path('wx_logout', views.wx_logout, name='wx_logout'),
     path('room_data', views.room_data, name='room_data'),
     path('player_data', views.player_data, name='player_data'),
+    path('add_player', views.add_player, name='add_player'),
     path('update_player', views.update_player, name='update_player'),
     path('wrong_image', views.wrong_image, name='wrong_image'),
+    path('setting', views.setting, name='setting'),
+    path('update_cost_mode', views.update_cost_mode, name='update_cost_mode'),
+    path('del_data', views.del_data, name='del_data'),
 ]

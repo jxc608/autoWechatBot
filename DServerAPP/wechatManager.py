@@ -364,7 +364,8 @@ class wechatInstance():
                             self.itchat_instance.send_image(img_file, 'filehelper')
                         if len(objs) == 0:
                             self.itchat_instance.send("无错误图片", 'filehelper')
-
+                    elif contentSplit[0] == '好友':
+                        print(self.itchat_instance.memberList)
                     elif len(contentSplit) == 1:
                         try :
                             theID = int(contentSplit[0])
@@ -689,7 +690,7 @@ class wechatInstance():
                         player = gameid.player  
                     except GameID.DoesNotExist:
                         self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：tempUser', 'filehelper')
-                        player = Player(wechat_nick_name='tempUser', club=self.club, current_score=0, history_profit=0)
+                        player = Player(wechat_nick_name='tempUser', nick_name=room_data.playerData[num].name, club=self.club, current_score=0, history_profit=0)
                         player.save()
                         gameid = GameID(player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
                         gameid.save()

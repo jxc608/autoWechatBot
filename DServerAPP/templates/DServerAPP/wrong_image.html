@@ -32,12 +32,16 @@
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item">
+                            <button type="button" class="btn btn-default" onclick="delete_all()">一键删除</button>
+                        </li>
+                        <li class="list-group-item">
+
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
                                     <th>日期</th>
                                     <th>图片</th>
-                                    <!--<th>操作</th>-->
+                                    <th>操作</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -49,9 +53,9 @@
                                         <td>
                                             <img src="{{data.image}}" style="width:100px;height:auto"/>
                                         </td>
-                                        <!--<td>
-                                            <button type="button" class="btn btn-default" onclick="update({{player.id}})">删除</button>
-                                        </td>-->
+                                        <td>
+                                            <button type="button" class="btn btn-default" onclick="delete1({{data.id}})">删除</button>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -71,27 +75,27 @@
             window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
-        function update(player_id){
-            if($('#nickname_'+player_id).val()==''){
-                alert("请输入微信昵称。");
-                return;
-            }
-            if($('#score_'+player_id).val()==''){
-                alert("请输入当前分数。");
-                return;
-            }
-            if($('#profit_'+player_id).val()==''){
-                alert("请输入盈利状况。");
-                return;
-            }
-            $.post("/update_player",{
-                id:player_id,
-                nickname:$('#nickname_'+player_id).val(),
-                score:$('#score_'+player_id).val(),
-                profit:$('#profit_'+player_id).val(),
+        function delete1(id){
+            $.post("/delete_wrongimage",{
+                id:id,
             },function(data){
-                if(data.result == 0)
-                    alert('修改成功！')
+                if(data.result == 0){
+                    alert('删除成功！');
+                    window.location.reload();
+                }
+            },"json");
+        }
+
+        function delete_all(id){
+            if(confirm("确定要删除吗？") == false)
+                return;
+            $.post("/delete_wrongimage",{
+                all:1,
+            },function(data){
+                if(data.result == 0){
+                    alert('删除成功！');
+                    window.location.reload();
+                }
             },"json");
         }
     </script>
