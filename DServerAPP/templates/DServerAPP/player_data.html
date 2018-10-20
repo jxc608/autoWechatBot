@@ -54,6 +54,9 @@
                               <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="search()">查询</button>
                               </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
+                              </div>
                             </form>
                         </li>
                         <li class="list-group-item">
@@ -149,6 +152,10 @@
                 if(data.result == 0)
                     alert('修改成功！')
             },"json");
+        }
+
+        function refresh(){
+            window.location.reload();
         }
     </script>
 </body>

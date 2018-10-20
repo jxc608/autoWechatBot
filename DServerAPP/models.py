@@ -29,6 +29,7 @@ class Player(models.Model):
     nick_name = models.CharField(max_length=200)
     current_score = models.IntegerField(default=0)
     history_profit = models.IntegerField(default=0)
+    history_cost = models.IntegerField(default=0)
     introducer = models.CharField(max_length=200, default='none')
     today_hoster_number = models.IntegerField(default=0)
 

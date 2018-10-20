@@ -365,7 +365,8 @@ class wechatInstance():
                         if len(objs) == 0:
                             self.itchat_instance.send("无错误图片", 'filehelper')
                     elif contentSplit[0] == '好友':
-                        print(self.itchat_instance.memberList)
+                        print(self.itchat_instance.get_friends(update=True))
+                        print(itchat.search_friends(name='珈蓝夜宇'))
                     elif len(contentSplit) == 1:
                         try :
                             theID = int(contentSplit[0])
