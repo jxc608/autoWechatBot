@@ -58,10 +58,28 @@ def getSortedDict(dict):
     return [dict[key] for key in keys] 
 
 def getRoomIDAndHoster(rowData, index):
+    print('walawala')
     roomId = 0
     hoster = ''
     flag1 = rowData[index].words.find(':')
-    roomId = int(rowData[index].words[flag1 + 1:])
+    rawId = rowData[index].words[flag1 + 1:].strip().replace(' ','')
+
+    if rawId.isdigit():
+        roomId = int(rawId)
+    else:
+        numberList = []
+        for char in rawId:
+            if char.isdigit():
+                numberList.append(int(char))
+                print(char)
+            else:
+                print('fuck:' + char)
+        
+        length = len(numberList)
+        roomId = 0
+        for num in range(0, len(numberList)):
+            roomId += numberList[num] * pow(10, length - num - 1)
+    print('the roomId is:' + str(roomId))
     flag2 = rowData[index + 1].words.find(':')
     hoster = rowData[index + 1].words[flag2 + 1:]
     return roomId, hoster
@@ -519,6 +537,7 @@ class wechatInstance():
                                 roomId, roomHoster = getRoomIDAndHoster(managedData[num], quadIndex)
                                 room_data.roomId = roomId
                                 room_data.roomHoster = roomHoster
+                                break
                             else:
                                 continue
 
