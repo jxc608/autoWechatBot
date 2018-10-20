@@ -41,6 +41,8 @@ class GameID(models.Model):
 class Score(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     score = models.IntegerField(default=0)
+    cost = models.IntegerField(default=0)
+    is_host = models.IntegerField(default=0)
     create_time = models.DateTimeField('create time')
     room_id = models.CharField(max_length=20)
 
@@ -53,6 +55,9 @@ class HistoryGame(models.Model):
     start_time = models.CharField(max_length=20)
     player_data = models.CharField(max_length=1000,default='none')#playerResult.playerData的数组
     create_time = models.DateTimeField('create time')
+    cost = models.IntegerField(default=0)
+    score = models.IntegerField(default=0)
+
 
 class Cdkey(models.Model):
     cdkey = models.CharField(primary_key=True, max_length=50)

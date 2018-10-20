@@ -17,7 +17,7 @@
             width: 100%;
         }
     </style>
-    <title>错误图片</title>
+    <title>用户统计</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
@@ -27,34 +27,57 @@
             <div class="col-xs-12">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
-                        <h3 class="panel-title text-center">错误图片</h3>
+                        <h3 class="panel-title text-center">用户统计</h3>
                     </div>
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
-                        <li class="list-group-item">
-                            <button type="button" class="btn btn-default" onclick="delete_all()">一键删除</button>
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <b>总计</b>
                         </li>
                         <li class="list-group-item">
-
+                             <b>玩家数:</b>{{total}}
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5"><b>添加/查询</b></li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="nickname">昵称:</label>
+                                <input type="email" class="form-control" id="nickname" placeholder="请输入微信昵称" value="{{nickname}}">
+                              </div>
+                              <div class="form-group">
+                                <label for="gameid">gameid:</label>
+                                <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="search()">查询</button>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
+                              </div>
+                            </form>
+                        </li>
+                        <li class="list-group-item">
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
-                                    <th>日期</th>
-                                    <th>图片</th>
-                                    <th>操作</th>
+                                    <th>昵称</th>
+                                    <th>id</th>
+                                    <th>历史总抽水</th>
+                                    <th>历史总盈亏</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    {% for data in list %}
+                                    {% for player in players %}
                                     <tr>
                                         <td>
-                                            {{data.create_time}}
+                                            <input type="email" class="form-control" id="nickname_{{player.id}}" value="{{player.nick_name}}">
+                                        </td>
+                                        <td>{{player.gameid}}</td>
+                                        <td>
+                                            {{player.history_profit}}
                                         </td>
                                         <td>
-                                            <img src="{{data.image}}" style="width:100px;height:auto"/>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-default" onclick="delete1({{data.id}})">删除</button>
+                                            {{player.history_profit}}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -72,31 +95,11 @@
     </div>
     <script>
         function search(){
-            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            window.location.href = "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
-        function delete1(id){
-            $.post("/delete_wrongimage",{
-                id:id,
-            },function(data){
-                if(data.result == 0){
-                    alert('删除成功！');
-                    window.location.reload();
-                }
-            },"json");
-        }
-
-        function delete_all(id){
-            if(confirm("确定要删除吗？") == false)
-                return;
-            $.post("/delete_wrongimage",{
-                all:1,
-            },function(data){
-                if(data.result == 0){
-                    alert('删除成功！');
-                    window.location.reload();
-                }
-            },"json");
+        function refresh(){
+            window.location.reload();
         }
     </script>
 </body>

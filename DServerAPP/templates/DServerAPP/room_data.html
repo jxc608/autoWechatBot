@@ -17,7 +17,7 @@
             width: 100%;
         }
     </style>
-    <title>登录</title>
+    <title>今日对局</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
@@ -27,7 +27,7 @@
             <div class="col-xs-12">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
-                        <h3 class="panel-title text-center">欢迎，xx{{ club.user_name }}</h3>
+                        <h3 class="panel-title text-center">今日对局</h3>
                     </div>
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
@@ -35,41 +35,35 @@
                             <b>总计</b>
                         </li>
                         <li class="list-group-item">
-                             <b>房间数:</b>11&nbsp;&nbsp;<b>局数:</b>1111
-                        </li>
-                        <li class="list-group-item" style="background-color:#f5f5f5"><b>查询</b></li>
-                        <li class="list-group-item">
-                            <form class="form-inline">
-                              <div class="form-group">
-                                <label for="num">房间ID:</label>
-                                <input type="email" class="form-control" id="room_id" placeholder="请输入房间ID">
-                              </div>
-                              <div class="form-group">
-                                <label for="num">局数:</label>
-                                <input type="email" class="form-control" id="room_id" placeholder="请输入局号">
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="add_time()">查询</button>
-                              </div>
-                            </form>
+                             <b>今日抽水:</b>{{total_cost}}&nbsp;&nbsp;<b>今日盈亏:</b>{{total_score}}
                         </li>
                         <li class="list-group-item">
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
-                                    <th>房间信息</th>
-                                    <th>玩家</th>
-                                    <th>积分</th>
+                                    <th>房间ID</th>
+                                    <th>房主ID</th>
+                                    <th>房主昵称</th>
+                                    <th>对局时间</th>
+                                    <th>对局数</th>
+                                    <th>得分</th>
+                                    <th>抽水</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    <td>
-                                        12121<br/>
-                                        风之子<br/>
-                                        10-12 23:25
-                                    </td>
-                                    <td>稳稳幸福</td>
-                                    <td>100</td>
+                                    {% for room in rooms %}
+                                        <tr>
+                                        <td>
+                                            {{room.room_id}}
+                                        </td>
+                                        <td>{{room.hoster_id}}</td>
+                                        <td>{{room.hoster_name}}</td>
+                                        <td>{{room.start_time}}</td>
+                                        <td>{{room.round_number}}</td>
+                                        <td>{{room.score}}</td>
+                                        <td>{{room.cost}}</td>
+                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </li>
@@ -83,52 +77,7 @@
         </div>
     </div>
     <script>
-        //注销
-        function wx_logout(){
-            $.post("/wx_logout",{},function(data){
-               window.location.reload()
-            },"json");
-        }
-        function create_cdkey(){
-            if($('#num').val()==''){
-                alert("请输入数量。");
-                return;
-            }
-            $.post("/create_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
-                if(data.result == true){
-                     alert("生成成功！");
-                }
-            },"json");
-        }
 
-        function get_cdkey(){
-            if($('#num').val()==''){
-                alert("请输入数量。");
-                return;
-            }
-            $.post("/get_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
-                var keys = '';
-                for(var i=0;i<data.result.length;i++)
-                    keys += data.result[i]+'<br/>';
-                $('#keys').html(keys);
-            },"json");
-        }
-
-        function add_time(){
-            if($('#cdkey').val()==''){
-                alert("请输入CD KEY。");
-                return;
-            }
-            $.post("/add_time",{cdkey:$('#cdkey').val()},function(data){
-                if(data.messageCode == 10005){
-                     alert("CD KEY 已使用！");
-                }else if(data.messageCode == 10004){
-                     alert("CD KEY 不存在！");
-                }else if(data.messageCode == 0){
-                    window.location.reload();
-                }
-            },"json");
-        }
     </script>
 </body>
 </html>

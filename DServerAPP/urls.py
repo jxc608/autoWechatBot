@@ -24,4 +24,7 @@ urlpatterns = [
     path('setting', views.setting, name='setting'),
     path('update_cost_mode', views.update_cost_mode, name='update_cost_mode'),
     path('del_data', views.del_data, name='del_data'),
+    path('player_stat', views.player_stat, name='player_stat'),
+    path('player_room_data', views.player_room_data, name='player_room_data'),
+
 ]

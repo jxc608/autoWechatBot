@@ -17,10 +17,10 @@
     		width: 100%;
     	}
         .container-fluid{
-            
+
         }
     </style>
-    <title>登录</title>
+    <title>首页</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
@@ -35,7 +35,7 @@
 				  <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item" style="background-color:#f5f5f5;text-align:center">
-                            <a href="/setting" class="button">设置</a>&nbsp;|&nbsp;<a href="/player_data" class="button">用户数据</a>&nbsp;|&nbsp;<a href="/wrong_image" class="button">错误图片</a>
+                            <a href="/setting" class="button">设置</a>&nbsp;|&nbsp;<a href="/player_data" class="button">用户数据</a>&nbsp;|&nbsp;<a href="/player_stat" class="button">用户统计</a>&nbsp;|&nbsp;<a href="/room_data" class="button">今日对局</a>&nbsp;|&nbsp;<a href="/player_room_data" class="button">今日用户对局</a>&nbsp;|&nbsp;<a href="/wrong_image" class="button">错误图片</a>
                         </li>
                         {% if is_admin == True %}
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>生成CD KEY</b></li>

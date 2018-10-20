@@ -17,7 +17,7 @@
             width: 100%;
         }
     </style>
-    <title>登录</title>
+    <title>用户数据</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
@@ -67,7 +67,7 @@
                                     <th>id</th>
                                     <th>总分数</th>
                                     <th>操作</th>
-                                    <th>历史总盈亏</th>
+                                   <!-- <th>历史总盈亏</th>-->
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -83,9 +83,9 @@
                                         <td>
                                             <button type="button" class="btn btn-default" onclick="update({{player.id}})">修改</button>
                                         </td>
-                                        <td>
+                                       <!-- <td>
                                             {{player.history_profit}}
-                                        </td>
+                                        </td>-->
                                     </tr>
                                     {% endfor %}
                                 </tbody>

@@ -685,7 +685,9 @@ class wechatInstance():
                     gameid = None
                     player = None
                     playserScore = room_data.playerData[num].score 
-
+                    is_host = 0
+                    if room_data.playerData[num].name == room_data.roomHoster:
+                        is_host = 1
                     try:
                         gameid = GameID.objects.get(gameid=room_data.playerData[num].id)
                         player = gameid.player  
@@ -695,7 +697,7 @@ class wechatInstance():
                         player.save()
                         gameid = GameID(player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
                         gameid.save()
-                    
+                    player.today_hoster_number += 1
                     try:
                         if num < len(rules):
                             if costMode == 0:
@@ -704,11 +706,14 @@ class wechatInstance():
                                 valve = int(params[0])
                                 cost = int(params[1])
                                 if playserScore > valve:
-                                    score = Score(player=player, score=playserScore - cost, create_time=timezone.now(), room_id=room_data.roomId)
+                                    score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                                     score.save()
                                     player.current_score = player.current_score + room_data.playerData[num].score - cost 
-                                    player.history_profit = player.history_profit + room_data.playerData[num].score
+                                    player.history_profit = player.history_profit + room_data.playerData[num].score - cost
+                                    player.history_cost += cost
                                     player.save()
+                                    historyGame.cost += cost
+                                    historyGame.score += room_data.playerData[num].score - cost
                                     costed = True
                                     clubProfit += cost
                                     pic_msg+= '玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
@@ -721,11 +726,14 @@ class wechatInstance():
                                 if playserScore >= 100:
                                     param = float(rules[num])
                                     cost = int(playserScore * param)
-                                    score = Score(player=player, score=playserScore - cost, create_time=timezone.now(), room_id=room_data.roomId)
+                                    score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                                     score.save()
                                     player.current_score = player.current_score + room_data.playerData[num].score - cost 
-                                    player.history_profit = player.history_profit + room_data.playerData[num].score
+                                    player.history_profit = player.history_profit + room_data.playerData[num].score - cost
+                                    player.history_cost += cost
                                     player.save()
+                                    historyGame.cost += cost
+                                    historyGame.score += room_data.playerData[num].score - cost
                                     costed = True
                                     clubProfit += cost
                                     pic_msg+= '玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
@@ -736,7 +744,7 @@ class wechatInstance():
 
 
                         if costed == False:
-                            score = Score(player=player, score=playserScore, create_time=timezone.now(), room_id=room_data.roomId)
+                            score = Score(player=player, score=playserScore, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                             score.save()
                             player.current_score = player.current_score + room_data.playerData[num].score 
                             player.history_profit = player.history_profit + room_data.playerData[num].score
@@ -750,7 +758,7 @@ class wechatInstance():
                         traceback.print_exc()
                         self.itchat_instance.send('发生异常！', 'filehelper')
                         continue
-
+                historyGame.save()        
           
             self.club.profit += clubProfit
             self.club.save()

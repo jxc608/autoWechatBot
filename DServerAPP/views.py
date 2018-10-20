@@ -12,6 +12,7 @@ from . import wechatManager
 import time,datetime,json
 from django.db import connection
 from django.conf import settings
+from django.db.models import Sum
 
 def timestamp2string(timeStamp): 
   try: 
@@ -187,8 +188,50 @@ def get_cdkey(request):
     return HttpResponse(json.dumps({'result': result}), content_type="application/json")
 
 def room_data(request):
-    return render(request, 'DServerAPP/room_data.html')
+    day = datetime.datetime.now().strftime('%Y-%m-%d')
+    club = Clubs.objects.get(user_name=request.session['club'])
+    rooms = HistoryGame.objects.filter(club=club, create_time__startswith=day)
+    total_cost = 0
+    total_score = 0
+    for room in rooms:
+        total_cost += room.cost
+        total_score += room.score
+    return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total_cost':total_cost, 'total_score':total_score})
 
+def player_room_data(request):
+    club = Clubs.objects.get(user_name=request.session['club'])
+    day = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    cursor=connection.cursor()
+    sql = " select player.id, player.nick_name,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql+= " on player.id=gameid.player_id"
+    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
+    cursor.execute(sql)
+    players = cursor.fetchall()
+    list_ = []
+    for player in players:
+        data = {
+            "id":player[0],
+            "nick_name":player[1],
+            "gameid":player[2],
+            "total_round":0,
+            "total_host":0,
+            "total_cost":0,
+            "total_score":0
+        }
+        data['total_round'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).count()
+        data['total_cost'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).aggregate(Sum('cost'))['cost__sum']
+        if data['total_cost'] == None:
+            data['total_cost'] = 0
+        data['total_score'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).aggregate(Sum('score'))['score__sum']
+        if data['total_score'] == None:
+            data['total_score'] = 0    
+        data['total_host'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
+        if data['total_host'] == None:
+            data['total_host'] = 0    
+        list_.append(data)
+    return render(request, 'DServerAPP/player_room_data.html', {'players':list_})
+    
 def player_data(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
@@ -221,6 +264,40 @@ def player_data(request):
         list_.append(data)
     total = len(list_)
     return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+
+
+def player_stat(request):
+    nickname_search = request.GET.get('nickname','')
+    gameid_search = request.GET.get('gameid', '')
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    cursor=connection.cursor()
+    sql = " select player.*,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql+= " on player.id=gameid.player_id"
+    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
+    if nickname_search:
+        sql+= " and nick_name like '%"+nickname_search+"%'"
+    if gameid_search:
+        sql+= " and gameid='"+gameid_search+"'"
+    sql+= " order by current_score desc, history_profit desc"
+    cursor.execute(sql)
+    players = cursor.fetchall()
+    list_ = []
+    for player in players:
+        gameid = player[9]
+        if gameid == None:
+            gameid = '-'
+        data = {
+            "id":player[0],
+            "wechat_nick_name":player[2],
+            "nick_name":player[3],
+            "current_score":player[5],
+            "history_profit":player[6],
+            "gameid":gameid
+        }
+        list_.append(data)
+    total = len(list_)
+    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def add_player(request):
     nickname = request.POST.get('nickname')
