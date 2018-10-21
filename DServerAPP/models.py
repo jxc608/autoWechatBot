@@ -25,6 +25,7 @@ class Clubs(models.Model):
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
     wechat_id = models.CharField(max_length=200)
+    wechat_uuid = models.CharField(max_length=200)
     wechat_nick_name = models.CharField(max_length=200)
     nick_name = models.CharField(max_length=200)
     current_score = models.IntegerField(default=0)

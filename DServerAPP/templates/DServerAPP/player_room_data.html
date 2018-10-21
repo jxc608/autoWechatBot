@@ -9,6 +9,12 @@
     <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
     <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/moment.js/2.18.1/moment-with-locales.min.js"></script>  
+    <link href="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet">  
+    <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>  
+
+
     <style>
         .top_panel {
             margin-top: 100px;
@@ -37,6 +43,17 @@
                         <li class="list-group-item">
                              <b>今日抽水:</b>{{total_cost}}&nbsp;&nbsp;<b>今日盈亏:</b>{{total_profit}}
                         </li>-->
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="datetime">日期</label>
+                                <input type='text' class="form-control" id='datetime' value="{{day}}"/>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="search()">查询</button>
+                              </div>
+                            </form>
+                        </li>
                         <li class="list-group-item">
                             <table class="table table-hover">
                                 <thead>
@@ -77,51 +94,15 @@
         </div>
     </div>
     <script>
-        //注销
-        function wx_logout(){
-            $.post("/wx_logout",{},function(data){
-               window.location.reload()
-            },"json");
-        }
-        function create_cdkey(){
-            if($('#num').val()==''){
-                alert("请输入数量。");
-                return;
-            }
-            $.post("/create_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
-                if(data.result == true){
-                     alert("生成成功！");
-                }
-            },"json");
-        }
+        $(function () {
+            $("#datetime").datetimepicker({
+                format: 'YYYY-MM-DD',
+                locale: moment.locale('zh-cn')
+            });
+        });
 
-        function get_cdkey(){
-            if($('#num').val()==''){
-                alert("请输入数量。");
-                return;
-            }
-            $.post("/get_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
-                var keys = '';
-                for(var i=0;i<data.result.length;i++)
-                    keys += data.result[i]+'<br/>';
-                $('#keys').html(keys);
-            },"json");
-        }
-
-        function add_time(){
-            if($('#cdkey').val()==''){
-                alert("请输入CD KEY。");
-                return;
-            }
-            $.post("/add_time",{cdkey:$('#cdkey').val()},function(data){
-                if(data.messageCode == 10005){
-                     alert("CD KEY 已使用！");
-                }else if(data.messageCode == 10004){
-                     alert("CD KEY 不存在！");
-                }else if(data.messageCode == 0){
-                    window.location.reload();
-                }
-            },"json");
+        function search() {
+            window.location.href = "/player_room_data?date="+$('#datetime').val();
         }
     </script>
 </body>

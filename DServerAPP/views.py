@@ -189,6 +189,8 @@ def get_cdkey(request):
 
 def room_data(request):
     day = datetime.datetime.now().strftime('%Y-%m-%d')
+    if request.GET.get('date'):
+        day = request.GET.get('date')
     club = Clubs.objects.get(user_name=request.session['club'])
     rooms = HistoryGame.objects.filter(club=club, create_time__startswith=day)
     total_cost = 0
@@ -196,12 +198,13 @@ def room_data(request):
     for room in rooms:
         total_cost += room.cost
         total_score += room.score
-    return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total_cost':total_cost, 'total_score':total_score})
+    return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total_cost':total_cost, 'total_score':total_score, 'day':day})
 
 def player_room_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     day = datetime.datetime.now().strftime('%Y-%m-%d')
-
+    if request.GET.get('date'):
+        day = request.GET.get('date')
     cursor=connection.cursor()
     sql = " select player.id, player.nick_name,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
     sql+= " on player.id=gameid.player_id"
@@ -230,7 +233,7 @@ def player_room_data(request):
         if data['total_host'] == None:
             data['total_host'] = 0    
         list_.append(data)
-    return render(request, 'DServerAPP/player_room_data.html', {'players':list_})
+    return render(request, 'DServerAPP/player_room_data.html', {'players':list_,'day':day})
     
 def player_data(request):
     nickname_search = request.GET.get('nickname','')
@@ -238,7 +241,7 @@ def player_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
     cursor=connection.cursor()
-    sql = " select player.*,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
     sql+= " on player.id=gameid.player_id"
     sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
@@ -250,15 +253,15 @@ def player_data(request):
     players = cursor.fetchall()
     list_ = []
     for player in players:
-        gameid = player[9]
+        gameid = player[5]
         if gameid == None:
             gameid = '-'
         data = {
             "id":player[0],
-            "wechat_nick_name":player[2],
-            "nick_name":player[3],
-            "current_score":player[5],
-            "history_profit":player[6],
+            "wechat_nick_name":player[1],
+            "nick_name":player[2],
+            "current_score":player[3],
+            "history_profit":player[4],
             "gameid":gameid
         }
         list_.append(data)
@@ -272,7 +275,7 @@ def player_stat(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
     cursor=connection.cursor()
-    sql = " select player.*,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
     sql+= " on player.id=gameid.player_id"
     sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
@@ -284,15 +287,15 @@ def player_stat(request):
     players = cursor.fetchall()
     list_ = []
     for player in players:
-        gameid = player[9]
+        gameid = player[5]
         if gameid == None:
             gameid = '-'
         data = {
             "id":player[0],
-            "wechat_nick_name":player[2],
-            "nick_name":player[3],
-            "current_score":player[5],
-            "history_profit":player[6],
+            "wechat_nick_name":player[1],
+            "nick_name":player[2],
+            "current_score":player[3],
+            "history_profit":player[4],
             "gameid":gameid
         }
         list_.append(data)

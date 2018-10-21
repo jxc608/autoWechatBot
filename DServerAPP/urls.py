@@ -26,5 +26,6 @@ urlpatterns = [
     path('del_data', views.del_data, name='del_data'),
     path('player_stat', views.player_stat, name='player_stat'),
     path('player_room_data', views.player_room_data, name='player_room_data'),
+    path('delete_wrongimage', views.delete_wrongimage, name='delete_wrongimage'),
 
 ]
