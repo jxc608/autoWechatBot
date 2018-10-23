@@ -111,6 +111,31 @@
             window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
+        function add(){
+            if($('#nickname').val()==''){
+                alert("请输入昵称。");
+                return;
+            }
+            if($('#gameid').val()==''){
+                alert("请输入游戏id。");
+                return;
+            }
+            $.post("/add_player",{
+                nickname:$('#nickname').val(),
+                gameid:$('#gameid').val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 1)
+                    alert('昵称已存在！');
+                else if(data.result == 2)
+                    alert('游戏ID存在！');
+                else if(data.result == 0){
+                    alert('添加成功！')
+                    window.location.reload();
+                }
+            },"json");
+        }
+        
         function wechat_bind(player_id){
             if($('#wechat_nick_name_'+player_id).val()==''){
                 alert("请输入微信昵称。");

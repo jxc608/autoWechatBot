@@ -750,7 +750,7 @@ class wechatInstance():
                                     historyGame.score += room_data.playerData[num].score - cost
                                     costed = True
                                     clubProfit += cost
-                                    pic_msg+= str(num+1) + '.玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    pic_msg+= str(num+1) + '.玩家id：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
                                     '  管理费：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
                                     #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper')    
@@ -772,7 +772,7 @@ class wechatInstance():
                                     historyGame.score += room_data.playerData[num].score - cost
                                     costed = True
                                     clubProfit += cost
-                                    pic_msg+= str(num+1) + '.玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    pic_msg+= str(num+1) + '.玩家id：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
                                     '  管理费：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
                                     #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
@@ -787,7 +787,7 @@ class wechatInstance():
                             player.current_score = player.current_score + room_data.playerData[num].score 
                             player.history_profit = player.history_profit + room_data.playerData[num].score
                             player.save()
-                            pic_msg+= str(num+1) + '.玩家id：' + str(room_data.playerData[num].name) + '  分数：' + str(room_data.playerData[num].score) + \
+                            pic_msg+= str(num+1) + '.玩家id：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
                             '  总分数：' + str(player.current_score) + '\n'
                             #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
                             #'  总分数：' + str(player.current_score), 'filehelper')      
