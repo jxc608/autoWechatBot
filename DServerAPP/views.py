@@ -241,7 +241,7 @@ def player_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
     cursor=connection.cursor()
-    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid,game_nick_name from DServerAPP_player player left join DServerAPP_gameid gameid"
     sql+= " on player.id=gameid.player_id"
     sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
@@ -254,15 +254,18 @@ def player_data(request):
     list_ = []
     for player in players:
         gameid = player[5]
+        game_nick_name = player[6]
         if gameid == None:
             gameid = '-'
+            game_nick_name = '-'
         data = {
             "id":player[0],
             "wechat_nick_name":player[1],
             "nick_name":player[2],
             "current_score":player[3],
             "history_profit":player[4],
-            "gameid":gameid
+            "gameid":gameid,
+            "game_nick_name":game_nick_name,
         }
         list_.append(data)
     total = len(list_)
@@ -326,21 +329,168 @@ def add_player(request):
 
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
-def update_player(request):
+def wechat_bind(request):
     player_id = int(request.POST.get('id'))
-    nickname = request.POST.get('nickname')
+    nick_name = request.POST.get('nick_name')
+    wechat_nick_name = request.POST.get('wechat_nick_name')
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    bot = wechatManager.wechatInstance.new_instance(club.user_name)
+    wx_login = bot.is_login()
+    uuid = None
+    if not wx_login or club.expired_time < time.time():
+        return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+
+    code, msg = bot.set_alias(wechat_nick_name, nick_name)
+    if code == 0:
+        player = Player.objects.get(id=player_id)
+        if player.club_id != club.uuid:
+            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        player.nick_name = nick_name
+        player.wechat_nick_name = wechat_nick_name
+        #player.current_score = score
+        #player.history_profit = profit
+        player.save()
+        return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({'result': 3, 'msg':msg}), content_type="application/json")
+
+
+def add_score(request):
+    player_id = int(request.POST.get('id'))
     score = int(request.POST.get('score'))
-    #profit = int(request.POST.get('profit'))
 
     club = Clubs.objects.get(user_name=request.session['club'])
     player = Player.objects.get(id=player_id)
     if player.club_id != club.uuid:
         return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-    player.nick_name = nickname
-    player.current_score = score
-    #player.history_profit = profit
+    player.current_score += score
     player.save()
-    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    agent = request.ua.os
+    '''
+    'device_type': request.ua.device_type,
+    'os': request.ua.os,
+    'browser': request.ua.browser,
+    'from_pc': request.ua.from_pc,
+    'from_smartphone': request.ua.from_pc,
+    '''
+    if request.META.get('HTTP_X_FORWARDED_FOR'):
+        ip =  request.META['HTTP_X_FORWARDED_FOR']
+    else:
+        ip = request.META['REMOTE_ADDR']
+
+    score_change = ScoreChange(player=player, score=score, agent=agent, ip=ip, create_time=int(time.time()))
+    score_change.save();
+    return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
+
+def minus_score(request):
+    player_id = int(request.POST.get('id'))
+    score = int(request.POST.get('score'))
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+    player = Player.objects.get(id=player_id)
+    if player.club_id != club.uuid:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+    player.current_score -= score
+    player.save()
+    agent = request.ua.os
+    '''
+    'device_type': request.ua.device_type,
+    'os': request.ua.os,
+    'browser': request.ua.browser,
+    'from_pc': request.ua.from_pc,
+    'from_smartphone': request.ua.from_pc,
+    '''
+    if request.META.get('HTTP_X_FORWARDED_FOR'):
+        ip =  request.META['HTTP_X_FORWARDED_FOR']
+    else:
+        ip = request.META['REMOTE_ADDR']
+
+    score_change = ScoreChange(player=player, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
+    score_change.save();
+
+    return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
+
+def score_change(request):
+    nickname_search = request.GET.get('nickname','')
+    gameid_search = request.GET.get('gameid', '')
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    cursor=connection.cursor()
+    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
+    sql+= " on player.id=gameid.player_id"
+    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
+    if nickname_search:
+        sql+= " and nick_name like '%"+nickname_search+"%'"
+    if gameid_search:
+        sql+= " and gameid='"+gameid_search+"'"
+    sql+= " order by current_score desc, history_profit desc"
+    cursor.execute(sql)
+    players = cursor.fetchall()
+    list_ = []
+    for player in players:
+        gameid = player[5]
+        if gameid == None:
+            gameid = '-'
+        data = {
+            "id":player[0],
+            "wechat_nick_name":player[1],
+            "nick_name":player[2],
+            "current_score":player[3],
+            "history_profit":player[4],
+            "gameid":gameid
+        }
+        list_.append(data)
+    total = len(list_)
+    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+
+
+def score_change_log(request):
+    nickname_search = request.GET.get('nickname','')
+    gameid_search = request.GET.get('gameid', '')
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    cursor=connection.cursor()
+    sql = " select player.id, player.wechat_nick_name, player.nick_name,"
+    sql+= " player.current_score, scorechange.score,gameid,"
+    sql+= " scorechange.agent, scorechange.ip, scorechange.create_time"
+    sql+= " from DServerAPP_scorechange scorechange join DServerAPP_player player"
+    sql+= " on player.id=scorechange.player_id "
+    sql+= " left join  DServerAPP_gameid gameid "
+    sql+= " on player.id=gameid.player_id"
+    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
+    if nickname_search:
+        sql+= " and nick_name like '%"+nickname_search+"%'"
+    if gameid_search:
+        sql+= " and gameid='"+gameid_search+"'"
+    cursor.execute(sql)
+    players = cursor.fetchall()
+    list_ = []
+    for player in players:
+        gameid = player[5]
+        if gameid == None:
+            gameid = '-'
+        timeArray = time.localtime(player[8])
+        create_time = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+        data = {
+            "id":player[0],
+            "wechat_nick_name":player[1],
+            "nick_name":player[2],
+            "current_score":player[3],
+            "score":player[4],
+            "gameid":gameid,
+            "agent":player[6],
+            "ip":player[7],
+            "create_time":create_time,
+        }
+        if data['score'] > 0:
+            data['change'] = '上分'
+        else:
+            data['change'] = '下分 '
+        list_.append(data)
+    total = len(list_)
+    return render(request, 'DServerAPP/score_change_log.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def wrong_image(request):
     club = Clubs.objects.get(user_name=request.session['club'])

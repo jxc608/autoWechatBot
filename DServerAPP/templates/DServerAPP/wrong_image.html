@@ -16,15 +16,25 @@
         .btn {
             width: 100%;
         }
+        .nospace{
+            margin:0px;
+            padding: 0px;
+        }
     </style>
     <title>错误图片</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-    <div class="container-fluid" style="margin:0px;padding:0px">
-        <div class="row">
-            <div class="col-xs-12">
+    <div class="container-fluid nospace">
+        <div class="row nospace">
+            <div class="col-xs-12 nospace">
+                <div id="image_large_div" style="position:absolute;z-index:10000;margin:0 auto;top:35px;text-align:center;display:none">
+                    <img id="image_large" src=""/>
+                </div>
+                <div id="image_large_btn" style="position:absolute;z-index:10001;margin:0 auto;width:100%;text-align:center;display:none">
+                    <button type="button" class="btn btn-default" onclick="hide_large()" style="height:35px;width:100%">关闭</button>
+                </div>
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title text-center">错误图片</h3>
@@ -51,7 +61,7 @@
                                             {{data.create_time}}
                                         </td>
                                         <td>
-                                            <img src="{{data.image}}" style="width:100px;height:auto"/>
+                                            <img src="{{data.image}}" style="width:100px;height:auto" onclick="show_large({{data.id}})" id="img_{{data.id}}"/>
                                         </td>
                                         <td>
                                             <button type="button" class="btn btn-default" onclick="delete1({{data.id}})">删除</button>
@@ -98,6 +108,19 @@
                 }
             },"json");
         }
+
+        function hide_large(){
+            $("#image_large_div").hide();
+            $("#image_large_btn").hide();
+        }
+        function show_large(img_id){
+            var src = $("#img_"+img_id)[0].src; 
+            $("#image_large").attr('src',src); 
+            $("#image_large").css("width", $(window).width());
+            $("#image_large").css("height", "auto");
+            $("#image_large_div").show();
+            $("#image_large_btn").show();
+        }   
     </script>
 </body>
 </html>

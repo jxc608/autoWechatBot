@@ -31,7 +31,7 @@
             <div class="col-xs-12 nospace">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
-                        <h3 class="panel-title text-center">微信绑定</h3>
+                        <h3 class="panel-title text-center">上下分</h3>
                     </div>
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
@@ -61,15 +61,18 @@
                               <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
                               </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="log()">上下分记录</button>
+                              </div>
                             </form>
                         </li>
                         <li class="list-group-item">
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
+                                    <th>昵称</th>
                                     <th>id</th>
-                                    <th>微信昵称</th>
-                                    <th>备注昵称</th>
+                                    <th>总分数</th>
                                     <th>操作</th>
                                    <!-- <th>历史总盈亏</th>-->
                                 </tr>
@@ -78,16 +81,18 @@
                                     {% for player in players %}
                                     <tr>
                                         <td width="25%">
-                                            {{player.gameid}}({{player.game_nick_name}})
+                                            {{player.nick_name}}
+                                        </td>
+                                        <td width="25%">{{player.gameid}}</td>
+                                        <td width="25%">
+                                            <span id="current_score_{{player.id}}">
+                                            {{player.current_score}}
+                                            </span>
                                         </td>
                                         <td width="25%">
-                                            <input type="email" class="form-control" id="wechat_nick_name_{{player.id}}" value="{{player.wechat_nick_name}}">
-                                        </td>
-                                        <td width="25%">
-                                            <input type="email" class="form-control" id="nick_name_{{player.id}}" value="{{player.nick_name}}">
-                                        </td>
-                                        <td width="25%">
-                                            <button type="button" class="btn btn-default" onclick="wechat_bind({{player.id}})">绑定</button>
+                                            <input type="email" class="form-control" id="score_{{player.id}}" value="">
+                                            <button type="button" class="btn btn-default" onclick="add_score({{player.id}})">上分+</button>
+                                            <button type="button" class="btn btn-default" onclick="minus_score({{player.id}})">下分-</button>
                                         </td>
                                        <!-- <td>
                                             {{player.history_profit}}
@@ -111,31 +116,85 @@
             window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
-        function wechat_bind(player_id){
-            if($('#wechat_nick_name_'+player_id).val()==''){
-                alert("请输入微信昵称。");
+        function log(){
+            window.location.href = "/score_change_log";
+        }
+
+        function add(){
+            if($('#nickname').val()==''){
+                alert("请输入昵称。");
                 return;
             }
-            if($('#nick_name_'+player_id).val()==''){
-                alert("请输入备注昵称。");
+            if($('#gameid').val()==''){
+                alert("请输入游戏id。");
+                return;
+            }
+            $.post("/add_player",{
+                nickname:$('#nickname').val(),
+                gameid:$('#gameid').val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 1)
+                    alert('昵称已存在！');
+                else if(data.result == 2)
+                    alert('游戏ID存在！');
+                else if(data.result == 0){
+                    alert('添加成功！')
+                    window.location.reload();
+                }
+            },"json");
+        }
+
+        function add_score(player_id){
+            if($('#score_'+player_id).val()==''){
+                alert("请输入上分分数。");
+                return;
+            }
+            $.post("/add_score",{
+                id:player_id,
+                score:$('#score_'+player_id).val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    $('#current_score_'+player_id).html(data.current_score);
+                    alert('上分成功！')   
+                }
+            },"json");
+        }
+
+        function minus_score(player_id){
+            if($('#score_'+player_id).val()==''){
+                alert("请输入下分分数。");
+                return;
+            }
+            $.post("/minus_score",{
+                id:player_id,
+                score:$('#score_'+player_id).val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    $('#current_score_'+player_id).html(data.current_score);
+                    alert('上分成功！')   
+                }
+            },"json");
+        }
+
+        function update(player_id){
+            if($('#nickname_'+player_id).val()==''){
+                alert("请输入昵称。");
                 return;
             }
             /*if($('#profit_'+player_id).val()==''){
                 alert("请输入盈利状况。");
                 return;
             }*/
-            $.post("/wechat_bind",{
+            $.post("/update_player",{
                 id:player_id,
-                nick_name:$('#nick_name_'+player_id).val(),
-                wechat_nick_name:$('#wechat_nick_name_'+player_id).val(),
+                nickname:$('#nickname_'+player_id).val(),
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
                 if(data.result == 0)
-                    alert('绑定成功！');
-                else if (data.result == 2)
-                    alert('请先微信扫码登录');
-                else if (data.result == 3)
-                    alert(data.msg);
+                    alert('修改成功！')
             },"json");
         }
 

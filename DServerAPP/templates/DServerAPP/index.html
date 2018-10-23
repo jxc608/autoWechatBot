@@ -16,8 +16,9 @@
     	.btn {
     		width: 100%;
     	}
-        .container-fluid{
-
+        .nospace{
+            margin:0px;
+            padding: 0px;
         }
     </style>
     <title>首页</title>
@@ -25,9 +26,9 @@
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-	<div class="container-fluid" style="margin:0px;padding:0px">
-		<div class="row">
-			<div class="col-xs-12">
+	<div class="container-fluid nospace">
+		<div class="row nospace">
+			<div class="col-xs-12 nospace">
 				<div class="panel panel-primary">
 					<div class="panel-heading">
 						<h3 class="panel-title text-center">欢迎，{{ club.user_name }}</h3>
@@ -35,7 +36,7 @@
 				  <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item" style="background-color:#f5f5f5;text-align:center">
-                            <a href="/setting" class="button">设置</a>&nbsp;|&nbsp;<a href="/player_data" class="button">用户数据</a>&nbsp;|&nbsp;<a href="/player_stat" class="button">用户统计</a>&nbsp;|&nbsp;<a href="/room_data" class="button">今日对局</a>&nbsp;|&nbsp;<a href="/player_room_data" class="button">今日用户对局</a>&nbsp;|&nbsp;<a href="/wrong_image" class="button">错误图片</a>
+                            <a href="/setting" class="button">设置</a>&nbsp;|&nbsp;<a href="/player_data" class="button">微信绑定</a>&nbsp;|&nbsp;<a href="/player_stat" class="button">用户统计</a>&nbsp;|&nbsp;<a href="/room_data" class="button">今日对局</a>&nbsp;|&nbsp;<a href="/player_room_data" class="button">今日用户对局</a>&nbsp;|&nbsp;<a href="/score_change" class="button">上下分</a>&nbsp;|&nbsp;<a href="/wrong_image" class="button">错误图片</a>
                         </li>
                         {% if is_admin == True %}
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>生成CD KEY</b></li>

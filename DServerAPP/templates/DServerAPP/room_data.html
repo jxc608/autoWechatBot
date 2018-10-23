@@ -22,15 +22,19 @@
         .btn {
             width: 100%;
         }
+        .nospace{
+            margin:0px;
+            padding: 0px;
+        }
     </style>
     <title>今日对局</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-    <div class="container-fluid" style="margin:0px;padding:0px">
-        <div class="row">
-            <div class="col-xs-12">
+    <div class="container-fluid nospace">
+        <div class="row nospace">
+            <div class="col-xs-12 nospace">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title text-center">今日对局</h3>
@@ -52,7 +56,7 @@
                             <b>总计</b>
                         </li>
                         <li class="list-group-item">
-                             <b>今日抽水:</b>{{total_cost}}&nbsp;&nbsp;<b>今日盈亏:</b>{{total_score}}
+                             <b>今日管理费:</b>{{total_cost}}&nbsp;&nbsp;<b>今日盈亏:</b>{{total_score}}
                         </li>
                         <li class="list-group-item">
                             <table class="table table-hover">
@@ -64,7 +68,7 @@
                                     <th>对局时间</th>
                                     <th>对局数</th>
                                     <th>得分</th>
-                                    <th>抽水</th>
+                                    <th>管理费</th>
                                 </tr>
                                 </thead>
                                 <tbody>

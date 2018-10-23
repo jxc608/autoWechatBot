@@ -16,15 +16,19 @@
         .btn {
             width: 100%;
         }
+        .nospace{
+            margin:0px;
+            padding: 0px;
+        }
     </style>
     <title>设置</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-    <div class="container-fluid" style="margin:0px;padding:0px">
-        <div class="row">
-            <div class="col-xs-12">
+    <div class="container-fluid nospace">
+        <div class="row nospace">
+            <div class="col-xs-12 nospace">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title text-center">设置</h3>
@@ -32,7 +36,7 @@
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item" style="background-color:#f5f5f5;">
-                            <b>抽水设置</b>
+                            <b>管理费设置</b>
                         </li>
                         <li class="list-group-item">
                             <form class="form-inline">

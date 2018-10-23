@@ -16,15 +16,19 @@
         .btn {
             width: 100%;
         }
+        .nospace{
+            margin:0px;
+            padding: 0px;
+        }
     </style>
     <title>用户统计</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-    <div class="container-fluid" style="margin:0px;padding:0px">
-        <div class="row">
-            <div class="col-xs-12">
+    <div class="container-fluid nospace">
+        <div class="row nospace">
+            <div class="col-xs-12 nospace">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title text-center">用户统计</h3>
@@ -62,7 +66,7 @@
                                 <tr>
                                     <th>昵称</th>
                                     <th>id</th>
-                                    <th>历史总抽水</th>
+                                    <th>历史总管理费</th>
                                     <th>历史总盈亏</th>
                                 </tr>
                                 </thead>
@@ -70,7 +74,7 @@
                                     {% for player in players %}
                                     <tr>
                                         <td>
-                                            <input type="email" class="form-control" id="nickname_{{player.id}}" value="{{player.nick_name}}">
+                                        {{player.nick_name}}
                                         </td>
                                         <td>{{player.gameid}}</td>
                                         <td>

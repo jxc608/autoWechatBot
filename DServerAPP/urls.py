@@ -19,7 +19,7 @@ urlpatterns = [
     path('room_data', views.room_data, name='room_data'),
     path('player_data', views.player_data, name='player_data'),
     path('add_player', views.add_player, name='add_player'),
-    path('update_player', views.update_player, name='update_player'),
+    path('wechat_bind', views.wechat_bind, name='wechat_bind'),
     path('wrong_image', views.wrong_image, name='wrong_image'),
     path('setting', views.setting, name='setting'),
     path('update_cost_mode', views.update_cost_mode, name='update_cost_mode'),
@@ -27,5 +27,9 @@ urlpatterns = [
     path('player_stat', views.player_stat, name='player_stat'),
     path('player_room_data', views.player_room_data, name='player_room_data'),
     path('delete_wrongimage', views.delete_wrongimage, name='delete_wrongimage'),
+    path('add_score', views.add_score, name='add_score'),
+    path('minus_score', views.minus_score, name='minus_score'),
+    path('score_change', views.score_change, name='score_change'),
+    path('score_change_log', views.score_change_log, name='score_change_log'),
 
 ]

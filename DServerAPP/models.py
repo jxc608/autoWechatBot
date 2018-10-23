@@ -18,7 +18,7 @@ class Clubs(models.Model):
     user_name = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
     expired_time = models.DecimalField(max_digits=19, decimal_places=6)
-    cost_mode = models.IntegerField(default=0)#抽水模式 固定 还是 百分比
+    cost_mode = models.IntegerField(default=0)#管理费模式 固定 还是 百分比
     cost_param = models.CharField(max_length=200, default='none')
     profit = models.IntegerField(default=0)
 
@@ -67,9 +67,14 @@ class Cdkey(models.Model):
     create_time = models.IntegerField(default=0)
 
 class WrongImage(models.Model):
-    id = models.IntegerField(primary_key=True)
     club_name = models.CharField(max_length=20)
     image = models.CharField(max_length=100)
     create_time = models.IntegerField(default=0)
 
+class ScoreChange(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    score = models.IntegerField(default=0) 
+    agent = models.CharField(max_length=500)
+    ip = models.CharField(max_length=20)
+    create_time = models.IntegerField(default=0)
 
