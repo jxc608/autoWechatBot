@@ -53,9 +53,6 @@
                                 <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="add()">添加</button>
-                              </div>
-                              <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="search()">查询</button>
                               </div>
                               <div class="form-group">
@@ -120,31 +117,6 @@
             window.location.href = "/score_change_log";
         }
 
-        function add(){
-            if($('#nickname').val()==''){
-                alert("请输入昵称。");
-                return;
-            }
-            if($('#gameid').val()==''){
-                alert("请输入游戏id。");
-                return;
-            }
-            $.post("/add_player",{
-                nickname:$('#nickname').val(),
-                gameid:$('#gameid').val(),
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 1)
-                    alert('昵称已存在！');
-                else if(data.result == 2)
-                    alert('游戏ID存在！');
-                else if(data.result == 0){
-                    alert('添加成功！')
-                    window.location.reload();
-                }
-            },"json");
-        }
-
         function add_score(player_id){
             if($('#score_'+player_id).val()==''){
                 alert("请输入上分分数。");
@@ -176,25 +148,6 @@
                     $('#current_score_'+player_id).html(data.current_score);
                     alert('上分成功！')   
                 }
-            },"json");
-        }
-
-        function update(player_id){
-            if($('#nickname_'+player_id).val()==''){
-                alert("请输入昵称。");
-                return;
-            }
-            /*if($('#profit_'+player_id).val()==''){
-                alert("请输入盈利状况。");
-                return;
-            }*/
-            $.post("/update_player",{
-                id:player_id,
-                nickname:$('#nickname_'+player_id).val(),
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0)
-                    alert('修改成功！')
             },"json");
         }
 
