@@ -76,7 +76,11 @@
                                         <td>
                                         {{player.nick_name}}
                                         </td>
-                                        <td>{{player.gameid}}</td>
+                                        <td>
+                                            {% for gameid in player.gameids%}
+                                            {{gameid.gameid}}<br/>
+                                            {% endfor %}
+                                        </td>
                                         <td>
                                             {{player.history_profit}}
                                         </td>

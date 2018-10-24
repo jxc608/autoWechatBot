@@ -205,71 +205,38 @@ def player_room_data(request):
     day = datetime.datetime.now().strftime('%Y-%m-%d')
     if request.GET.get('date'):
         day = request.GET.get('date')
-    cursor=connection.cursor()
-    sql = " select player.id, player.nick_name,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
-    sql+= " on player.id=gameid.player_id"
-    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
-    cursor.execute(sql)
-    players = cursor.fetchall()
-    list_ = []
+
+    players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+
     for player in players:
-        data = {
-            "id":player[0],
-            "nick_name":player[1],
-            "gameid":player[2],
-            "total_round":0,
-            "total_host":0,
-            "total_cost":0,
-            "total_score":0
-        }
-        data['total_round'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).count()
-        data['total_cost'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).aggregate(Sum('cost'))['cost__sum']
-        if data['total_cost'] == None:
-            data['total_cost'] = 0
-        data['total_score'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).aggregate(Sum('score'))['score__sum']
-        if data['total_score'] == None:
-            data['total_score'] = 0    
-        data['total_host'] = Score.objects.filter(player_id=data["id"], create_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
-        if data['total_host'] == None:
-            data['total_host'] = 0    
-        list_.append(data)
-    return render(request, 'DServerAPP/player_room_data.html', {'players':list_,'day':day})
+        player.gameids = GameID.objects.filter(player_id=player.id)
+        player.total_round = Score.objects.filter(player_id=player.id, create_time__startswith=day).count()
+        player.total_cost = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('cost'))['cost__sum']
+        if player.total_cost == None:
+            player.total_cost = 0
+        player.total_score = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('score'))['score__sum']
+        if player.total_score == None:
+            player.total_score = 0    
+        player.total_host = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
+        if player.total_host == None:
+            player.total_host = 0    
+    return render(request, 'DServerAPP/player_room_data.html', {'players':players,'day':day})
     
 def player_data(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
     club = Clubs.objects.get(user_name=request.session['club'])
 
-    cursor=connection.cursor()
-    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid,game_nick_name from DServerAPP_player player left join DServerAPP_gameid gameid"
-    sql+= " on player.id=gameid.player_id"
-    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
-        sql+= " and nick_name like '%"+nickname_search+"%'"
-    if gameid_search:
-        sql+= " and gameid='"+gameid_search+"'"
-    sql+= " order by current_score desc, history_profit desc"
-    cursor.execute(sql)
-    players = cursor.fetchall()
-    list_ = []
+        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score', '-history_profit')
+    else:
+        players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+
     for player in players:
-        gameid = player[5]
-        game_nick_name = player[6]
-        if gameid == None:
-            gameid = '-'
-            game_nick_name = '-'
-        data = {
-            "id":player[0],
-            "wechat_nick_name":player[1],
-            "nick_name":player[2],
-            "current_score":player[3],
-            "history_profit":player[4],
-            "gameid":gameid,
-            "game_nick_name":game_nick_name,
-        }
-        list_.append(data)
-    total = len(list_)
-    return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+        gameids = GameID.objects.filter(player_id=player.id)
+        player.gameids = gameids
+    total = len(players)
+    return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 
 def player_stat(request):
@@ -277,33 +244,17 @@ def player_stat(request):
     gameid_search = request.GET.get('gameid', '')
     club = Clubs.objects.get(user_name=request.session['club'])
 
-    cursor=connection.cursor()
-    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
-    sql+= " on player.id=gameid.player_id"
-    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
-        sql+= " and nick_name like '%"+nickname_search+"%'"
-    if gameid_search:
-        sql+= " and gameid='"+gameid_search+"'"
-    sql+= " order by current_score desc, history_profit desc"
-    cursor.execute(sql)
-    players = cursor.fetchall()
-    list_ = []
+        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score', '-history_profit')
+    else:
+        players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+
     for player in players:
-        gameid = player[5]
-        if gameid == None:
-            gameid = '-'
-        data = {
-            "id":player[0],
-            "wechat_nick_name":player[1],
-            "nick_name":player[2],
-            "current_score":player[3],
-            "history_profit":player[4],
-            "gameid":gameid
-        }
-        list_.append(data)
-    total = len(list_)
-    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+        gameids = GameID.objects.filter(player_id=player.id)
+        player.gameids = gameids
+    total = len(players)
+
+    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def add_player(request):
     nickname = request.POST.get('nickname')
@@ -326,6 +277,41 @@ def add_player(request):
     player.save()
     gameid = GameID(player=player, gameid=gameid, game_nick_name=nickname)
     gameid.save()
+
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def add_gameid(request):
+    nickname = request.POST.get('nickname')
+    gameid = int(request.POST.get('gameid'))
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    player = None
+    try:
+        player = Player.objects.get(nick_name=nickname, club=club)
+    except Player.DoesNotExist:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+
+    gameID = GameID.objects.filter(gameid=gameid)
+    if len(gameID) > 0:
+        player_id = gameID[0].player_id
+        ids_count = GameID.objects.filter(player_id=player_id).values("gameid").distinct().count()
+        print(ids_count)
+        if ids_count > 1:
+            return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+        GameID.objects.filter(player_id=player_id).update(player_id=player.id)
+        Score.objects.filter(player_id=player_id).update(player_id=player.id)
+        ScoreChange.objects.filter(player_id=player_id).update(player_id=player.id)
+        original_player = Player.objects.get(id=player_id)
+        player.current_score += original_player.current_score
+        player.history_profit += original_player.history_profit
+        player.history_cost += original_player.history_cost
+        player.today_hoster_number += original_player.today_hoster_number
+        player.save()
+        original_player.delete()
+    else:
+        gameid = GameID(player=player, gameid=gameid, game_nick_name=nickname)
+        gameid.save()
 
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
@@ -417,33 +403,18 @@ def score_change(request):
     gameid_search = request.GET.get('gameid', '')
     club = Clubs.objects.get(user_name=request.session['club'])
 
-    cursor=connection.cursor()
-    sql = " select player.id, player.wechat_nick_name, player.nick_name, player.current_score, player.history_profit,gameid from DServerAPP_player player left join DServerAPP_gameid gameid"
-    sql+= " on player.id=gameid.player_id"
-    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
-        sql+= " and nick_name like '%"+nickname_search+"%'"
-    if gameid_search:
-        sql+= " and gameid='"+gameid_search+"'"
-    sql+= " order by current_score desc, history_profit desc"
-    cursor.execute(sql)
-    players = cursor.fetchall()
-    list_ = []
+        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score', '-history_profit')
+    else:
+        players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+
     for player in players:
-        gameid = player[5]
-        if gameid == None:
-            gameid = '-'
-        data = {
-            "id":player[0],
-            "wechat_nick_name":player[1],
-            "nick_name":player[2],
-            "current_score":player[3],
-            "history_profit":player[4],
-            "gameid":gameid
-        }
-        list_.append(data)
-    total = len(list_)
-    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+        gameids = GameID.objects.filter(player_id=player.id)
+        player.gameids = []
+        for gameid in gameids:
+            player.gameids.append(gameid.gameid)
+    total = len(players)
+    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 
 def score_change_log(request):

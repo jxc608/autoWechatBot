@@ -64,7 +64,7 @@
                                 <tr>
                                     <th>昵称</th>
                                     <th>id</th>
-                                    <th>玩家微信id</th>
+                                    <th>玩家微信昵称</th>
                                     <th>对局次数</th>
                                     <th>房主次数</th>
                                     <th>得分</th>
@@ -77,8 +77,12 @@
                                         <td>
                                             {{player.nick_name}}
                                         </td>
-                                        <td>{{player.gameid}}</td>
-                                        <td>{{player.nick_name}}</td>
+                                        <td>
+                                            {% for gameid in player.gameids%}
+                                            {{gameid.gameid}}<br/>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{player.wechat_nick_name}}</td>
                                         <td>{{player.total_round}}</td>
                                         <td>{{player.total_host}}</td>
                                         <td>{{player.total_score}}</td>

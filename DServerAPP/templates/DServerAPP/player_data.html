@@ -53,9 +53,6 @@
                                 <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="add()">添加</button>
-                              </div>
-                              <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="search()">查询</button>
                               </div>
                               <div class="form-group">
@@ -78,7 +75,9 @@
                                     {% for player in players %}
                                     <tr>
                                         <td width="25%">
-                                            {{player.gameid}}({{player.game_nick_name}})
+                                            {% for gameid in player.gameids %}
+                                            {{gameid.gameid}}({{gameid.game_nick_name}})<br/>
+                                            {% endfor %}
                                         </td>
                                         <td width="25%">
                                             <input type="email" class="form-control" id="wechat_nick_name_{{player.id}}" value="{{player.wechat_nick_name}}">
@@ -111,31 +110,6 @@
             window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
-        function add(){
-            if($('#nickname').val()==''){
-                alert("请输入昵称。");
-                return;
-            }
-            if($('#gameid').val()==''){
-                alert("请输入游戏id。");
-                return;
-            }
-            $.post("/add_player",{
-                nickname:$('#nickname').val(),
-                gameid:$('#gameid').val(),
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 1)
-                    alert('昵称已存在！');
-                else if(data.result == 2)
-                    alert('游戏ID存在！');
-                else if(data.result == 0){
-                    alert('添加成功！')
-                    window.location.reload();
-                }
-            },"json");
-        }
-        
         function wechat_bind(player_id){
             if($('#wechat_nick_name_'+player_id).val()==''){
                 alert("请输入微信昵称。");
