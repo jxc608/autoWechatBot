@@ -384,14 +384,17 @@ class wechatInstance():
                             self.itchat_instance.send("无错误图片", 'filehelper')
                     elif contentSplit[0] == '好友':
                         #print(self.itchat_instance.get_friends(update=True))
-                        f = self.itchat_instance.search_friends(name='夜魔1')
+                        f = self.itchat_instance.search_friends(remarkName='夜魔1')
                         print(f)
-                        f = self.itchat_instance.search_friends(name='夜魔')
+                        print(type(f))
+                        '''
+                        f = self.itchat_instance.search_friends(remarkName='创世纪')
                         if f:
                             print(f[0]['UserName'])
                             print(self.itchat_instance.set_alias(f[0]['UserName'], '夜魔1'))
-                            f = self.itchat_instance.search_friends(name='夜魔1')
+                            f = self.itchat_instance.search_friends(remarkName='夜魔1')
                             print(f[0]['UserName'])
+                        '''
                     elif len(contentSplit) == 1:
                         try :
                             theID = int(contentSplit[0])
@@ -721,10 +724,15 @@ class wechatInstance():
                         gameid = GameID.objects.get(gameid=room_data.playerData[num].id)
                         player = gameid.player
                         f = self.itchat_instance.search_friends(remarkName=player.nick_name)
-                        print(player.nick_name)
+                        print('friends......')
                         print(f)
-                        if len(f) > 0:
-                            wechat_uuid = f[0]['UserName']
+                        print('..............')
+                        if f:
+                            if isinstance(f,list):
+                                wechat_uuid = f[0]['UserName']
+                            elif isinstance(f,dict):
+                                wechat_uuid = f['UserName']
+
                     except GameID.DoesNotExist:
                         self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：tempUser', 'filehelper')
                         player = Player(wechat_nick_name='tempUser', nick_name=room_data.playerData[num].name, club=self.club, current_score=0, history_profit=0)
