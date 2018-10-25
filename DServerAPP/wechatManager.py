@@ -649,16 +649,17 @@ class wechatInstance():
                             
             if wrong_img or room_data.startTime == '' or room_data.roomId == 0\
                      or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
-                print('roomId:' + str(room_data.roomId))
-                print('startTime:' + str(room_data.startTime))
-                print('roomHosterId:' + str(room_data.roomHosterId))
-                print('roomHoster:' + str(room_data.roomHoster))
-                print('roundCounter:' + str(room_data.roundCounter))
-                print('players:' + str(len(room_data.playerData)))
+                erro_msg = '图片无法识别\n'
+                erro_msg+= 'roomId:' + str(room_data.roomId) + '\n'
+                erro_msg+= 'startTime:' + str(room_data.startTime) + '\n'
+                erro_msg+= 'roomHosterId:' + str(room_data.roomHosterId) + '\n'
+                erro_msg+= 'roomHoster:' + str(room_data.roomHoster) + '\n'
+                erro_msg+= 'roundCounter:' + str(room_data.roundCounter) + '\n'
+                erro_msg+= 'players:' + str(len(room_data.playerData))
 
                 wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
-                self.itchat_instance.send('图片无法识别', 'filehelper')
+                self.itchat_instance.send(erro_msg, 'filehelper')
                 return
             #计算玩家分数正负号
             wholeScoreSum = wholeScoreSum / 2
