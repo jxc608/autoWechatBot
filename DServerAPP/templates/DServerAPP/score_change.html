@@ -59,9 +59,6 @@
                                 <button type="button" class="btn btn-default" onclick="add()">添加</button>
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="add_gameid()">添加小号</button>
-                              </div>
-                              <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
                               </div>
                               <div class="form-group">
@@ -75,7 +72,8 @@
                                 <tr>
                                     <th>昵称</th>
                                     <th>id</th>
-                                    <th>总分数</th>
+                                    <th><a href="javascript:void(0);" onclick="order_by('round')">总局数↑</a></th>
+                                    <th><a href="javascript:void(0);" onclick="order_by('score')">总分数↑</a></th>
                                     <th>操作</th>
                                    <!-- <th>历史总盈亏</th>-->
                                 </tr>
@@ -83,20 +81,28 @@
                                 <tbody>
                                     {% for player in players %}
                                     <tr>
-                                        <td width="25%">
+                                        <td width="20%">
                                             {{player.nick_name}}
                                         </td>
-                                        <td width="25%">
+                                        <td width="20%">
                                             {% for gameid in player.gameids %}
-                                            {{gameid}}<br/>
+                                            {{gameid.gameid}}
+                                            <a href="javascrip:void(0);" onclick="del_gameid({{player.id}},{{gameid.gameid}})"><span style="font-size:20px">×</span></a>
+                                            <br/>
                                             {% endfor %}
+                                            <button type="button" class="btn btn-default" onclick="show_modal({{player.id}})">添加小号</button>
                                         </td>
-                                        <td width="25%">
+                                        <td width="20%">
+                                            <span id="current_score_{{player.id}}">
+                                            {{player.total_round}}
+                                            </span>
+                                        </td>
+                                        <td width="20%">
                                             <span id="current_score_{{player.id}}">
                                             {{player.current_score}}
                                             </span>
                                         </td>
-                                        <td width="25%">
+                                        <td width="20%">
                                             <input type="email" class="form-control" id="score_{{player.id}}" value="">
                                             <button type="button" class="btn btn-default" onclick="add_score({{player.id}})">上分+</button>
                                             <button type="button" class="btn btn-default" onclick="minus_score({{player.id}})">下分-</button>
@@ -118,16 +124,49 @@
             </div>
         </div>
     </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        请输入游戏id
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="email" class="form-control" id="gameid_add" placeholder="请输入gameid" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="add_gameid()">
+                        添加
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
     <script>
+        var player_id;
+        function show_modal(id){
+            player_id = id;
+            $('#myModal').modal();;
+        }
+
         function search(){
-            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+        }
+
+        function order_by(order){
+            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&order="+order;
         }
 
         function log(){
             window.location.href = "/score_change_log";
         }
 
-       function add(){
+        function add(){
             if($('#nickname').val()==''){
                 alert("请输入昵称。");
                 return;
@@ -152,20 +191,16 @@
             },"json");
         }
 
-       function add_gameid(){
-            if(confirm('确定要绑定吗？')==false)
-                return;
-            if($('#nickname').val()==''){
-                alert("请输入昵称。");
-                return;
-            }
-            if($('#gameid').val()==''){
+        function add_gameid(){
+            if($('#gameid_add').val()==''){
                 alert("请输入游戏id。");
                 return;
             }
+            if(confirm('确定要绑定吗？')==false)
+                return;
             $.post("/add_gameid",{
-                nickname:$('#nickname').val(),
-                gameid:$('#gameid').val(),
+                id:player_id,
+                gameid:$('#gameid_add').val(),
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
                 if(data.result == 1)
@@ -174,6 +209,25 @@
                     alert('游戏ID已绑定到其他用户！');
                 else if(data.result == 0){
                     alert('添加成功！')
+                    window.location.reload();
+                }
+            },"json");
+        }
+
+        function del_gameid(player_id, gameid){
+            if(confirm('确定要删除吗？')==false)
+                return;
+            $.post("/del_gameid",{
+                id:player_id,
+                gameid:gameid,
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 1)
+                    alert('用户不存在！');
+                else if(data.result == 2)
+                    alert('游戏ID已绑定到其他用户！');
+                else if(data.result == 0){
+                    alert('删除成功！')
                     window.location.reload();
                 }
             },"json");

@@ -648,7 +648,6 @@ class wechatInstance():
                             break
                             
             if wrong_img or room_data.startTime == '' or room_data.roomId == 0\
-                     or room_data.roomHoster == ''\
                      or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
                 print('roomId:' + str(room_data.roomId))
                 print('startTime:' + str(room_data.startTime))
@@ -698,15 +697,13 @@ class wechatInstance():
                 self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper') 
                 '''
                 rules = []
-                if self.club.cost_param == None or self.club.cost_param == 'none':
-                    if self.club.cost_mode == 0:
-                        rules = '1000|20_500|10'
-                    elif self.club.cost_mode == 1:
-                        rules = '0.1_0.2'
+                club_ = Clubs.objects.get(user_name=self.club.user_name)
+                if club_.cost_param == None or club_.cost_param == 'none' or club_.cost_param == '':
+                    pass
                 else:
-                    rules = self.club.cost_param
-                rules = rules.split('_')
-                costMode = self.club.cost_mode
+                    rules = club_.cost_param
+                    rules = rules.split('|')
+                costMode = club_.cost_mode
 
                 clubProfit = 0
                 
@@ -741,13 +738,14 @@ class wechatInstance():
                         gameid.save()
                     player.today_hoster_number += 1
                     try:
-                        if num < len(rules):
-                            if costMode == 0:
-                                #固定模式 1000|20_500|10
-                                params = rules[num].split('|')
-                                valve = int(params[0])
-                                cost = int(params[1])
-                                if playserScore > valve:
+                        if len(rules) > 0:
+                            if costMode == 0 and num < int(rules[0]):
+                                #固定模式 3|20_15_10|100
+                                value = int(rules[2])
+                                params = rules[1].split('_')
+                                cost = int(params[num])
+
+                                if playserScore > value:
                                     score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                                     score.save()
                                     player.current_score = player.current_score + room_data.playerData[num].score - cost 
@@ -758,17 +756,18 @@ class wechatInstance():
                                     historyGame.score += room_data.playerData[num].score - cost
                                     costed = True
                                     clubProfit += cost
-                                    pic_msg+= str(num+1) + '.玩家id：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
+                                    pic_msg+= str(num+1) + '.ID' + str(room_data.playerData[num].id) + '：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
                                     '  管理费：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
                                     #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper')    
                                     if wechat_uuid:
                                         self.itchat_instance.send_image(img_file, wechat_uuid)
                                         self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  管理费：' + str(cost) , wechat_uuid)
-                            elif costMode == 1:
+                            elif costMode == 1 and num < int(rules[0]):
                                 #百分比模式
-                                if playserScore >= 100:
-                                    param = float(rules[num])
+                                if playserScore >= 100 :
+                                    params = rules[1].split('_')
+                                    param = float(params[num])
                                     cost = int(playserScore * param)
                                     score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                                     score.save()
@@ -780,7 +779,36 @@ class wechatInstance():
                                     historyGame.score += room_data.playerData[num].score - cost
                                     costed = True
                                     clubProfit += cost
-                                    pic_msg+= str(num+1) + '.玩家id：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
+                                    pic_msg+= str(num+1) + '.ID' + str(room_data.playerData[num].id) + '：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
+                                    '  管理费：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
+                                    #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
+                                    #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
+                                    if wechat_uuid:
+                                        self.itchat_instance.send_image(img_file, wechat_uuid)
+                                        self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  管理费：' + str(cost) , wechat_uuid)
+                            elif costMode == 2:
+                                values = rules[0].split('_')
+                                costs = rules[1].split('_')
+                                can_cost = False
+                                for index, value in enumerate(values):
+                                    if playserScore >= int(value):
+                                        can_cost = True
+                                        break
+
+                                #所有固定模式
+                                if can_cost:
+                                    cost = int(costs[index])
+                                    score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
+                                    score.save()
+                                    player.current_score = player.current_score + room_data.playerData[num].score - cost 
+                                    player.history_profit = player.history_profit + room_data.playerData[num].score - cost
+                                    player.history_cost += cost
+                                    player.save()
+                                    historyGame.cost += cost
+                                    historyGame.score += room_data.playerData[num].score - cost
+                                    costed = True
+                                    clubProfit += cost
+                                    pic_msg+= str(num+1) + '.ID' + str(room_data.playerData[num].id) + '：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
                                     '  管理费：' + str(cost) + '  总分数：' + str(player.current_score) + '\n'
                                     #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
@@ -788,14 +816,13 @@ class wechatInstance():
                                         self.itchat_instance.send_image(img_file, wechat_uuid)
                                         self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  管理费：' + str(cost) , wechat_uuid)
 
-
                         if costed == False:
                             score = Score(player=player, score=playserScore, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                             score.save()
                             player.current_score = player.current_score + room_data.playerData[num].score 
                             player.history_profit = player.history_profit + room_data.playerData[num].score
                             player.save()
-                            pic_msg+= str(num+1) + '.玩家id：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
+                            pic_msg+= str(num+1) + '.ID' + str(room_data.playerData[num].id) + '：' + player.nick_name + '  分数：' + str(room_data.playerData[num].score) + \
                             '  总分数：' + str(player.current_score) + '\n'
                             #self.itchat_instance.send('玩家id：' + str(room_data.playerData[num].id) + '  分数：' + str(room_data.playerData[num].score) + \
                             #'  总分数：' + str(player.current_score), 'filehelper')      

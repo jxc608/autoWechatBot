@@ -89,7 +89,7 @@ def register(request):
         #return HttpResponse(messageType.createMessage('success', messageType.USER_NAME_ALREADY_USED, 'the userName has already been used'))
     except Clubs.DoesNotExist:
         password=request.POST.get('password','')
-        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=time.time())
+        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=time.time(), cost_mode=0, cost_param='')
         club.save()
         return render(request, 'DServerAPP/register.html', {"account": 2, "acct":"注册成功！" })
         #return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'register completed'))
@@ -226,15 +226,23 @@ def player_data(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
     club = Clubs.objects.get(user_name=request.session['club'])
-
-    if nickname_search:
-        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score', '-history_profit')
+    player_id = 0
+    if gameid_search:
+        gameids = GameID.objects.filter(gameid=gameid_search).values("player_id").distinct()
+        if gameids.count() == 0:
+            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+        player_id = gameids[0]['player_id']
+    if gameid_search:        
+        players = Player.objects.filter(club=club, id=player_id).order_by('-current_score')
+    elif nickname_search:
+        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score')
     else:
         players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
 
     for player in players:
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
+
     total = len(players)
     return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
@@ -281,14 +289,14 @@ def add_player(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def add_gameid(request):
-    nickname = request.POST.get('nickname')
+    player_id = int(request.POST.get('id'))
     gameid = int(request.POST.get('gameid'))
 
     club = Clubs.objects.get(user_name=request.session['club'])
 
     player = None
     try:
-        player = Player.objects.get(nick_name=nickname, club=club)
+        player = Player.objects.get(id=player_id, club=club)
     except Player.DoesNotExist:
         return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
 
@@ -310,10 +318,26 @@ def add_gameid(request):
         player.save()
         original_player.delete()
     else:
-        gameid = GameID(player=player, gameid=gameid, game_nick_name=nickname)
+        gameid = GameID(player=player, gameid=gameid, game_nick_name=player.nick_name)
         gameid.save()
 
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def del_gameid(request):
+    player_id = int(request.POST.get('id'))
+    gameid = int(request.POST.get('gameid'))
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    player = None
+    try:
+        player = Player.objects.get(id=player_id, club=club)
+    except Player.DoesNotExist:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+    GameID.objects.filter(player_id=player_id, gameid=gameid).delete()
+
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
 
 def wechat_bind(request):
     player_id = int(request.POST.get('id'))
@@ -401,18 +425,31 @@ def minus_score(request):
 def score_change(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
+    orderby = request.GET.get('order', 'round')
     club = Clubs.objects.get(user_name=request.session['club'])
 
-    if nickname_search:
-        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score', '-history_profit')
+    player_id = 0
+    if gameid_search:
+        gameids = GameID.objects.filter(gameid=gameid_search).values("player_id").distinct()
+        if gameids.count() == 0:
+            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+        player_id = gameids[0]['player_id']
+    if gameid_search:        
+        players = Player.objects.filter(club=club, id=player_id).order_by('-current_score')
+    elif nickname_search:
+        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score')
     else:
         players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
 
     for player in players:
-        gameids = GameID.objects.filter(player_id=player.id)
-        player.gameids = []
-        for gameid in gameids:
-            player.gameids.append(gameid.gameid)
+        player.gameids = GameID.objects.filter(player_id=player.id)
+        player.gameids_count = len(player.gameids)
+        player.total_round = Score.objects.filter(player_id=player.id).count()
+    if orderby == 'round':
+        players = sorted(players, key=lambda players : players.total_round, reverse=True) 
+    else:
+        players = sorted(players, key=lambda players : players.current_score, reverse=True) 
+
     total = len(players)
     return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
@@ -503,7 +540,8 @@ def delete_wrongimage(request):
 
 def setting(request):
     club = Clubs.objects.get(user_name=request.session['club'])
-    return render(request, 'DServerAPP/setting.html', {'club':club})
+    params = club.cost_param.split("|")
+    return render(request, 'DServerAPP/setting.html', {'club':club, 'params':params})
 
 def is_number(num):
 
@@ -516,34 +554,52 @@ def is_number(num):
 
 def update_cost_mode(request):
     mode = int(request.POST.get('mode'))
-    param = request.POST.get('param')
+    param1 = request.POST.get('param1')
+    param2 = request.POST.get('param2')
+    param3 = request.POST.get('param3')
 
-    #if param.find('_') == -1:
-    #    return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-
-    list_ = param.split('_')
     if mode == 0:
+        if not param1.isdigit() or not param3.isdigit():
+            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        list_ = param2.split('_')
         for x in list_:
-            if x.find('|') == -1:
+            if not x.isdigit():
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-            xx = x.split('|')
-            if len(xx) != 2:
-                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-            for x_ in xx:
-                if not x_.isdigit():
-                    return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        if len(list_) < int(param1):
+            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+
     elif mode == 1:
+        if not param1.isdigit():
+            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        list_ = param2.split('_')
         for x in list_:
             if not is_number(x):
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
             if float(x) > 1:
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        if len(list_) < int(param1):
+            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+
+    elif mode == 2:
+        list1_ = param1.split('_')
+        for x in list1_:
+            if not x.isdigit():
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        list2_ = param2.split('_')
+        for x in list2_:
+            if not x.isdigit():
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        if len(list1_) != len(list2_):
+            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
 
     club = Clubs.objects.get(user_name=request.session['club'])
     club.cost_mode = mode
-    club.cost_param = param
-    club.save()
+    if mode == 0:
+        club.cost_param = '%s|%s|%s' % (param1, param2, param3)
+    else:
+        club.cost_param = '%s|%s' % (param1, param2)
 
+    club.save()
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def del_data(request):

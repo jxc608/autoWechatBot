@@ -42,24 +42,50 @@
                             <form class="form-inline">
                               <div class="form-group">
                                 <label for="key_type">模式:</label>
-                                <select class="form-control" id="mode">
-                                    <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>固定模式</option>
-                                    <option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>百分比模式</option>
+                                <select class="form-control" id="mode" onchange="change_mode()">
+                                    <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>前x名固定</option>
+                                    <option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名百分比</option>
+                                    <option value="2" {% if club.cost_mode == 2 %}selected{% endif %}>所有固定</option>
                                 </select>
                               </div>
-                              <div class="form-group">
-                                <label for="num">参数:</label>
-                                <input type="text" class="form-control" id="param" value="{{club.cost_param}}">
+                              <div class="form-group" id="mode_0" style="display:">
+                                  <div class="form-group">
+                                    <b>参数:</b>
+                                    前
+                                    <input type="text" class="form-control" id="param1_0" value="{%if club.cost_mode == 0 %}{{params.0}}{%endif%}">
+                                    名&nbsp;
+                                    固定值
+                                    <input type="text" class="form-control" id="param2_0" value="{%if club.cost_mode == 0 %}{{params.1}}{%endif%}">
+                                    (例如前3名：20_15_10)，最低
+                                    <input type="text" class="form-control" id="param3_0" value="{%if club.cost_mode == 0 %}{{params.2}}{%endif%}">（至少达到此分数才会收取）
+                                  </div>
+                              </div>
+                              <div class="form-group" id="mode_1" style="display:none">
+                                  <div class="form-group">
+                                    <b>参数:</b>
+                                    前
+                                    <input type="text" class="form-control" id="param1_1" value="{%if club.cost_mode == 1 %}{{params.0}}{%endif%}">
+                                    名&nbsp;
+                                    百分比
+                                    <input type="text" class="form-control" id="param2_1" value="{%if club.cost_mode == 1 %}{{params.1}}{%endif%}">
+                                    (例如前3名：0.05_0.03_0.02)
+                                  </div>
+                              </div>
+                              <div class="form-group" id="mode_2" style="display:none">
+                                  <div class="form-group">
+                                    <b>参数:</b>
+                                    分数达到
+                                    <input type="text" class="form-control" id="param1_2" value="{%if club.cost_mode == 2 %}{{params.0}}{%endif%}">
+                                    （例如:5000_2000_1000） ，&nbsp;
+                                    固定值
+                                    <input type="text" class="form-control" id="param2_2" value="{%if club.cost_mode == 2 %}{{params.1}}{%endif%}">
+                                    (例如:20_15_10)
+                                  </div>
                               </div>
                               <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="update_cost()">保存</button>
                               </div>
                             </form>
-                        </li>
-                        <li class="list-group-item">
-                            <b>格式</b><br/>
-                            固定模式:100|50_200|100<br/>
-                            百分比模式:0.1_0.2
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>数据清空</b>
@@ -77,19 +103,61 @@
         </div>
     </div>
     <script>
+        change_mode();
+        function change_mode(){
+            if ($('#mode').val() == '0'){
+                $('#mode_0').show()
+                $('#mode_1').hide()
+                $('#mode_2').hide()
+            }
+            else if ($('#mode').val() == '1'){
+                $('#mode_0').hide()
+                $('#mode_1').show()
+                $('#mode_2').hide()
+            }
+            else if ($('#mode').val() == '2'){
+                $('#mode_0').hide()
+                $('#mode_1').hide()
+                $('#mode_2').show()
+            }
+        }
 
         function update_cost(){
-            if($('#param').val()==''){
-                alert("请输入参数。");
-                return;
+            var mode = $('#mode').val();
+            if (mode == '2'){
+                if($('#param1_'+mode).val()==''){
+                    alert("请输入参数。");
+                    return;
+                }
+                if($('#param2_'+mode).val()==''){
+                    alert("请输入参数。");
+                    return;
+                }
+                if($('#param3_'+mode).val()==''){
+                    alert("请输入参数。");
+                    return;
+                }
+            }else{
+                if($('#param1_'+mode).val()==''){
+                    alert("请输入参数。");
+                    return;
+                }
+                if($('#param2_'+mode).val()==''){
+                    alert("请输入参数。");
+                    return;
+                }
             }
+
             /*if($('#profit_'+player_id).val()==''){
                 alert("请输入盈利状况。");
                 return;
             }*/
             $.post("/update_cost_mode",{
                 mode:$('#mode').val(),
-                param:$('#param').val(),
+                param1:$('#param1_'+mode).val(),
+                param2:$('#param2_'+mode).val(),
+                param3:$('#param3_'+mode).val(),
+
             },function(data){
                 if(data.result == 0)
                     alert('保存成功！');

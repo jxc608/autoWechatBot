@@ -32,5 +32,6 @@ urlpatterns = [
     path('score_change', views.score_change, name='score_change'),
     path('score_change_log', views.score_change_log, name='score_change_log'),
     path('add_gameid', views.add_gameid, name='add_gameid'),
+    path('del_gameid', views.del_gameid, name='del_gameid'),
 
 ]
