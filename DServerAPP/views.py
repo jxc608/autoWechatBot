@@ -253,16 +253,34 @@ def player_stat(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
     if nickname_search:
-        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score', '-history_profit')
+        players_cost = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-history_cost')
     else:
-        players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+        players_cost = Player.objects.filter(club=club).order_by('-history_cost')
 
-    for player in players:
+    for player in players_cost:
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
-    total = len(players)
 
-    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+    if nickname_search:
+        players_profit = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-history_profit')
+    else:
+        players_profit = Player.objects.filter(club=club).order_by('-history_profit')
+
+    for player in players_profit:
+        gameids = GameID.objects.filter(player_id=player.id)
+        player.gameids = gameids
+    total = len(players_profit)
+
+    list_ = []
+    for index, player in enumerate(players_cost):
+        list_.append(
+            {
+                'cost':player,
+                'profit':players_profit[index]
+            }
+        )
+    print(list_)
+    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def add_player(request):
     nickname = request.POST.get('nickname')

@@ -65,27 +65,31 @@
                                 <thead>
                                 <tr>
                                     <th>昵称</th>
-                                    <th>id</th>
-                                    <th>历史总管理费</th>
                                     <th>历史总盈亏</th>
+                                    <th>昵称</th>
+                                    <th>历史总管理费</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    {% for player in players %}
+                                    {% for player in list %}
                                     <tr>
                                         <td>
-                                        {{player.nick_name}}
-                                        </td>
-                                        <td>
-                                            {% for gameid in player.gameids%}
+                                            {{player.profit.nick_name}}<br/>
+                                            {% for gameid in player.profit.gameids%}
                                             {{gameid.gameid}}<br/>
                                             {% endfor %}
                                         </td>
                                         <td>
-                                            {{player.history_profit}}
+                                            {{player.profit.history_profit}}
                                         </td>
                                         <td>
-                                            {{player.history_profit}}
+                                            {{player.cost.nick_name}}<br/>
+                                            {% for gameid in player.cost.gameids%}
+                                            {{gameid.gameid}}<br/>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {{player.cost.history_cost}}
                                         </td>
                                     </tr>
                                     {% endfor %}

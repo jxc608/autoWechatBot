@@ -35,7 +35,8 @@ class Player(models.Model):
     today_hoster_number = models.IntegerField(default=0)
 
 class GameID(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)    
+    club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
     game_nick_name = models.CharField(max_length=200)
     gameid = models.CharField(max_length=20)
 

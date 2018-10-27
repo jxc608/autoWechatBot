@@ -719,7 +719,7 @@ class wechatInstance():
                     if room_data.playerData[num].name == room_data.roomHoster:
                         is_host = 1
                     try:
-                        gameid = GameID.objects.get(gameid=room_data.playerData[num].id)
+                        gameid = GameID.objects.get(club=self.club, gameid=room_data.playerData[num].id)
                         player = gameid.player
                         f = self.itchat_instance.search_friends(remarkName=player.nick_name)
                         print('friends......')
@@ -735,10 +735,12 @@ class wechatInstance():
                         self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：tempUser', 'filehelper')
                         player = Player(wechat_nick_name='tempUser', nick_name=room_data.playerData[num].name, club=self.club, current_score=0, history_profit=0)
                         player.save()
-                        gameid = GameID(player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
+                        gameid = GameID(club=self.club, player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
                         gameid.save()
                     player.today_hoster_number += 1
                     try:
+                        last_current_score = player.current_score;
+
                         if len(rules) > 0:
                             if costMode == 0 and num < int(rules[0]):
                                 #固定模式 3|20_15_10|100
@@ -763,7 +765,12 @@ class wechatInstance():
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper')    
                                     if wechat_uuid:
                                         self.itchat_instance.send_image(img_file, wechat_uuid)
-                                        self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  管理费：' + str(cost) , wechat_uuid)
+                                        alert_msg = player.nick_name + '\n'
+                                        alert_msg+= '上次积分: '+str(last_current_score) + '\n'
+                                        alert_msg+= '本局积分: '+str(room_data.playerData[num].score) + '\n'
+                                        alert_msg+= '本局房费: '+str(cost) + '\n'
+                                        alert_msg+= '当前余分: '+str(player.current_score) + '\n'
+                                        self.itchat_instance.send(alert_msg, wechat_uuid)
                             elif costMode == 1 and num < int(rules[0]):
                                 #百分比模式
                                 if playserScore >= 100 :
@@ -786,7 +793,12 @@ class wechatInstance():
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
                                     if wechat_uuid:
                                         self.itchat_instance.send_image(img_file, wechat_uuid)
-                                        self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  管理费：' + str(cost) , wechat_uuid)
+                                        alert_msg = player.nick_name + '\n'
+                                        alert_msg+= '上次积分: '+str(last_current_score) + '\n'
+                                        alert_msg+= '本局积分: '+str(room_data.playerData[num].score) + '\n'
+                                        alert_msg+= '本局房费: '+str(cost) + '\n'
+                                        alert_msg+= '当前余分: '+str(player.current_score) + '\n'
+                                        self.itchat_instance.send(alert_msg, wechat_uuid)
                             elif costMode == 2:
                                 values = rules[0].split('_')
                                 costs = rules[1].split('_')
@@ -815,7 +827,12 @@ class wechatInstance():
                                     #'  管理费：' + str(cost) + '  总分数：' + str(player.current_score), 'filehelper') 
                                     if wechat_uuid:
                                         self.itchat_instance.send_image(img_file, wechat_uuid)
-                                        self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) + '  管理费：' + str(cost) , wechat_uuid)
+                                        alert_msg = player.nick_name + '\n'
+                                        alert_msg+= '上次积分: '+str(last_current_score) + '\n'
+                                        alert_msg+= '本局积分: '+str(room_data.playerData[num].score) + '\n'
+                                        alert_msg+= '本局房费: '+str(cost) + '\n'
+                                        alert_msg+= '当前余分: '+str(player.current_score) + '\n'
+                                        self.itchat_instance.send(alert_msg, wechat_uuid)
 
                         if costed == False:
                             score = Score(player=player, score=playserScore, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
@@ -829,7 +846,12 @@ class wechatInstance():
                             #'  总分数：' + str(player.current_score), 'filehelper')      
                             if wechat_uuid:
                                 self.itchat_instance.send_image(img_file, wechat_uuid)
-                                self.itchat_instance.send('得分：' + str(room_data.playerData[num].score) , wechat_uuid)
+                                alert_msg = player.nick_name + '\n'
+                                alert_msg+= '上次积分: '+str(last_current_score) + '\n'
+                                alert_msg+= '本局积分: '+str(room_data.playerData[num].score) + '\n'
+                                alert_msg+= '本局房费: 无' + '\n'
+                                alert_msg+= '当前余分: '+str(player.current_score) + '\n'
+                                self.itchat_instance.send(alert_msg, wechat_uuid)
                     except:
                         traceback.print_exc()
                         self.itchat_instance.send('发生异常！', 'filehelper')
