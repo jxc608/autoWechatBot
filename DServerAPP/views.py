@@ -295,13 +295,13 @@ def add_player(request):
     except Player.DoesNotExist:
         pass
 
-    gameID = GameID.objects.filter(gameid=gameid)
+    gameID = GameID.objects.filter(gameid=gameid, club=club)
     if len(gameID) > 0:
         return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
 
     player = Player(wechat_nick_name='tempUser', nick_name=nickname, club=club, current_score=0, history_profit=0)
     player.save()
-    gameid = GameID(player=player, gameid=gameid, game_nick_name=nickname)
+    gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=nickname)
     gameid.save()
 
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
@@ -318,7 +318,7 @@ def add_gameid(request):
     except Player.DoesNotExist:
         return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
 
-    gameID = GameID.objects.filter(gameid=gameid)
+    gameID = GameID.objects.filter(gameid=gameid, club=club)
     if len(gameID) > 0:
         player_id = gameID[0].player_id
         ids_count = GameID.objects.filter(player_id=player_id).values("gameid").distinct().count()
@@ -336,7 +336,7 @@ def add_gameid(request):
         player.save()
         original_player.delete()
     else:
-        gameid = GameID(player=player, gameid=gameid, game_nick_name=player.nick_name)
+        gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=player.nick_name)
         gameid.save()
 
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
@@ -357,7 +357,7 @@ def del_gameid(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 
-def wechat_bind(request):
+def wechat_friends(request):
     player_id = int(request.POST.get('id'))
     nick_name = request.POST.get('nick_name')
     wechat_nick_name = request.POST.get('wechat_nick_name')
@@ -370,7 +370,26 @@ def wechat_bind(request):
     if not wx_login or club.expired_time < time.time():
         return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
 
-    code, msg = bot.set_alias(wechat_nick_name, nick_name)
+    list_ = bot.search_friends(wechat_nick_name)
+
+    return HttpResponse(json.dumps({'result': 0, 'list':list_}), content_type="application/json")
+
+
+def wechat_bind(request):
+    player_id = int(request.POST.get('id'))
+    user_name = request.POST.get('user_name')
+    nick_name = request.POST.get('nick_name')
+    wechat_nick_name = request.POST.get('wechat_nick_name')
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    bot = wechatManager.wechatInstance.new_instance(club.user_name)
+    wx_login = bot.is_login()
+    uuid = None
+    if not wx_login or club.expired_time < time.time():
+        return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+
+    code, msg = bot.set_alias(user_name, nick_name)
     if code == 0:
         player = Player.objects.get(id=player_id)
         if player.club_id != club.uuid:

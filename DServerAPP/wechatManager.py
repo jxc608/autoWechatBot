@@ -422,7 +422,7 @@ class wechatInstance():
 
             self.itchat_instance.send('正在识别...', 'filehelper')
 
-            club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
+            club_path = settings.STATIC_ROOT + '/upload/' + clubInstance.user_name + '/'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
             img_file = club_path + msg.fileName
@@ -657,7 +657,7 @@ class wechatInstance():
                 erro_msg+= 'roundCounter:' + str(room_data.roundCounter) + '\n'
                 erro_msg+= 'players:' + str(len(room_data.playerData))
 
-                wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
+                wrong_image = WrongImage(club_name=clubInstance.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
                 self.itchat_instance.send(erro_msg, 'filehelper')
                 return
@@ -672,14 +672,14 @@ class wechatInstance():
             
             try:
                 print('roomId:'+str(room_data.roomId)+',startTime:'+str(startTime))
-                HistoryGame.objects.get(club_id=self.club.uuid, round_number=room_data.roundCounter, room_id=room_data.roomId, start_time=startTime)
+                HistoryGame.objects.get(club_id=clubInstance.uuid, round_number=room_data.roundCounter, room_id=room_data.roomId, start_time=startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
                 return ''
             except HistoryGame.DoesNotExist:
                 playerData = []
                 for d in room_data.playerData:
                     playerData.append(d.dumps())
-                historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,\
+                historyGame = HistoryGame(club=clubInstance, room_id=room_data.roomId, hoster_name=room_data.roomHoster,\
                 hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, \
                 player_data=json.dumps(playerData), create_time=timezone.now())
                 historyGame.save()
@@ -698,13 +698,13 @@ class wechatInstance():
                 self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper') 
                 '''
                 rules = []
-                club_ = Clubs.objects.get(user_name=self.club.user_name)
-                if club_.cost_param == None or club_.cost_param == 'none' or club_.cost_param == '':
+                clubInstance = Clubs.objects.get(user_name=clubInstance.user_name)
+                if clubInstance.cost_param == None or clubInstance.cost_param == 'none' or clubInstance.cost_param == '':
                     pass
                 else:
-                    rules = club_.cost_param
+                    rules = clubInstance.cost_param
                     rules = rules.split('|')
-                costMode = club_.cost_mode
+                costMode = clubInstance.cost_mode
 
                 clubProfit = 0
                 
@@ -719,7 +719,7 @@ class wechatInstance():
                     if room_data.playerData[num].name == room_data.roomHoster:
                         is_host = 1
                     try:
-                        gameid = GameID.objects.get(club=self.club, gameid=room_data.playerData[num].id)
+                        gameid = GameID.objects.get(club=clubInstance, gameid=room_data.playerData[num].id)
                         player = gameid.player
                         f = self.itchat_instance.search_friends(remarkName=player.nick_name)
                         print('friends......')
@@ -733,11 +733,12 @@ class wechatInstance():
 
                     except GameID.DoesNotExist:
                         self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：tempUser', 'filehelper')
-                        player = Player(wechat_nick_name='tempUser', nick_name=room_data.playerData[num].name, club=self.club, current_score=0, history_profit=0)
+                        player = Player(wechat_nick_name='tempUser', nick_name=room_data.playerData[num].name, club=clubInstance, current_score=0, history_profit=0)
                         player.save()
-                        gameid = GameID(club=self.club, player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
+                        gameid = GameID(club=clubInstance, player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
                         gameid.save()
-                    player.today_hoster_number += 1
+                    if is_host:
+                        player.today_hoster_number += 1
                     try:
                         last_current_score = player.current_score;
 
@@ -858,8 +859,8 @@ class wechatInstance():
                         continue
                 historyGame.save()        
           
-            self.club.profit += clubProfit
-            self.club.save()
+            clubInstance.profit += clubProfit
+            clubInstance.save()
             pic_msg+= '-------------------------------------\n'
             pic_msg+= '获得管理费：' + str(clubProfit)
             self.itchat_instance.send(pic_msg, 'filehelper') 
@@ -919,11 +920,21 @@ class wechatInstance():
         print('thread start')
         self.itchat_instance.run()
 
-    def set_alias(self, wechat_nick_name, nick_name):
+    def search_friends(self, wechat_nick_name):
+        list_ = []
         f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
-        if len(f) == 0:
-            return  1, '微信昵称不存在'
-        ret = self.itchat_instance.set_alias(f[0]['UserName'], nick_name)
+        for ff in f:
+            data = {
+                "NickName":ff["NickName"],
+                "UserName":ff["UserName"],
+                "Signature":ff["Signature"],
+                "HeadImgUrl":ff["HeadImgUrl"],
+            }
+            list_.append(data)
+        return list_
+
+    def set_alias(self, wechat_user_name, nick_name):
+        ret = self.itchat_instance.set_alias(wechat_user_name, nick_name)
         if ret['BaseResponse']['Ret'] != 0:
             return 2, ret['BaseResponse']['ErrMsg']
         return 0, '绑定成功'
