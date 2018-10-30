@@ -13,6 +13,8 @@ import time,datetime,json
 from django.db import connection
 from django.conf import settings
 from django.db.models import Sum
+import xlwt
+import io
 
 def timestamp2string(timeStamp): 
   try: 
@@ -191,21 +193,36 @@ def room_data(request):
     day = datetime.datetime.now().strftime('%Y-%m-%d')
     if request.GET.get('date'):
         day = request.GET.get('date')
+    orderby = request.GET.get('order', 'round')
+
     club = Clubs.objects.get(user_name=request.session['club'])
     rooms = HistoryGame.objects.filter(club=club, create_time__startswith=day)
     total_cost = 0
     total_score = 0
+    total_round = 0
+    total_profit = 0
     for room in rooms:
         total_cost += room.cost
         total_score += room.score
-    return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total_cost':total_cost, 'total_score':total_score, 'day':day})
+        total_round += room.round_number
+        total_profit += room.score - room.cost
+
+    if orderby == 'cost':  
+        rooms = sorted(rooms, key=lambda rooms : rooms.cost, reverse=True) 
+    elif orderby == 'score':  
+        rooms = sorted(rooms, key=lambda rooms : rooms.score, reverse=True) 
+    elif orderby == 'round':  
+        rooms = sorted(rooms, key=lambda rooms : rooms.round_number, reverse=True)
+    total = len(rooms)
+
+    return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total':total, 'total_cost':total_cost, 'total_score':total_score, 'total_round':total_round, 'total_profit':total_profit, 'day':day})
 
 def player_room_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     day = datetime.datetime.now().strftime('%Y-%m-%d')
     if request.GET.get('date'):
         day = request.GET.get('date')
-
+    orderby = request.GET.get('order', 'round')
     players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
 
     for player in players:
@@ -219,7 +236,15 @@ def player_room_data(request):
             player.total_score = 0    
         player.total_host = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
         if player.total_host == None:
-            player.total_host = 0    
+            player.total_host = 0
+    if orderby == 'round':  
+        players = sorted(players, key=lambda players : players.total_round, reverse=True) 
+    elif orderby == 'host':  
+        players = sorted(players, key=lambda players : players.total_host, reverse=True)
+    elif orderby == 'score':  
+        players = sorted(players, key=lambda players : players.total_score, reverse=True)
+    elif orderby == 'cost':  
+        players = sorted(players, key=lambda players : players.total_cost, reverse=True)
     return render(request, 'DServerAPP/player_room_data.html', {'players':players,'day':day})
     
 def player_data(request):
@@ -657,5 +682,20 @@ def del_data(request):
     print(sql)
     cursor.execute(sql)
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def stat_xls(request):
+    
+    wb = xlwt.Workbook()
+    wb.encoding='utf-8'
+    ws = wb.add_sheet('1')
+    ws.write(0,1,'123')  #如果要写中文请使用UNICODE
+    sio = io.BytesIO()
+    wb.save(sio)   #这点很重要，传给save函数的不是保存文件名，而是一个StringIO流
+    sio.seek(0)
+    res = HttpResponse()
+    res["Content-Type"] = "application/vnd.ms-excel"
+    res["Content-Disposition"] = 'filename="userinfos.xlsx"'
+    res.write(sio.getvalue())
+    return res
 
 

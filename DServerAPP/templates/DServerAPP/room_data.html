@@ -56,19 +56,17 @@
                             <b>总计</b>
                         </li>
                         <li class="list-group-item">
-                             <b>今日管理费:</b>{{total_cost}}&nbsp;&nbsp;<b>今日盈亏:</b>{{total_score}}
+                             <b>今日管理费:</b>{{total_cost}}&nbsp;&nbsp;<b>今日盈亏:</b>{{total_profit}}&nbsp;&nbsp;<b>开放开局:</b>{{total}}房，{{total_round}}局
                         </li>
                         <li class="list-group-item">
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
                                     <th>房间ID</th>
-                                    <th>房主ID</th>
-                                    <th>房主昵称</th>
-                                    <th>对局时间</th>
-                                    <th>对局数</th>
-                                    <th>得分</th>
-                                    <th>管理费</th>
+                                    <th>房主</th>
+                                    <th><a href="/room_data?order=round">对局数↑</a></th>
+                                    <th><a href="/room_data?order=score">得分↑</a></th>
+                                    <th><a href="/room_data?order=cost">管理费↑</a></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -77,9 +75,7 @@
                                         <td>
                                             {{room.room_id}}
                                         </td>
-                                        <td>{{room.hoster_id}}</td>
-                                        <td>{{room.hoster_name}}</td>
-                                        <td>{{room.start_time}}</td>
+                                        <td>{{room.hoster_name}}<br/>{{room.hoster_id}}</td>
                                         <td>{{room.round_number}}</td>
                                         <td>{{room.score}}</td>
                                         <td>{{room.cost}}</td>

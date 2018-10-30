@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.urls import path
 
 from . import views
@@ -34,6 +35,7 @@ urlpatterns = [
     path('add_gameid', views.add_gameid, name='add_gameid'),
     path('del_gameid', views.del_gameid, name='del_gameid'),
     path('wechat_friends', views.wechat_friends, name='wechat_friends'),
+    path('stat_xls', views.stat_xls, name='stat_xls'),
 
 
 ]

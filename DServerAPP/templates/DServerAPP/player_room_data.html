@@ -63,26 +63,21 @@
                                 <thead>
                                 <tr>
                                     <th>昵称</th>
-                                    <th>id</th>
-                                    <th>玩家微信昵称</th>
-                                    <th>对局次数</th>
-                                    <th>房主次数</th>
-                                    <th>得分</th>
-                                    <th>管理费</th>
+                                    <th><a href="/player_room_data?order=round">对局次数↑</a></th>
+                                    <th><a href="/player_room_data?order=host">房主次数↑</a></th>
+                                    <th><a href="/player_room_data?order=score">得分↑</a></th>
+                                    <th><a href="/player_room_data?order=cost">管理费↑</a></th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                     {% for player in players %}
                                         <tr>
                                         <td>
-                                            {{player.nick_name}}
-                                        </td>
-                                        <td>
+                                            {{player.nick_name}}<br/>
                                             {% for gameid in player.gameids%}
                                             {{gameid.gameid}}<br/>
                                             {% endfor %}
                                         </td>
-                                        <td>{{player.wechat_nick_name}}</td>
                                         <td>{{player.total_round}}</td>
                                         <td>{{player.total_host}}</td>
                                         <td>{{player.total_score}}</td>
