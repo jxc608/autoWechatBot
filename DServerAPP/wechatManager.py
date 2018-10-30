@@ -124,7 +124,22 @@ def getPlayerScore(nickName, itchatInstance, self):
         itchatInstance.send('用户:' + nickName + '不存在，请先注册用户', 'filehelper')
         return '命令执行失败: %s' % msg['Content']
 
+def get_data_pos(result):
+    pos = []
+    for words in result:
+        pos.append(words['chars'][0]['location']['left'])
+    a = {}
+    for i in pos:
+        if pos.count(i)>=1:
+            a[i] = pos.count(i)        
+    a = sorted(a.items(), key=lambda item:item[1],reverse=True)
+    print('=============')
+    print(a)
+    print('=============')
+
+
 def get_pic_info(result):
+    #get_data_pos(result)
     room_id = None
     hoster = None
     hoster_id = 0
@@ -151,6 +166,7 @@ def get_pic_info(result):
         'player_id':{'start':600, 'end':650},
         'score':{'start':790, 'end':850},
     }
+    print(result)
     data_list = []
     for words in result:
         if not room_id:
@@ -173,18 +189,23 @@ def get_pic_info(result):
         if not caption_start and room_id and hoster and round_number and start_time:
             caption_start = True
             continue
-
         if not caption_user and words['words'].strip() == '玩家':
+            pos_range['player']['start'] = words['chars'][0]['location']['left']
+            pos_range['player']['end'] = pos_range['player']['start'] + 100
             caption_user = True
         if not caption_id and words['words'].strip() == 'ID':
+            pos_range['player_id']['start'] = words['chars'][0]['location']['left']
+            pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
             caption_id = True
         if not caption_score and words['words'].strip() == '积分':
+            pos_range['score']['start'] = words['chars'][0]['location']['left']
+            pos_range['score']['end'] = pos_range['score']['start'] + 100
             caption_score = True
         #标题部分
         if not player_start and caption_user and caption_id and caption_score:
             player_start = True
             continue
-
+        print('player:'+str(player)+'=======player_id:'+str(player_id))
         if player and player_id and not score:
 
             tmp_player_id = ''
@@ -215,18 +236,18 @@ def get_pic_info(result):
             player = None
             player_id = None
             score = None
-
+        is_number = re.search(r'^\d+', words['words']) or re.search(r'^\d+-\d+', words['words'])
         if words['chars'][0]['location']['left'] >= pos_range['player']['start'] \
             and words['chars'][0]['location']['left'] < pos_range['player']['end']:
             player = words['words']
             player_chars = words['chars']
-        elif words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
+        elif is_number and words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
             and words['chars'][0]['location']['left'] < pos_range['player_id']['end']:
             player_id = words['words']
             player_id_chars = words['chars']
             if not player:
                 player = '-'
-        elif words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
+        elif is_number and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
             and words['chars'][0]['location']['left'] < pos_range['score']['end']:
             score = words['words']
             score_chars = words['chars']
@@ -557,7 +578,6 @@ class wechatInstance():
             #从识别的文本中抓取最终结果
             resultDir = result['direction']#0:是正常方向，3是顺时针90度
             wordsArray = result['words_result']
-            get_pic_info(wordsArray)
             #把数据按坐标排序
             dataTable = {}
             if resultDir == 0:
