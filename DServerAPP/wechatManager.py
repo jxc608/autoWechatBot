@@ -136,12 +136,13 @@ def get_data_pos(index, result):
     print(pos)
 
 def get_pic_info(result):
+    print(result)
     room_id = 0
     hoster = None
     hoster_id = 0
     round_number = 0
     start_time = None
-    
+
     caption_user = False
     caption_id = False
     caption_score = False
@@ -196,8 +197,11 @@ def get_pic_info(result):
             pos_range['player_id']['start'] = words['chars'][0]['location']['left']
             pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
             caption_id = True
-        if not caption_score and words['words'].strip() == '积分':
-            pos_range['score']['start'] = words['chars'][0]['location']['left']
+        if not caption_score and words['words'].strip() == '积分' or re.search(r'D积分$', words['words']):
+            if re.search(r'D积分$', words['words']):
+                pos_range['score']['start'] = words['chars'][1]['location']['left']
+            else:
+                pos_range['score']['start'] = words['chars'][0]['location']['left']
             pos_range['score']['end'] = pos_range['score']['start'] + 100
             caption_score = True
 
@@ -212,7 +216,7 @@ def get_pic_info(result):
             pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
             player_start = True
             continue
-        print('player:'+str(player)+'=======player_id:'+str(player_id))
+        print('player:'+str(player)+'=======player_id:'+str(player_id)+'=======score:'+str(score))
         if player and player_id and not score:
 
             tmp_player_id = ''
@@ -243,18 +247,19 @@ def get_pic_info(result):
             player = None
             player_id = None
             score = None
-        is_number = re.search(r'^\d+', words['words']) or re.search(r'^\d+-\d+', words['words'])
+        is_player_id = re.search(r'^\d+', words['words']) or re.search(r'^\d+-\d+', words['words'])
+        is_socre =  re.search(r'^\d+', words['words']) or re.search(r'^-\d+', words['words'])
         if words['chars'][0]['location']['left'] >= pos_range['player']['start'] \
             and words['chars'][0]['location']['left'] < pos_range['player']['end']:
             player = words['words']
             player_chars = words['chars']
-        elif is_number and words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
+        elif is_player_id and words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
             and words['chars'][0]['location']['left'] < pos_range['player_id']['end']:
             player_id = words['words']
             player_id_chars = words['chars']
             if not player:
                 player = '-'
-        elif is_number and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
+        elif is_socre and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
             and words['chars'][0]['location']['left'] < pos_range['score']['end']:
             score = words['words']
             score_chars = words['chars']

@@ -253,7 +253,7 @@ def player_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     player_id = 0
     if gameid_search:
-        gameids = GameID.objects.filter(gameid=gameid_search).values("player_id").distinct()
+        gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
         if gameids.count() == 0:
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
         player_id = gameids[0]['player_id']
@@ -492,7 +492,7 @@ def score_change(request):
 
     player_id = 0
     if gameid_search:
-        gameids = GameID.objects.filter(gameid=gameid_search).values("player_id").distinct()
+        gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
         if gameids.count() == 0:
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
         player_id = gameids[0]['player_id']
@@ -529,7 +529,7 @@ def score_change_log(request):
     sql+= " on player.id=scorechange.player_id "
     sql+= " left join  DServerAPP_gameid gameid "
     sql+= " on player.id=gameid.player_id"
-    sql+= " where club_id='"+str(club.uuid).replace('-','')+"'"
+    sql+= " where player.club_id='"+str(club.uuid).replace('-','')+"'"
     if nickname_search:
         sql+= " and nick_name like '%"+nickname_search+"%'"
     if gameid_search:
