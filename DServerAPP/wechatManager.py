@@ -124,27 +124,24 @@ def getPlayerScore(nickName, itchatInstance, self):
         itchatInstance.send('用户:' + nickName + '不存在，请先注册用户', 'filehelper')
         return '命令执行失败: %s' % msg['Content']
 
-def get_data_pos(result):
+def get_data_pos(index, result):
+    pos = {}
     pos = []
-    for words in result:
-        pos.append(words['chars'][0]['location']['left'])
-    a = {}
-    for i in pos:
-        if pos.count(i)>=1:
-            a[i] = pos.count(i)        
-    a = sorted(a.items(), key=lambda item:item[1],reverse=True)
-    print('=============')
-    print(a)
-    print('=============')
-
+    for i, words in enumerate(result):
+        if i <= index:
+            continue
+        left = words['chars'][0]['location']['left']
+        pos.append(left)
+    pos.sort()
+    print(pos)
 
 def get_pic_info(result):
-    #get_data_pos(result)
-    room_id = None
+    room_id = 0
     hoster = None
     hoster_id = 0
-    round_number = None
+    round_number = 0
     start_time = None
+    
     caption_user = False
     caption_id = False
     caption_score = False
@@ -162,13 +159,12 @@ def get_pic_info(result):
     player_start = False
     #首字范围
     pos_range = {
-        'player':{'start':200, 'end':300},
-        'player_id':{'start':600, 'end':650},
-        'score':{'start':790, 'end':850},
+        'player':{'start':200, 'end':300, 'base':139},
+        'player_id':{'start':600, 'end':650, 'base':612},
+        'score':{'start':790, 'end':850, 'base':796},
     }
-    print(result)
     data_list = []
-    for words in result:
+    for index, words in enumerate(result):
         if not room_id:
             r = re.search(r'房号:\d+', words['words'])
             if r:
@@ -177,6 +173,9 @@ def get_pic_info(result):
             r = re.search(r'房主:(.*)', words['words'])
             if r:
                 hoster = r.group(0).split(':')[1]
+            r = re.search(r'房主$', words['words'])
+            if r:
+                hoster = '-'
         if not round_number:
             r = re.search(r'局数:\d+', words['words'])
             if r:
@@ -201,8 +200,16 @@ def get_pic_info(result):
             pos_range['score']['start'] = words['chars'][0]['location']['left']
             pos_range['score']['end'] = pos_range['score']['start'] + 100
             caption_score = True
+
         #标题部分
         if not player_start and caption_user and caption_id and caption_score:
+            player_start = True
+            continue
+        #标题部分
+        if not player_start and caption_user and not caption_id and caption_score:
+            rate = pos_range['player']['start'] / pos_range['player']['base'] 
+            pos_range['player_id']['start'] = pos_range['player_id']['base'] * rate
+            pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
             player_start = True
             continue
         print('player:'+str(player)+'=======player_id:'+str(player_id))
