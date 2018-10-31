@@ -194,14 +194,14 @@ def get_pic_info(result):
             pos_range['player']['end'] = pos_range['player']['start'] + 100
             caption_user = True
         if not caption_id and words['words'].strip() == 'ID':
-            pos_range['player_id']['start'] = words['chars'][0]['location']['left']
+            pos_range['player_id']['start'] = words['chars'][0]['location']['left'] - 10
             pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
             caption_id = True
         if not caption_score and words['words'].strip() == '积分' or re.search(r'D积分$', words['words']):
             if re.search(r'D积分$', words['words']):
-                pos_range['score']['start'] = words['chars'][1]['location']['left']
+                pos_range['score']['start'] = words['chars'][1]['location']['left'] - 10
             else:
-                pos_range['score']['start'] = words['chars'][0]['location']['left']
+                pos_range['score']['start'] = words['chars'][0]['location']['left'] - 10
             pos_range['score']['end'] = pos_range['score']['start'] + 100
             caption_score = True
 
@@ -292,7 +292,7 @@ class wechatInstance():
         self.club = clubInstance
 
         # 接受文字命令的 逻辑处理
-        @self.itchat_instance.msg_register(itchat.content.TEXT)
+        #@self.itchat_instance.msg_register(itchat.content.TEXT)
         def simple_reply(msg):
             clubInstance = Clubs.objects.get(user_name=self.club.user_name)
             if clubInstance.expired_time < time.time():
@@ -1065,7 +1065,7 @@ class wechatInstance():
                 return
 
             try:
-                HistoryGame.objects.get(club_id=clubInstance.uuid, round_number=room_data.roundCounter, room_id=room_data.roomId, start_time=room_data.startTime)
+                HistoryGame.objects.get(club_id=clubInstance.uuid, room_id=room_data.roomId, start_time=room_data.startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
                 return ''
             except HistoryGame.DoesNotExist:
@@ -1140,7 +1140,10 @@ class wechatInstance():
                                 #固定模式 3|20_15_10|100
                                 value = int(rules[2])
                                 params = rules[1].split('_')
-                                cost = int(params[num])
+                                if params[num].isdigit():
+                                    cost = int(params[num])
+                                else:
+                                    cost = int(playserScore * float(params[num]))
 
                                 if playserScore > value:
                                     score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)

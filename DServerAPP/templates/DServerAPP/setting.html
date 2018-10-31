@@ -43,8 +43,8 @@
                               <div class="form-group">
                                 <label for="key_type">模式:</label>
                                 <select class="form-control" id="mode" onchange="change_mode()">
-                                    <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>前x名固定</option>
-                                    <option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名百分比</option>
+                                    <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>前x名固定或百分比</option>
+                                    <!--<option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名百分比</option>-->
                                     <option value="2" {% if club.cost_mode == 2 %}selected{% endif %}>所有固定</option>
                                 </select>
                               </div>
@@ -54,9 +54,9 @@
                                     前
                                     <input type="text" class="form-control" id="param1_0" value="{%if club.cost_mode == 0 %}{{params.0}}{%endif%}">
                                     名&nbsp;
-                                    固定值
+                                    固定值或百分比
                                     <input type="text" class="form-control" id="param2_0" value="{%if club.cost_mode == 0 %}{{params.1}}{%endif%}">
-                                    (例如前3名：20_15_10)，最低
+                                    (例如前3名：20_15_10 或 0.03_30_0.01 小于1按百分比，大于1按固定)，最低
                                     <input type="text" class="form-control" id="param3_0" value="{%if club.cost_mode == 0 %}{{params.2}}{%endif%}">（至少达到此分数才会收取）
                                   </div>
                               </div>
@@ -69,6 +69,7 @@
                                     百分比
                                     <input type="text" class="form-control" id="param2_1" value="{%if club.cost_mode == 1 %}{{params.1}}{%endif%}">
                                     (例如前3名：0.05_0.03_0.02)
+                                    <input type="text" class="form-control" id="param3_1" value="{%if club.cost_mode == 1 %}{{params.2}}{%endif%}">（至少达到此分数才会收取）
                                   </div>
                               </div>
                               <div class="form-group" id="mode_2" style="display:none">

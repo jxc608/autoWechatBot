@@ -76,7 +76,6 @@ def register(request):
     username=request.POST.get('username','')
     password=request.POST.get('password','')
     cpassword=request.POST.get('cpassword','')
-    print(username)
 
     if username == None:
         return render(request, 'DServerAPP/register.html', {"account": 1, "acct":"账号为空" })
@@ -304,7 +303,6 @@ def player_stat(request):
                 'profit':players_profit[index]
             }
         )
-    print(list_)
     return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def add_player(request):
@@ -347,7 +345,6 @@ def add_gameid(request):
     if len(gameID) > 0:
         player_id = gameID[0].player_id
         ids_count = GameID.objects.filter(player_id=player_id).values("gameid").distinct().count()
-        print(ids_count)
         if ids_count > 1:
             return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
         GameID.objects.filter(player_id=player_id).update(player_id=player.id)
@@ -452,7 +449,7 @@ def add_score(request):
     else:
         ip = request.META['REMOTE_ADDR']
 
-    score_change = ScoreChange(player=player, score=score, agent=agent, ip=ip, create_time=int(time.time()))
+    score_change = ScoreChange(player=player, club=club, score=score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save();
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
 
@@ -479,7 +476,7 @@ def minus_score(request):
     else:
         ip = request.META['REMOTE_ADDR']
 
-    score_change = ScoreChange(player=player, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
+    score_change = ScoreChange(player=player, club=club, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save();
 
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
@@ -519,40 +516,43 @@ def score_change(request):
 def score_change_log(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
-    club = Clubs.objects.get(user_name=request.session['club'])
+    day = datetime.datetime.now().strftime('%Y-%m-%d')
+    if request.GET.get('date'):
+        day = request.GET.get('date')
 
+    club = Clubs.objects.get(user_name=request.session['club'])
+    #列表
     cursor=connection.cursor()
-    sql = " select player.id, player.wechat_nick_name, player.nick_name,"
-    sql+= " player.current_score, scorechange.score,gameid,"
-    sql+= " scorechange.agent, scorechange.ip, scorechange.create_time"
+    sql = " select player.id, player.nick_name,"
+    sql+= " scorechange.score, scorechange.agent, scorechange.ip, scorechange.create_time"
     sql+= " from DServerAPP_scorechange scorechange join DServerAPP_player player"
     sql+= " on player.id=scorechange.player_id "
-    sql+= " left join  DServerAPP_gameid gameid "
-    sql+= " on player.id=gameid.player_id"
     sql+= " where player.club_id='"+str(club.uuid).replace('-','')+"'"
+    sql+= " and from_unixtime(scorechange.create_time,'%Y-%m-%d')='"+day+"'"
     if nickname_search:
         sql+= " and nick_name like '%"+nickname_search+"%'"
     if gameid_search:
-        sql+= " and gameid='"+gameid_search+"'"
+        gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
+        if gameids.count() == 0:
+            return render(request, 'DServerAPP/score_change_log.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search, 'day':day})
+        player_id = gameids[0]['player_id']
+        sql+= " and player_id="+str(player_id)
+    sql+= " order by scorechange.create_time desc"
     cursor.execute(sql)
     players = cursor.fetchall()
     list_ = []
     for player in players:
-        gameid = player[5]
-        if gameid == None:
-            gameid = '-'
-        timeArray = time.localtime(player[8])
+        gameids = GameID.objects.filter(player_id=player[0])
+        timeArray = time.localtime(player[5])
         create_time = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
         data = {
             "id":player[0],
-            "wechat_nick_name":player[1],
-            "nick_name":player[2],
-            "current_score":player[3],
-            "score":player[4],
-            "gameid":gameid,
-            "agent":player[6],
-            "ip":player[7],
+            "nick_name":player[1],
+            "score":player[2],
+            "agent":player[3],
+            "ip":player[4],
             "create_time":create_time,
+            "gameids":gameids
         }
         if data['score'] > 0:
             data['change'] = '上分'
@@ -560,7 +560,32 @@ def score_change_log(request):
             data['change'] = '下分 '
         list_.append(data)
     total = len(list_)
-    return render(request, 'DServerAPP/score_change_log.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+    #今日统计
+    cursor=connection.cursor()
+    sql = " select sum(score) score "
+    sql+= " from DServerAPP_scorechange scorechange join DServerAPP_player player"
+    sql+= " on player.id=scorechange.player_id "
+    sql+= " where player.club_id='"+str(club.uuid).replace('-','')+"'"
+    sql+= " and from_unixtime(scorechange.create_time,'%Y-%m-%d')='"+day+"'"
+    sql+= " and score>0"
+    cursor.execute(sql)
+    rr = cursor.fetchall()
+    today_up = 0
+    if rr[0][0]:
+        today_up = rr[0][0]
+    cursor=connection.cursor()
+    sql = " select sum(score) score "
+    sql+= " from DServerAPP_scorechange scorechange join DServerAPP_player player"
+    sql+= " on player.id=scorechange.player_id "
+    sql+= " where player.club_id='"+str(club.uuid).replace('-','')+"'"
+    sql+= " and from_unixtime(scorechange.create_time,'%Y-%m-%d')='"+day+"'"
+    sql+= " and score<0"
+    cursor.execute(sql)
+    rr = cursor.fetchall()
+    today_down = 0
+    if rr[0][0]:
+        today_down = rr[0][0]
+    return render(request, 'DServerAPP/score_change_log.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search, 'day':day, 'today_up':today_up, 'today_down':today_down})
 
 def wrong_image(request):
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -625,7 +650,7 @@ def update_cost_mode(request):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         list_ = param2.split('_')
         for x in list_:
-            if not x.isdigit():
+            if not is_number(x):
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         if len(list_) < int(param1):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
@@ -669,7 +694,6 @@ def del_data(request):
     cursor=connection.cursor()
     sql = " delete from DServerAPP_historygame"
     sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
-    print(sql)
     cursor.execute(sql)
     sql = " update DServerAPP_player"
     sql+= " set current_score=0,history_profit=0,today_hoster_number=0"
@@ -679,7 +703,6 @@ def del_data(request):
     sql+= " where player_id in ("
     sql+= " select id from DServerAPP_player where club_id='" +str(club.uuid).replace('-','') + "'"
     sql+= ")"
-    print(sql)
     cursor.execute(sql)
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
@@ -695,7 +718,7 @@ def stat_xls(request):
     res = HttpResponse()
     res["Content-Type"] = "application/vnd.ms-excel"
     res["Content-Disposition"] = 'filename="userinfos.xlsx"'
-    res.write(sio.getvalue())
+    res.write(sio.read())
     return res
 
 

@@ -9,6 +9,10 @@
     <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
     <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/moment.js/2.18.1/moment-with-locales.min.js"></script>  
+    <link href="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet">  
+    <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>  
     <style>
         .top_panel {
             margin-top: 100px;
@@ -41,9 +45,13 @@
                         <li class="list-group-item">
                              <b>玩家数:</b>{{total}}
                         </li>
-                        <li class="list-group-item" style="background-color:#f5f5f5"><b>添加/查询</b></li>
+                        <li class="list-group-item" style="background-color:#f5f5f5"><b>查询</b></li>
                         <li class="list-group-item">
                             <form class="form-inline">
+                              <div class="form-group">
+                                <label for="datetime">日期</label>
+                                <input type='text' class="form-control" id='datetime' value="{{day}}"/>
+                              </div>
                               <div class="form-group">
                                 <label for="nickname">昵称:</label>
                                 <input type="email" class="form-control" id="nickname" placeholder="请输入微信昵称" value="{{nickname}}">
@@ -61,11 +69,13 @@
                             </form>
                         </li>
                         <li class="list-group-item">
+                            <b>今日上分:</b>{{today_up}}&nbsp;&nbsp;<b>今日下分:</b>{{today_down}}
+                        </li>
+                        <li class="list-group-item">
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
                                     <th>昵称</th>
-                                    <th>id</th>
                                     <th>上下分</th>
                                     <th>分数</th>
                                     <!--<th>设备</th>
@@ -77,9 +87,11 @@
                                     {% for player in players %}
                                     <tr>
                                         <td>
-                                        {{player.nick_name}}
+                                        {{player.nick_name}}<br/>
+                                        {% for gameid in player.gameids%}
+                                        {{gameid.gameid}}<br/>
+                                        {% endfor %}
                                         </td>
-                                        <td>{{player.gameid}}</td>
                                         <td>
                                             {{player.change}}
                                         </td>
@@ -92,7 +104,7 @@
                                         <td>
                                             {{player.ip}}
                                         </td>-->
-                                        <td>
+                                        <td width="20%">
                                             {{player.create_time}}
                                         </td>
                                     </tr>
@@ -110,8 +122,15 @@
         </div>
     </div>
     <script>
+        $(function () {
+            $("#datetime").datetimepicker({
+                format: 'YYYY-MM-DD',
+                locale: moment.locale('zh-cn')
+            });
+        });
+
         function search(){
-            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            window.location.href = "/score_change_log?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&date="+$('#datetime').val();;
         }
 
         function refresh(){
