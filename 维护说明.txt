@@ -1,0 +1,15 @@
+1.系统架构
+  mysql - django - uwsgi - nginx
+  请安装相关软件
+  nginx配置 - nginx.conf
+  uwsgi配置 - uwsgi.ini
+
+2.python 依赖包安装
+  pip install -r requirements.txt
+
+3.启动服务
+  开启: uwsgi --ini uwsgi.ini
+  停止: uwsgi --stop uwsgi.pid
+  刷新: uwsgi --reload uwsgi.pid
+
+
