@@ -742,7 +742,7 @@ def stat_xls(request):
     ws.write(0, 6, '负数', title_style2)  #如果要写中文请使用UNICODE
     index = 0
     for player in players:
-        if player.current_score > 0:
+        if player.current_score >= 0:
             continue
         ws.write(index + 1, minus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
         ws.write(index + 1, minus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
