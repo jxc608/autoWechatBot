@@ -449,7 +449,7 @@ def add_score(request):
     else:
         ip = request.META['REMOTE_ADDR']
 
-    score_change = ScoreChange(player=player, club=club, score=score, agent=agent, ip=ip, create_time=int(time.time()))
+    score_change = ScoreChange(player=player, score=score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save();
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
 
@@ -476,7 +476,7 @@ def minus_score(request):
     else:
         ip = request.META['REMOTE_ADDR']
 
-    score_change = ScoreChange(player=player, club=club, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
+    score_change = ScoreChange(player=player, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save();
 
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
@@ -707,18 +707,86 @@ def del_data(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def stat_xls(request):
-    
+    club = Clubs.objects.get(user_name=request.session['club'])
+    players = Player.objects.filter(club=club).order_by('-current_score')
     wb = xlwt.Workbook()
-    wb.encoding='utf-8'
-    ws = wb.add_sheet('1')
-    ws.write(0,1,'123')  #如果要写中文请使用UNICODE
+    wb.encoding = 'utf-8'
+    ws = wb.add_sheet('总账单')
+
+    total_plus = 0
+    total_minus = 0
+    plus_row1 = 1
+    plus_row2 = 2
+    minus_row1 = 5
+    minus_row2 = 6
+    title_style1 = stat_xls_style(3, 'SimSun', 400, 0, True)
+    title_style2 = stat_xls_style(7, 'SimSun', 400, 0, True)
+    text_style = stat_xls_style(1, 'SimSun', 300, 0, False)
+    num_style = stat_xls_style(1, 'Arial', 300, 0, False)
+
+    ws.write(0, 1, '名字', title_style1)  #如果要写中文请使用UNICODE
+    ws.write(0, 2, '正数', title_style2)  #如果要写中文请使用UNICODE
+    index = 0
+    for player in players:
+        if player.current_score < 0:
+            continue
+        ws.write(index + 1, plus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
+        ws.write(index + 1, plus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
+        total_plus += player.current_score
+        index += 1;
+    ws.write(index + 1, plus_row1, '总数', title_style1)  #如果要写中文请使用UNICODE
+    ws.write(index + 1, plus_row2, total_plus, title_style2)  #如果要写中文请使用UNICODE
+
+
+    ws.write(0, 5, '名字', title_style1)  #如果要写中文请使用UNICODE
+    ws.write(0, 6, '负数', title_style2)  #如果要写中文请使用UNICODE
+    index = 0
+    for player in players:
+        if player.current_score > 0:
+            continue
+        ws.write(index + 1, minus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
+        ws.write(index + 1, minus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
+        total_minus += player.current_score
+        index += 1;
+    ws.write(index + 1, minus_row1, '总数', title_style1)  #如果要写中文请使用UNICODE
+    ws.write(index + 1, minus_row2, total_minus, title_style2)  #如果要写中文请使用UNICODE
+
     sio = io.BytesIO()
     wb.save(sio)   #这点很重要，传给save函数的不是保存文件名，而是一个StringIO流
     sio.seek(0)
     res = HttpResponse()
     res["Content-Type"] = "application/vnd.ms-excel"
-    res["Content-Disposition"] = 'filename="userinfos.xlsx"'
-    res.write(sio.read())
+    res["Content-Disposition"] = 'filename="总账单.xls"'
+    res.write(sio.getvalue())
     return res
+
+def stat_xls_style(bg_color, name, height, color, bold=False):
+    style = xlwt.XFStyle()  # 初始化样式
+
+    pattern = xlwt.Pattern()   # 创建一个模式     
+    pattern.pattern = xlwt.Pattern.SOLID_PATTERN # 设置其模式为实型  
+    pattern.pattern_fore_colour = bg_color  
+
+    font = xlwt.Font()  # 为样式创建字体
+    # 字体类型：比如宋体、仿宋也可以是汉仪瘦金书繁
+    font.name = name
+    # 设置字体颜色
+    font.colour_index = color
+    # 字体大小
+    font.height = height
+
+    borders = xlwt.Borders()
+    borders.left = xlwt.Borders.THIN
+    borders.left = xlwt.Borders.THIN
+    borders.right = xlwt.Borders.THIN
+    borders.top = xlwt.Borders.THIN
+    borders.bottom = xlwt.Borders.THIN
+
+    # 定义格式
+    style.font = font
+    style.borders = borders
+    style.pattern = pattern
+
+    return style
 
 

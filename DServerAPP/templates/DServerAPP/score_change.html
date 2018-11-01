@@ -64,6 +64,9 @@
                               <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="log()">上下分记录</button>
                               </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="stat()">导出全员总账单</button>
+                              </div>
                             </form>
                         </li>
                         <li class="list-group-item">
@@ -162,6 +165,10 @@
 
         function log(){
             window.location.href = "/score_change_log";
+        }
+
+        function stat(){
+            window.location.href = "/stat_xls";
         }
 
         function add(){
