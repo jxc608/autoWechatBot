@@ -186,83 +186,81 @@ def get_pic_info(result):
             if r:
                 start_time = r.group(0).split(':')[1]
         #房号，房主，局数，开始时间识别结束
-        if not caption_start and room_id and hoster and round_number and start_time:
-            caption_start = True
-            continue
-        if not caption_user and words['words'].strip() == '玩家':
-            pos_range['player']['start'] = words['chars'][0]['location']['left']
-            pos_range['player']['end'] = pos_range['player']['start'] + 100
-            caption_user = True
-        if not caption_id and words['words'].strip() == 'ID':
-            pos_range['player_id']['start'] = words['chars'][0]['location']['left'] - 10
-            pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
-            caption_id = True
-        if not caption_score and words['words'].strip() == '积分' or re.search(r'D积分$', words['words']):
-            if re.search(r'D积分$', words['words']):
-                pos_range['score']['start'] = words['chars'][1]['location']['left'] - 10
-            else:
-                pos_range['score']['start'] = words['chars'][0]['location']['left'] - 10
-            pos_range['score']['end'] = pos_range['score']['start'] + 100
-            caption_score = True
-
-        #标题部分
-        if not player_start and caption_user and caption_id and caption_score:
-            player_start = True
-            continue
-        #标题部分
-        if not player_start and caption_user and not caption_id and caption_score:
-            rate = pos_range['player']['start'] / pos_range['player']['base'] 
-            pos_range['player_id']['start'] = pos_range['player_id']['base'] * rate
-            pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
-            player_start = True
-            continue
-        print('player:'+str(player)+'=======player_id:'+str(player_id)+'=======score:'+str(score))
-        if player and player_id and not score:
-
-            tmp_player_id = ''
-            tmp_score = ''
-            if player_id == 'player_id_chars':
-                print(player_id_chars)
-            for char in player_id_chars:
-                if char['location']['left'] >= pos_range['player_id']['start'] \
-                    and char['location']['left'] < pos_range['score']['start']:
-                    tmp_player_id += char['char']
+        if room_id and hoster and round_number and start_time:
+            if not caption_user and words['words'].strip() == '玩家':
+                pos_range['player']['start'] = words['chars'][0]['location']['left'] + 20
+                pos_range['player']['end'] = pos_range['player']['start'] + 100
+                caption_user = True
+            if not caption_id and words['words'].strip() == 'ID':
+                pos_range['player_id']['start'] = words['chars'][0]['location']['left'] - 10
+                pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
+                caption_id = True
+            if not caption_score and words['words'].strip() == '积分' or re.search(r'D积分$', words['words']):
+                if re.search(r'D积分$', words['words']):
+                    pos_range['score']['start'] = words['chars'][1]['location']['left'] - 10
                 else:
-                    tmp_score += char['char']
-            player_id = tmp_player_id
-            score = tmp_score
-        if not player and player_id and score:
-            player = '-'
-        if player and player_id and score:
-            print('玩家:=============='+player)
-            print('玩家Id:==============='+player_id)                
-            print('积分:==============='+score)
-            data_list.append({
-                'name':player,
-                'id':int(player_id),
-                'score':int(score)
-            })
-            if player == hoster:
-                hoster_id = player_id
-            player = None
-            player_id = None
-            score = None
-        is_player_id = re.search(r'^\d+', words['words']) or re.search(r'^\d+-\d+', words['words'])
-        is_socre =  re.search(r'^\d+', words['words']) or re.search(r'^-\d+', words['words'])
-        if words['chars'][0]['location']['left'] >= pos_range['player']['start'] \
-            and words['chars'][0]['location']['left'] < pos_range['player']['end']:
-            player = words['words']
-            player_chars = words['chars']
-        elif is_player_id and words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
-            and words['chars'][0]['location']['left'] < pos_range['player_id']['end']:
-            player_id = words['words']
-            player_id_chars = words['chars']
-            if not player:
+                    pos_range['score']['start'] = words['chars'][0]['location']['left'] - 10
+                pos_range['score']['end'] = pos_range['score']['start'] + 100
+                caption_score = True
+
+            #标题部分
+            if not player_start and caption_user and caption_id and caption_score:
+                player_start = True
+                continue
+            #标题部分
+            if not player_start and caption_user and not caption_id and caption_score:
+                rate = pos_range['player']['start'] / pos_range['player']['base'] 
+                pos_range['player_id']['start'] = pos_range['player_id']['base'] * rate
+                pos_range['player_id']['end'] = pos_range['player_id']['start'] + 100
+                player_start = True
+                continue
+            print('player:'+str(player)+'=======player_id:'+str(player_id)+'=======score:'+str(score))
+            if player and player_id and not score:
+
+                tmp_player_id = ''
+                tmp_score = ''
+                if player_id == 'player_id_chars':
+                    print(player_id_chars)
+                for char in player_id_chars:
+                    if char['location']['left'] >= pos_range['player_id']['start'] \
+                        and char['location']['left'] < pos_range['score']['start']:
+                        tmp_player_id += char['char']
+                    else:
+                        tmp_score += char['char']
+                player_id = tmp_player_id
+                score = tmp_score
+            if not player and player_id and score:
                 player = '-'
-        elif is_socre and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
-            and words['chars'][0]['location']['left'] < pos_range['score']['end']:
-            score = words['words']
-            score_chars = words['chars']
+            if player and player_id and score:
+                print('玩家:=============='+player)
+                print('玩家Id:==============='+player_id)                
+                print('积分:==============='+score)
+                data_list.append({
+                    'name':player,
+                    'id':int(player_id),
+                    'score':int(score)
+                })
+                if player == hoster:
+                    hoster_id = player_id
+                player = None
+                player_id = None
+                score = None
+            is_player_id = re.search(r'^\d+', words['words']) or re.search(r'^\d+-\d+', words['words'])
+            is_socre =  re.search(r'^\d+', words['words']) or re.search(r'^-\d+', words['words'])
+            if words['chars'][0]['location']['left'] >= pos_range['player']['start'] \
+                and words['chars'][0]['location']['left'] < pos_range['player']['end']:
+                player = words['words']
+                player_chars = words['chars']
+            elif is_player_id and words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
+                and words['chars'][0]['location']['left'] < pos_range['player_id']['end']:
+                player_id = words['words']
+                player_id_chars = words['chars']
+                if not player:
+                    player = '-'
+            elif is_socre and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
+                and words['chars'][0]['location']['left'] < pos_range['score']['end']:
+                score = words['words']
+                score_chars = words['chars']
 
     room_data = playerResult.roomData()
     room_data.roomId = room_id

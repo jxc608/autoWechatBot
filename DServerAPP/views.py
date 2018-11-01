@@ -724,6 +724,14 @@ def stat_xls(request):
     text_style = stat_xls_style(1, 'SimSun', 300, 0, False)
     num_style = stat_xls_style(1, 'Arial', 300, 0, False)
 
+    ws.col(plus_row1).width = 256 * 30
+    ws.col(plus_row2).width = 256 * 20
+
+    ws.col(minus_row1).width = 256 * 30
+    ws.col(minus_row2).width = 256 * 20
+
+
+
     ws.write(0, 1, '名字', title_style1)  #如果要写中文请使用UNICODE
     ws.write(0, 2, '正数', title_style2)  #如果要写中文请使用UNICODE
     index = 0
