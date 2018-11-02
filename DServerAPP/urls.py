@@ -36,6 +36,10 @@ urlpatterns = [
     path('del_gameid', views.del_gameid, name='del_gameid'),
     path('wechat_friends', views.wechat_friends, name='wechat_friends'),
     path('stat_xls', views.stat_xls, name='stat_xls'),
-
+    path('bot_get_uuid', views.bot_get_uuid, name='bot_get_uuid'),
+    path('bot_check_login', views.bot_check_login, name='bot_check_login'),
+    path('bot_logout', views.bot_logout, name='bot_logout'),
+    path('bot_wechat_friends', views.bot_wechat_friends, name='bot_wechat_friends'),
+    path('bot_wechat_bind', views.bot_wechat_bind, name='bot_wechat_bind'),
 
 ]

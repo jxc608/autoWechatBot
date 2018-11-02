@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from hashring import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -134,3 +135,8 @@ CRONJOBS = [
     # 表示每天2：01执行
     ('0 0 * * *', 'blog.core.task')
 ]
+
+#机器人进程
+BOT_SERVERS = ['http://127.0.0.1:8081','http://127.0.0.1:8082']
+BOT_RING = HashRing(BOT_SERVERS)
+BOT_KEY = 'We1kskbot2018'
