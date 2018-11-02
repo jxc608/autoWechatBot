@@ -105,7 +105,7 @@ def bot_wechat_bind(request):
     key = request.GET.get("key")
     if not bot_key_check(key):
         return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
-        
+
     club_name = request.GET.get('name')
     player_id = int(request.GET.get('id'))
     user_name = request.GET.get('user_name')
@@ -344,7 +344,7 @@ def player_room_data(request):
     if request.GET.get('date'):
         day = request.GET.get('date')
     orderby = request.GET.get('order', 'round')
-    players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+    players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
     for player in players:
         player.gameids = GameID.objects.filter(player_id=player.id)
@@ -379,11 +379,11 @@ def player_data(request):
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
         player_id = gameids[0]['player_id']
     if gameid_search:        
-        players = Player.objects.filter(club=club, id=player_id).order_by('-current_score')
+        players = Player.objects.filter(club=club, id=player_id, is_del=0).order_by('-current_score')
     elif nickname_search:
-        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score')
+        players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
     else:
-        players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+        players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
     for player in players:
         gameids = GameID.objects.filter(player_id=player.id)
@@ -399,18 +399,18 @@ def player_stat(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
     if nickname_search:
-        players_cost = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-history_cost')
+        players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
     else:
-        players_cost = Player.objects.filter(club=club).order_by('-history_cost')
+        players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
 
     for player in players_cost:
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
 
     if nickname_search:
-        players_profit = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-history_profit')
+        players_profit = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_profit')
     else:
-        players_profit = Player.objects.filter(club=club).order_by('-history_profit')
+        players_profit = Player.objects.filter(club=club, is_del=0).order_by('-history_profit')
 
     for player in players_profit:
         gameids = GameID.objects.filter(player_id=player.id)
@@ -448,6 +448,21 @@ def add_player(request):
     player.save()
     gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=nickname)
     gameid.save()
+
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def del_player(request):
+    player_id = int(request.POST.get('id'))
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    player = None
+    try:
+        player = Player.objects.get(id=player_id, club=club)
+    except Player.DoesNotExist:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        
+    player.is_del = 1
+    player.save()
 
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
@@ -568,11 +583,11 @@ def score_change(request):
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
         player_id = gameids[0]['player_id']
     if gameid_search:        
-        players = Player.objects.filter(club=club, id=player_id).order_by('-current_score')
+        players = Player.objects.filter(club=club, is_del=0, id=player_id).order_by('-current_score')
     elif nickname_search:
-        players = Player.objects.filter(club=club, nick_name__contains=nickname_search).order_by('-current_score')
+        players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
     else:
-        players = Player.objects.filter(club=club).order_by('-current_score', '-history_profit')
+        players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
     for player in players:
         player.gameids = GameID.objects.filter(player_id=player.id)
@@ -603,6 +618,7 @@ def score_change_log(request):
     sql+= " on player.id=scorechange.player_id "
     sql+= " where player.club_id='"+str(club.uuid).replace('-','')+"'"
     sql+= " and from_unixtime(scorechange.create_time,'%Y-%m-%d')='"+day+"'"
+    sql+= " and is_del=0"
     if nickname_search:
         sql+= " and nick_name like '%"+nickname_search+"%'"
     if gameid_search:

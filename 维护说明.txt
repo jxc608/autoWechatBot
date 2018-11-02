@@ -2,14 +2,30 @@
   mysql - django - uwsgi - nginx
   请安装相关软件
   nginx配置 - nginx.conf
-  uwsgi配置 - uwsgi.ini
+  uwsgi配置
+   - uwsgi.ini        - web 进程
+   - uwsgi8081.ini    - 机器人进程1
+   - uwsgi8082.ini    - 机器人进程2
 2.数据库
   auto_accounting.sql
 3.python 依赖包安装
   pip install -r requirements.txt
 4.启动服务
+  web 服务
   开启: uwsgi --ini uwsgi.ini
   停止: uwsgi --stop uwsgi.pid
   刷新: uwsgi --reload uwsgi.pid
 
+  机器人 服务
+  开启: uwsgi --ini uwsgi8081.ini
+  停止: uwsgi --stop uwsgi8081.pid
+  刷新: uwsgi --reload uwsgi8081.pid
 
+  开启: uwsgi --ini uwsgi8082.ini
+  停止: uwsgi --stop uwsgi8082.pid
+  刷新: uwsgi --reload uwsgi8082.pid
+
+  机器人服务可根据情况添加
+  重新定义一个uwsgi端口.ini文件，并把ini文件里的端口也进行修改
+  并在/DServer/settings.py 中 BOT_SERVERS 列表中添加定义即可
+  

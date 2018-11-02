@@ -87,6 +87,7 @@
                                         </td>
                                         <td width="25%">
                                             <button type="button" class="btn btn-default" onclick="wechat_friends({{player.id}})">绑定</button>
+                                            <button type="button" class="btn btn-default" onclick="del_player({{player.id}})">删除</button>
                                         </td>
                                        <!-- <td>
                                             {{player.history_profit}}
@@ -201,6 +202,20 @@
                     alert('请先微信扫码登录');
                 else if (data.result == 3)
                     alert(data.msg);
+            },"json");
+        }
+
+        function del_player(player_id){
+            if(confirm('确定要删除吗？')==false)
+                return;
+            $.post("/del_player",{
+                id:player_id,
+
+            },function(data){
+                if(data.result == 0)
+                    alert('删除成功！');
+                else if (data.result == 2)
+                    alert('玩家不存在');
             },"json");
         }
 

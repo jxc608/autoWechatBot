@@ -33,6 +33,7 @@ class Player(models.Model):
     history_cost = models.IntegerField(default=0)
     introducer = models.CharField(max_length=200, default='none')
     today_hoster_number = models.IntegerField(default=0)
+    is_del = models.IntegerField(default=0)
 
 class GameID(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)    
@@ -59,7 +60,6 @@ class HistoryGame(models.Model):
     create_time = models.DateTimeField('create time')
     cost = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
-
 
 class Cdkey(models.Model):
     cdkey = models.CharField(primary_key=True, max_length=50)

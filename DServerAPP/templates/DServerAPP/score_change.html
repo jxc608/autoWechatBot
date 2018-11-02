@@ -102,6 +102,7 @@
                                             <span id="current_score_{{player.id}}">
                                             {{player.current_score}}
                                             </span>
+                                            <button type="button" class="btn btn-default" onclick="del_player({{player.id}})">删除</button>
                                         </td>
                                         <td width="20%">
                                             <input type="email" class="form-control" id="score_{{player.id}}" value="">
@@ -274,6 +275,22 @@
 
         function refresh(){
             window.location.reload();
+        }
+
+        function del_player(player_id){
+            if(confirm('确定要删除吗？')==false)
+                return;
+            $.post("/del_player",{
+                id:player_id,
+
+            },function(data){
+                if(data.result == 0){
+                    alert('删除成功！');
+                    window.location.reload();
+                }
+                else if (data.result == 2)
+                    alert('玩家不存在');
+            },"json");
         }
     </script>
 </body>
