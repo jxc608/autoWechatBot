@@ -225,12 +225,17 @@ def get_pic_info(result):
                     tmp_player_id = ''
                     tmp_score = ''
                     print(player_id_chars)
-                    for char in player_id_chars:
-                        if char['location']['left'] >= pos_range['player_id']['start'] \
-                            and char['location']['left'] < pos_range['score']['start']:
+                    last_left_pos = 0
+                    player_id_end = False
+                    for index, char in enumerate(player_id_chars):
+                        if index > 0 and char['location']['left'] - last_left_pos > 30:
+                            player_id_end = True
+                        if not player_id_end:
                             tmp_player_id += char['char']
                         else:
                             tmp_score += char['char']
+                        last_left_pos = char['location']['left']
+
                     player_id = tmp_player_id
                     score = tmp_score
                 if not player and player_id and score:
