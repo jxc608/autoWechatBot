@@ -734,17 +734,25 @@ def update_cost_mode(request):
     param1 = request.POST.get('param1')
     param2 = request.POST.get('param2')
     param3 = request.POST.get('param3')
+    if param1:
+        param1 = param1.strip()
+    if param2:
+        param2 = param2.strip()       
+    if param3:
+        param3 = param3.strip()  
 
     if mode == 0:
         if not param1.isdigit() or not param3.isdigit():
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         list_ = param2.split('_')
-        for x in list_:
+        for index, x in enumerate(list_):
+            x = x.strip()
+            list_[index] = x
             if not is_number(x):
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         if len(list_) < int(param1):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-
+        param2 = '_'.join(list_)
     elif mode == 1:
         if not param1.isdigit():
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
@@ -759,15 +767,23 @@ def update_cost_mode(request):
 
     elif mode == 2:
         list1_ = param1.split('_')
-        for x in list1_:
+        for index, x in enumerate(list1_):
+            x = x.strip()
+            list1_[index] = x
+            print('x-'+str(x))
             if not x.isdigit():
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        param1 = '_'.join(list1_)
+
         list2_ = param2.split('_')
-        for x in list2_:
+        for index, x in enumerate(list2_):
+            x = x.strip()
+            list2_[index] = x
             if not x.isdigit():
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         if len(list1_) != len(list2_):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        param2 = '_'.join(list2_)
 
     club = Clubs.objects.get(user_name=request.session['club'])
     club.cost_mode = mode

@@ -160,8 +160,10 @@
                 param3:$('#param3_'+mode).val(),
 
             },function(data){
-                if(data.result == 0)
+                if(data.result == 0){
                     alert('保存成功！');
+                    window.location.reload();
+                }
                 else
                     alert('参数格式错误！')
             },"json");
@@ -172,8 +174,9 @@
                 return;
             $.post("/del_data",{
             },function(data){
-                if(data.result == 0)
+                if(data.result == 0){
                     alert('清空成功！');
+                }
             },"json");
         }
     </script>

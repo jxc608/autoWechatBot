@@ -225,16 +225,12 @@ def get_pic_info(result):
                     tmp_player_id = ''
                     tmp_score = ''
                     print(player_id_chars)
-                    last_left_pos = 0
-                    player_id_end = False
-                    for index, char in enumerate(player_id_chars):
-                        if index > 0 and char['location']['left'] - last_left_pos > 30:
-                            player_id_end = True
-                        if not player_id_end:
+                    for char in player_id_chars:
+                        if char['location']['left'] >= pos_range['player_id']['start'] \
+                            and char['location']['left'] < pos_range['score']['start']:
                             tmp_player_id += char['char']
                         else:
                             tmp_score += char['char']
-                        last_left_pos = char['location']['left']
 
                     player_id = tmp_player_id
                     score = tmp_score
@@ -278,12 +274,24 @@ def get_pic_info(result):
     room_data.roomHosterId = hoster_id
     room_data.roomHoster = hoster
     room_data.roundCounter = round_number
+    total = 0
     for player in data_list:
         p = playerResult.playerData()
         p.name = player['name']
         p.id = player['id']
         p.score = player['score']
+        total += abs(p.score)
         room_data.playerData.append(p)
+    score = 0
+    print("total========"+str(total))
+    for playerData in room_data.playerData:
+        print("score========"+str(score)+"--player.score===="+str(playerData.score))
+
+        if score + abs(playerData.score) > total / 2:
+            playerData.score = -abs(playerData.score)
+        else:
+            playerData.score = abs(playerData.score)
+        score += abs(playerData.score)
     return room_data
 
 #itchat 实例列表
@@ -1133,8 +1141,8 @@ class wechatInstance():
                                 wechat_uuid = f['UserName']
 
                     except GameID.DoesNotExist:
-                        self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：tempUser', 'filehelper')
-                        player = Player(wechat_nick_name='tempUser', nick_name=room_data.playerData[num].name, club=clubInstance, current_score=0, history_profit=0)
+                        self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：' + room_data.playerData[num].name, 'filehelper')
+                        player = Player(wechat_nick_name=room_data.playerData[num].name, nick_name=room_data.playerData[num].name, club=clubInstance, current_score=0, history_profit=0)
                         player.save()
                         gameid = GameID(club=clubInstance, player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
                         gameid.save()
