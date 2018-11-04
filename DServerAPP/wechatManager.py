@@ -1332,9 +1332,10 @@ class wechatInstance():
         print('thread start')
         self.itchat_instance.run()
 
-    def search_friends(self, wechat_nick_name):
+    def search_friends(self, wechat_nick_name, remarkName):
         list_ = []
         f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
+        has_nickname = []
         for ff in f:
             data = {
                 "NickName":ff["NickName"],
@@ -1342,7 +1343,18 @@ class wechatInstance():
                 "Signature":ff["Signature"],
                 "HeadImgUrl":ff["HeadImgUrl"],
             }
+            has_nickname.append(ff["NickName"])
             list_.append(data)
+        f = self.itchat_instance.search_friends(remarkName=remarkName)
+        for ff in f:
+            if ff["NickName"] not in has_nickname:
+                data = {
+                    "NickName":ff["NickName"],
+                    "UserName":ff["UserName"],
+                    "Signature":ff["Signature"],
+                    "HeadImgUrl":ff["HeadImgUrl"],
+                }
+                list_.append(data)
         return list_
 
     def set_alias(self, wechat_user_name, nick_name):

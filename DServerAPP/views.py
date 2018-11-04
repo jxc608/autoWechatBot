@@ -97,7 +97,7 @@ def bot_wechat_friends(request):
     if not wx_login or club.expired_time < time.time():
         return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
 
-    list_ = bot.search_friends(wechat_nick_name)
+    list_ = bot.search_friends(wechat_nick_name, nick_name)
 
     return HttpResponse(json.dumps({'result': 0, 'list':list_}), content_type="application/json")
 
