@@ -171,7 +171,7 @@
                         html+=  data.list[i].NickName+'<br/>'+data.list[i].Signature;
                         html+='    </td>';
                         html+='    <td width="10%">';
-                        btn = "wechat_bind("+player_id+",'" + data.list[i].UserName+"')";
+                        btn = "wechat_bind("+player_id+",'" + data.list[i].UserName+"','"+ data.list[i].NickName+"')";
                         html+='        <button type="button" class="btn btn-default" onclick="'+btn+'">绑定</button>';
                         html+='    </td>';
                         html+='</tr>';
@@ -187,16 +187,18 @@
             },"json");
         }
 
-        function wechat_bind(player_id, user_name){
+        function wechat_bind(player_id, user_name, nick_name){
             $.post("/wechat_bind",{
                 id:player_id,
                 user_name:user_name,
                 nick_name:$('#nick_name_'+player_id).val(),
-                wechat_nick_name:$('#wechat_nick_name_'+player_id).val(),
+                wechat_nick_name:nick_name,
 
             },function(data){
-                if(data.result == 0)
+                if(data.result == 0){
                     alert('绑定成功！');
+                    $('#wechat_nick_name_'+player_id).val(nick_name)
+                }
                 else if (data.result == 2)
                     alert('请先微信扫码登录');
                 else if (data.result == 3)
