@@ -44,7 +44,7 @@
                                 <label for="key_type">模式:</label>
                                 <select class="form-control" id="mode" onchange="change_mode()">
                                     <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>前x名固定或百分比</option>
-                                    <!--<option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名百分比</option>-->
+                                    <option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名范围</option>
                                     <option value="2" {% if club.cost_mode == 2 %}selected{% endif %}>所有固定</option>
                                 </select>
                               </div>
@@ -66,10 +66,12 @@
                                     前
                                     <input type="text" class="form-control" id="param1_1" value="{%if club.cost_mode == 1 %}{{params.0}}{%endif%}">
                                     名&nbsp;
-                                    百分比
-                                    <input type="text" class="form-control" id="param2_1" value="{%if club.cost_mode == 1 %}{{params.1}}{%endif%}">
-                                    (例如前3名：0.05_0.03_0.02)
-                                    <input type="text" class="form-control" id="param3_1" value="{%if club.cost_mode == 1 %}{{params.2}}{%endif%}">（至少达到此分数才会收取）
+                                    范围
+                                    <textarea class="form-control" id="param2_1" name="param2_1" rows="5" style="min-width: 90%">{%if club.cost_mode == 1 %}{{params.1}}{%endif%}</textarea>
+                                    (例如前2名：0-399_400-1999*0-199_200-1999)<br/>
+                                    管理费
+                                    <textarea class="form-control" id="param3_1" name="param3_1" rows="5" style="min-width: 90%">{%if club.cost_mode == 1 %}{{params.2}}{%endif%}</textarea>
+                                    （例如前两名：40_20*80_40）
                                   </div>
                               </div>
                               <div class="form-group" id="mode_2" style="display:none">
@@ -87,6 +89,26 @@
                                 <button type="button" class="btn btn-default" onclick="update_cost()">保存</button>
                               </div>
                             </form>
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <b>修改密码</b>
+                        </li>
+                        <li class="list-group-item">
+                            <form>
+                                <div class="form-group">
+                                    <label for="account">源密码：</label>
+                                    <input type="password" class="form-control" id="old_passwd" name="old_passwd" placeholder="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="account">新密码：</label>
+                                    <input type="password" class="form-control" id="new_passwd" name="new_passwd" placeholder="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="account">确认密码：</label>
+                                    <input type="password" class="form-control" id="re_passwd" name="re_passwd" placeholder="">
+                                </div>
+                            </form>
+                            <button type="button" class="btn btn-default" onclick="change_passwd()">修改密码</button>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>数据清空</b>
@@ -168,6 +190,41 @@
                     alert('参数格式错误！')
             },"json");
         }
+
+        function change_passwd(){
+            if($('#old_passwd').val()==''){
+                alert("请输入原密码。");
+                return;
+            }
+            if($('#new_passwd').val()==''){
+                alert("请输入新密码。");
+                return;
+            }
+            if($('#re_passwd').val()!=$('#new_passwd').val()){
+                alert("新密码与确认密码不相同！");
+                return;
+            }
+
+            /*if($('#profit_'+player_id).val()==''){
+                alert("请输入盈利状况。");
+                return;
+            }*/
+            $.post("/change_passwd",{
+                old_passwd:$('#old_passwd').val(),
+                new_passwd:$('#new_passwd').val(),
+                re_passwd:$('#re_passwd').val(),
+
+            },function(data){
+                if(data.result == 0){
+                    alert('修改成功！');
+                } else if(data.result == 1){
+                    alert('源密码不正确！');
+                } else if(data.result == 2){
+                    alert('新密码与确认密码不相同！');
+                }
+            },"json");
+        }
+
 
         function del_data(){
             if(confirm("确定要清空吗？") == false)

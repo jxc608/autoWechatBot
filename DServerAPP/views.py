@@ -18,12 +18,11 @@ import io
 import requests
 import json
 
+
 def timestamp2string(timeStamp): 
   try: 
-    d = datetime.datetime.fromtimestamp(timeStamp) 
-    str1 = d.strftime("%Y-%m-%d %H:%M:%S") 
-    # 2015-08-28 16:43:37.283000' 
-    return str1 
+    timeArray = time.localtime(timeStamp)
+    return time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
   except Exception as e: 
     print(e)
     return '' 
@@ -185,7 +184,10 @@ def index(request):
         club.expired_time_desc = '已失效'
         club.expired = True
     else:
-        club.expired_time_desc = timestamp2string(club.expired_time)
+        timeArray = time.localtime(club.expired_time)
+        print(club.expired_time)
+        club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+    print(club.expired_time_desc)
     bot_info = {'wx_login':False, 'uuid':None}
     if not club.expired:
         bot_info = bot_request(club.user_name, '/bot_get_uuid?name='+club.user_name)
@@ -224,10 +226,25 @@ def register(request):
         #return HttpResponse(messageType.createMessage('success', messageType.USER_NAME_ALREADY_USED, 'the userName has already been used'))
     except Clubs.DoesNotExist:
         password=request.POST.get('password','')
-        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=time.time(), cost_mode=0, cost_param='')
+        expired = time.time() + 3600 * 12
+
+        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=expired, cost_mode=0, cost_param='')
         club.save()
         return render(request, 'DServerAPP/register.html', {"account": 2, "acct":"注册成功！" })
         #return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'register completed'))
+
+def change_passwd(request):
+    old_passwd = request.POST.get('old_passwd','')
+    new_passwd = request.POST.get('new_passwd','')
+    re_passwd = request.POST.get('re_passwd','')
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+    if old_passwd != club.password:
+        return HttpResponse(json.dumps({'result':1}), content_type="application/json")
+    club.password = new_passwd
+    club.save()
+    return HttpResponse(json.dumps({'result':0}), content_type="application/json")
+
 
 def login_password(request):
     username=request.POST.get('username','')
@@ -265,7 +282,7 @@ def add_time(request):
             return HttpResponse(messageType.createMessage('success', messageType.CDKEY_USED, 'the cdkey used'))
         time_add = 0
         if keyInstance.key_type == 1:
-            time_add = 3600
+            time_add = 3600 * 24
         elif keyInstance.key_type == 2:
             time_add = 3600 * 24 * 7
         elif keyInstance.key_type == 3:
@@ -435,14 +452,14 @@ def add_player(request):
 
     player = None
     try:
-        player = Player.objects.get(nick_name=nickname, club=club)
+        player = Player.objects.get(nick_name=nickname, club=club, is_del=0)
         return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
     except Player.DoesNotExist:
         pass
 
-    gameID = GameID.objects.filter(gameid=gameid, club=club)
-    if len(gameID) > 0:
-        return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+    #gameID = GameID.objects.filter(gameid=gameid, club=club)
+    #if len(gameID) > 0:
+    #    return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
 
     player = Player(wechat_nick_name='tempUser', nick_name=nickname, club=club, current_score=0, history_profit=0)
     player.save()
@@ -754,17 +771,21 @@ def update_cost_mode(request):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         param2 = '_'.join(list_)
     elif mode == 1:
-        if not param1.isdigit():
-            return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-        list_ = param2.split('_')
-        for x in list_:
-            if not is_number(x):
-                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-            if float(x) > 1:
-                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-        if len(list_) < int(param1):
+        list1_ = param2.split('*')
+        list2_ = param3.split('*')
+        print(str(len(list1_)) +'----' + str(len(list2_)))
+
+        if len(list1_) != len(list2_):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
 
+        for index, p in enumerate(list1_):
+            #range_ = re.findall('\d+-\d+', p)
+            range_ = p.split('_')
+            cost_ = list2_[index].split('_')
+            print(str(len(range_)) +'----' + str(len(cost_)))
+            print(list2_[index])
+            if len(range_) != len(cost_):
+                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
     elif mode == 2:
         list1_ = param1.split('_')
         for index, x in enumerate(list1_):
@@ -788,6 +809,8 @@ def update_cost_mode(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     club.cost_mode = mode
     if mode == 0:
+        club.cost_param = '%s|%s|%s' % (param1, param2, param3)
+    elif mode == 1:
         club.cost_param = '%s|%s|%s' % (param1, param2, param3)
     else:
         club.cost_param = '%s|%s' % (param1, param2)
@@ -814,7 +837,7 @@ def del_data(request):
 
 def stat_xls(request):
     club = Clubs.objects.get(user_name=request.session['club'])
-    players = Player.objects.filter(club=club).order_by('-current_score')
+    players = Player.objects.filter(club=club, is_del=0).order_by('-current_score')
     wb = xlwt.Workbook()
     wb.encoding = 'utf-8'
     ws = wb.add_sheet('总账单')

@@ -42,5 +42,6 @@ urlpatterns = [
     path('bot_wechat_friends', views.bot_wechat_friends, name='bot_wechat_friends'),
     path('bot_wechat_bind', views.bot_wechat_bind, name='bot_wechat_bind'),
     path('del_player', views.del_player, name='del_player'),
+    path('change_passwd', views.change_passwd, name='change_passwd'),
 
 ]

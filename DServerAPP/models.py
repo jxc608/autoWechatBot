@@ -19,7 +19,7 @@ class Clubs(models.Model):
     password = models.CharField(max_length=20)
     expired_time = models.DecimalField(max_digits=19, decimal_places=6)
     cost_mode = models.IntegerField(default=0)#管理费模式 固定 还是 百分比
-    cost_param = models.CharField(max_length=200, default='none')
+    cost_param = models.CharField(max_length=1000, default='none')
     profit = models.IntegerField(default=0)
 
 class Player(models.Model):

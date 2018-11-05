@@ -205,6 +205,8 @@ def get_pic_info(result):
             if not caption_score and re.search(r'(.*)积分$', words['words']):
                 score_pos = len(words['chars']) - 2
                 pos_range['score']['start'] = words['chars'][score_pos]['location']['left'] - 10
+                print("score_pos*****************"+str(pos_range['score']['start']))
+
                 pos_range['score']['end'] = pos_range['score']['start'] + 100
                 caption_score = True
             #标题部分
@@ -251,19 +253,18 @@ def get_pic_info(result):
                     player_id = None
                     score = None
                 is_player_id = re.search(r'^\d+', words['words']) or re.search(r'^\d+-\d+', words['words'])
-                is_socre =  re.search(r'^\d+', words['words']) or re.search(r'^-\d+', words['words'])
-
+                is_score =  re.search(r'^\d+', words['words']) or re.search(r'^-\d+', words['words'])
                 if words['chars'][0]['location']['left'] >= pos_range['player']['start'] \
-                    and words['chars'][0]['location']['left'] < pos_range['player']['end']:
+                    and words['chars'][0]['location']['left'] < pos_range['player_id']['start']:
                     player = words['words']
                     player_chars = words['chars']
                 elif is_player_id and words['chars'][0]['location']['left'] >= pos_range['player_id']['start'] \
-                    and words['chars'][0]['location']['left'] < pos_range['player_id']['end']:
+                    and words['chars'][0]['location']['left'] < pos_range['score']['start']:
                     player_id = words['words']
                     player_id_chars = words['chars']
                     if not player:
                         player = '-'
-                elif is_socre and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
+                elif is_score and words['chars'][0]['location']['left'] >= pos_range['score']['start'] \
                     and words['chars'][0]['location']['left'] < pos_range['score']['end']:
                     score = words['words']
                     score_chars = words['chars']
@@ -282,11 +283,9 @@ def get_pic_info(result):
         p.score = player['score']
         total += abs(p.score)
         room_data.playerData.append(p)
-    score = 0
-    print("total========"+str(total))
-    for playerData in room_data.playerData:
-        print("score========"+str(score)+"--player.score===="+str(playerData.score))
 
+    score = 0
+    for playerData in room_data.playerData:
         if score + abs(playerData.score) > total / 2:
             playerData.score = -abs(playerData.score)
         else:
@@ -1064,8 +1063,11 @@ class wechatInstance():
             resultDir = result['direction']#0:是正常方向，3是顺时针90度
             wordsArray = result['words_result']
             room_data = get_pic_info(wordsArray)
-                                        
-            if room_data.startTime == '' or room_data.roomId == 0\
+            total_score = 0
+            for playerData in room_data.playerData:
+                total_score += playerData.score
+
+            if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0\
                      or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
                 erro_msg = '图片无法识别\n'
                 erro_msg+= 'roomId:' + str(room_data.roomId) + '\n'
@@ -1073,7 +1075,8 @@ class wechatInstance():
                 erro_msg+= 'roomHosterId:' + str(room_data.roomHosterId) + '\n'
                 erro_msg+= 'roomHoster:' + str(room_data.roomHoster) + '\n'
                 erro_msg+= 'roundCounter:' + str(room_data.roundCounter) + '\n'
-                erro_msg+= 'players:' + str(len(room_data.playerData))
+                erro_msg+= 'players:' + str(len(room_data.playerData)) + '\n'
+                erro_msg+= 'total_score:' + str(total_score)
 
                 wrong_image = WrongImage(club_name=clubInstance.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
@@ -1153,7 +1156,6 @@ class wechatInstance():
 
                         if len(rules) > 0:
                             if costMode == 0 and num < int(rules[0]):
-                                #固定模式 3|20_15_10|100
                                 value = int(rules[2])
                                 params = rules[1].split('_')
                                 if params[num].isdigit():
@@ -1185,11 +1187,17 @@ class wechatInstance():
                                         alert_msg+= '当前余分: '+str(player.current_score) + '\n'
                                         self.itchat_instance.send(alert_msg, wechat_uuid)
                             elif costMode == 1 and num < int(rules[0]):
-                                #百分比模式
-                                if playserScore >= 100 :
-                                    params = rules[1].split('_')
-                                    param = float(params[num])
-                                    cost = int(playserScore * param)
+                                ranges = rules[1].split('*')
+                                costs = rules[2].split('*')
+                                cost = 0
+                                for index, range_ in enumerate(ranges):
+                                    if num == index:
+                                        costs_ = costs[index].split('_')
+                                        for rindex, rrange_ in enumerate(range_.split('_')):
+                                            if playserScore < int(rrange_):
+                                                cost = int(costs_[rindex])
+                                                break
+                                if cost > 0:
                                     score = Score(player=player, score=playserScore - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId)
                                     score.save()
                                     player.current_score = player.current_score + room_data.playerData[num].score - cost 
