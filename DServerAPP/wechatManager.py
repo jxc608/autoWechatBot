@@ -1082,7 +1082,6 @@ class wechatInstance():
                 wrong_image.save()
                 self.itchat_instance.send(erro_msg, 'filehelper')
                 return
-
             try:
                 HistoryGame.objects.get(club_id=clubInstance.uuid, room_id=room_data.roomId, start_time=room_data.startTime)
                 self.itchat_instance.send('数据已入库！', 'filehelper')      
@@ -1340,29 +1339,85 @@ class wechatInstance():
         print('thread start')
         self.itchat_instance.run()
 
-    def search_friends(self, wechat_nick_name, remarkName):
+    def send(self, user_name, msg):
+        r = self.itchat_instance.send(msg, user_name)
+        print(msg)
+        print(user_name)
+        print(r)
+
+    def search_friends_by_nickname(self, wechat_nick_name):
         list_ = []
-        f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
         has_nickname = []
-        for ff in f:
-            data = {
-                "NickName":ff["NickName"],
-                "UserName":ff["UserName"],
-                "Signature":ff["Signature"],
-                "HeadImgUrl":ff["HeadImgUrl"],
-            }
-            has_nickname.append(ff["NickName"])
-            list_.append(data)
-        f = self.itchat_instance.search_friends(remarkName=remarkName)
-        for ff in f:
-            if ff["NickName"] not in has_nickname:
+        f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
+
+        if isinstance(f,list):
+            for ff in f:
                 data = {
                     "NickName":ff["NickName"],
                     "UserName":ff["UserName"],
                     "Signature":ff["Signature"],
                     "HeadImgUrl":ff["HeadImgUrl"],
                 }
+                has_nickname.append(ff["NickName"])
                 list_.append(data)
+        elif isinstance(f,dict):
+            data = {
+                "NickName":f["NickName"],
+                "UserName":f["UserName"],
+                "Signature":f["Signature"],
+                "HeadImgUrl":f["HeadImgUrl"],
+            }
+            has_nickname.append(f["NickName"])
+            list_.append(data)
+        return list_
+
+    def search_friends(self, wechat_nick_name, remarkName):
+        list_ = []
+        has_nickname = []
+        f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
+
+        if isinstance(f,list):
+            for ff in f:
+                data = {
+                    "NickName":ff["NickName"],
+                    "UserName":ff["UserName"],
+                    "Signature":ff["Signature"],
+                    "HeadImgUrl":ff["HeadImgUrl"],
+                }
+                has_nickname.append(ff["NickName"])
+                list_.append(data)
+        elif isinstance(f,dict):
+            data = {
+                "NickName":f["NickName"],
+                "UserName":f["UserName"],
+                "Signature":f["Signature"],
+                "HeadImgUrl":f["HeadImgUrl"],
+            }
+            has_nickname.append(f["NickName"])
+            list_.append(data)
+
+        f = self.itchat_instance.search_friends(remarkName=remarkName)
+        if isinstance(f,list):
+            for ff in f:
+                if ff["NickName"] not in has_nickname:
+                    data = {
+                        "NickName":ff["NickName"],
+                        "UserName":ff["UserName"],
+                        "Signature":ff["Signature"],
+                        "HeadImgUrl":ff["HeadImgUrl"],
+                    }
+                    list_.append(data)
+        elif isinstance(f,dict):
+            if f["NickName"] not in has_nickname:
+                data = {
+                    "NickName":f["NickName"],
+                    "UserName":f["UserName"],
+                    "Signature":f["Signature"],
+                    "HeadImgUrl":f["HeadImgUrl"],
+                }
+                has_nickname.append(f["NickName"])
+                list_.append(data)
+
         return list_
 
     def set_alias(self, wechat_user_name, nick_name):

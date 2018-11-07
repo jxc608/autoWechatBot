@@ -61,40 +61,63 @@
                             </form>
                         </li>
                         <li class="list-group-item">
-                            <table class="table table-hover">
-                                <thead>
-                                <tr>
-                                    <th>id</th>
-                                    <th>微信昵称</th>
-                                    <th>备注昵称</th>
-                                    <th>操作</th>
-                                   <!-- <th>历史总盈亏</th>-->
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    {% for player in players %}
+                            <form class="form">
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="wechat_bind_all()">一键绑定</button>
+                              </div>
+                            </form>
+                            <script type="">
+                                function wechat_bind_all(){
+                                    if(confirm('确定要绑定吗？')==false)
+                                        return;
+                                    $("#bind_form").submit();
+                                }
+                            </script>
+                        </li>
+                        <li class="list-group-item">
+                            <form method="POST" id="bind_form" action="/wechat_bind_all">
+                                <table class="table table-hover">
+                                    <thead>
                                     <tr>
-                                        <td width="25%">
-                                            {% for gameid in player.gameids %}
-                                            {{gameid.gameid}}({{gameid.game_nick_name}})<br/>
-                                            {% endfor %}
-                                        </td>
-                                        <td width="25%">
-                                            <input type="email" class="form-control" id="wechat_nick_name_{{player.id}}" value="{{player.wechat_nick_name}}">
-                                        </td>
-                                        <td width="25%">
-                                            <input type="email" class="form-control" id="nick_name_{{player.id}}" value="{{player.nick_name}}">
-                                        </td>
-                                        <td width="25%">
-                                            <button type="button" class="btn btn-default" onclick="wechat_friends({{player.id}})">绑定</button>
-                                        </td>
-                                       <!-- <td>
-                                            {{player.history_profit}}
-                                        </td>-->
+                                        <th>id</th>
+                                        <th>微信昵称</th>
+                                        <th>备注昵称</th>
+                                        <th>操作</th>
+                                       <!-- <th>历史总盈亏</th>-->
                                     </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {% for player in players %}
+                                        <input type="hidden" class="form-control" name="player_id" value="{{player.id}}">
+
+                                        <tr>
+                                            <td width="25%">
+                                                {% for gameid in player.gameids %}
+                                                {{gameid.gameid}}({{gameid.game_nick_name}})<br/>
+                                                {% endfor %}
+                                            </td>
+                                            <td width="25%">
+                                                <input type="email" class="form-control" id="wechat_nick_name_{{player.id}}" name="wechat_nick_name" value="{{player.wechat_nick_name}}">
+                                            </td>
+                                            <td width="25%">
+                                                <input type="email" class="form-control" id="nick_name_{{player.id}}" name="nick_name" value="{{player.nick_name}}">
+                                            </td>
+                                            <td width="25%" align="center" id="is_bind">
+                                                {% if player.is_bind == 0%}
+                                                    <span style="color:red">未绑定</span>
+                                                {% else %}
+                                                    <span style="color:green">已绑定</span>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-default" onclick="wechat_friends({{player.id}})">绑定</button>
+                                            </td>
+                                           <!-- <td>
+                                                {{player.history_profit}}
+                                            </td>-->
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </form>
                         </li>
                     </ul>
                   </div>
@@ -180,8 +203,10 @@
                     $('#myModal').modal();;
 
                 }
-                else if (data.result == 2)
+                else if (data.result == 2){
                     alert('请先微信扫码登录');
+                    window.location.href = "/";
+                }
                 else if (data.result == 3)
                     alert(data.msg);
             },"json");
@@ -197,6 +222,7 @@
             },function(data){
                 if(data.result == 0){
                     alert('绑定成功！');
+                    $('#is_bind').html('<span style="color:green">已绑定</span>');
                     $('#wechat_nick_name_'+player_id).val(nick_name)
                 }
                 else if (data.result == 2)

@@ -43,5 +43,8 @@ urlpatterns = [
     path('bot_wechat_bind', views.bot_wechat_bind, name='bot_wechat_bind'),
     path('del_player', views.del_player, name='del_player'),
     path('change_passwd', views.change_passwd, name='change_passwd'),
+    path('wechat_bind_all', views.wechat_bind_all, name='wechat_bind_all'),
+    path('bot_wechat_bind_all', views.bot_wechat_bind_all, name='bot_wechat_bind_all'),
+    path('bot_notice', views.bot_notice, name='bot_notice'),
 
 ]

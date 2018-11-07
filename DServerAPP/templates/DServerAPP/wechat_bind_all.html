@@ -1,0 +1,9 @@
+<script type="text/javascript">
+    {% if result == 0%}
+    alert("绑定成功！");
+    window.location.href = '/player_data';
+    {% else %}
+    alert("请先微信扫码登录!");
+    window.location.href = '/';
+    {% endif %}
+</script>

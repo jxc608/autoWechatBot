@@ -34,6 +34,7 @@ class Player(models.Model):
     introducer = models.CharField(max_length=200, default='none')
     today_hoster_number = models.IntegerField(default=0)
     is_del = models.IntegerField(default=0)
+    is_bind = models.IntegerField(default=0)
 
 class GameID(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)    

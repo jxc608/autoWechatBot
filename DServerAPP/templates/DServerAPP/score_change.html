@@ -244,9 +244,15 @@
                 alert("请输入上分分数。");
                 return;
             }
+            if (confirm("要通知玩家吗？通知请先微信扫码登录。") == true)
+                notice = true;
+            else
+                notice = false;
+
             $.post("/add_score",{
                 id:player_id,
                 score:$('#score_'+player_id).val(),
+                notice:notice
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
                 if(data.result == 0){
@@ -261,14 +267,19 @@
                 alert("请输入下分分数。");
                 return;
             }
+            if (confirm("要通知玩家吗？通知请先微信扫码登录。") == true)
+                notice = true;
+            else
+                notice = false;
             $.post("/minus_score",{
                 id:player_id,
                 score:$('#score_'+player_id).val(),
+                notice:notice
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
                 if(data.result == 0){
                     $('#current_score_'+player_id).html(data.current_score);
-                    alert('上分成功！')   
+                    alert('下分成功！')   
                 }
             },"json");
         }
