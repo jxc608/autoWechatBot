@@ -85,7 +85,7 @@ CREATE TABLE `DServerAPP_gameid` (
   KEY `DServerAPP_gameid_player_id_3bc460dc_fk_DServerAPP_player_id` (`player_id`),
   KEY `gameid` (`gameid`(191)),
   CONSTRAINT `DServerAPP_gameid_player_id_3bc460dc_fk_DServerAPP_player_id` FOREIGN KEY (`player_id`) REFERENCES `DServerAPP_player` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1489 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -110,7 +110,7 @@ CREATE TABLE `DServerAPP_historygame` (
   PRIMARY KEY (`id`),
   KEY `DServerAPP_historygame_club_id_bee2cfcd_fk_DServerAPP_clubs_uuid` (`club_id`),
   CONSTRAINT `DServerAPP_historygame_club_id_bee2cfcd_fk_DServerAPP_clubs_uuid` FOREIGN KEY (`club_id`) REFERENCES `DServerAPP_clubs` (`uuid`)
-) ENGINE=InnoDB AUTO_INCREMENT=2039 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -127,7 +127,7 @@ CREATE TABLE `DServerAPP_manager` (
   `nick_name` varchar(200) DEFAULT '',
   `create_time` int(4) DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -156,7 +156,7 @@ CREATE TABLE `DServerAPP_player` (
   PRIMARY KEY (`id`),
   KEY `club_id` (`club_id`),
   CONSTRAINT `DServerAPP_player_club_id_bfdfece2_fk_DServerAPP_clubs_uuid` FOREIGN KEY (`club_id`) REFERENCES `DServerAPP_clubs` (`uuid`)
-) ENGINE=InnoDB AUTO_INCREMENT=1465 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -193,7 +193,7 @@ CREATE TABLE `DServerAPP_score` (
   KEY `DServerAPP_score_player_id_e83c361d_fk_DServerAPP_player_id` (`player_id`),
   KEY `create_time` (`create_time`),
   CONSTRAINT `DServerAPP_score_player_id_e83c361d_fk_DServerAPP_player_id` FOREIGN KEY (`player_id`) REFERENCES `DServerAPP_player` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17216 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -213,7 +213,7 @@ CREATE TABLE `DServerAPP_scorechange` (
   PRIMARY KEY (`id`),
   KEY `player_id` (`player_id`),
   KEY `create_time` (`create_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=770 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -229,7 +229,7 @@ CREATE TABLE `DServerAPP_wrongimage` (
   `image` varchar(100) CHARACTER SET latin1 NOT NULL,
   `create_time` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -281,7 +281,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -383,7 +383,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -399,7 +399,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
