@@ -85,7 +85,9 @@
                                     {% for player in players %}
                                     <tr>
                                         <td width="20%">
-                                            {{player.nick_name}}
+                                            {{player.nick_name}}<br/>
+                                            授信:<span id="score_limit_{{player.id}}">{{player.score_limit}}</span><br/>
+                                            <button type="button" class="btn btn-default" onclick="score_limit_modal({{player.id}}, '{{player.score_limit}}', '{{player.score_limit_desc}}')">授信</button>
                                         </td>
                                         <td width="20%">
                                             {% for gameid in player.gameids %}
@@ -149,6 +151,30 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal -->
     </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="scoreLimit" tabindex="-1" role="dialog" aria-labelledby="scoreLimitLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="scoreLimitLabel">
+                        授信
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="email" class="form-control" id="score_limit" placeholder="请输入授信额" value="">
+                    <textarea class="form-control" id="score_limit_desc" name="score_limit_desc" rows="5" style="min-width: 90%" placeholder="请输入授信超出提示" ></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="add_score_limit()">
+                        保存
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
     <script>
         var player_id;
         function show_modal(id){
@@ -202,7 +228,7 @@
                 alert("请输入游戏id。");
                 return;
             }
-            if(confirm('确定要绑定吗？')==false)
+            if(confirm('确定要添加吗？')==false)
                 return;
             $.post("/add_gameid",{
                 id:player_id,
@@ -212,7 +238,7 @@
                 if(data.result == 1)
                     alert('用户不存在！');
                 else if(data.result == 2)
-                    alert('游戏ID已绑定到其他用户！');
+                    alert('游戏ID已添加到其他用户，请先从其他用户中删除！');
                 else if(data.result == 0){
                     alert('添加成功！')
                     window.location.reload();
@@ -258,6 +284,39 @@
                 if(data.result == 0){
                     $('#current_score_'+player_id).html(data.current_score);
                     alert('上分成功！')   
+                }
+            },"json");
+        }
+
+        function score_limit_modal(id, score_limit, score_limit_desc){
+            player_id = id;
+            $('#score_limit').val(score_limit);
+            $('#score_limit_desc').val(score_limit_desc);
+            $('#scoreLimit').modal();;
+        }
+
+        function add_score_limit(){
+            if($('#score_limit').val()==''){
+                alert("请输入授信分数。");
+                return;
+            }
+
+            if($('#score_limit_desc').val()==''){
+                alert("请输入授信超出提示。");
+                return;
+            }
+
+            $.post("/add_score_limit",{
+                id:player_id,
+                score:$('#score_limit').val(),
+                score_desc:$('#score_limit_desc').val(),
+
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    $('#score_limit_'+player_id).html(data.score_limit);
+                    alert('授信成功！')   
+                    $('#scoreLimit').modal('hide');
                 }
             },"json");
         }

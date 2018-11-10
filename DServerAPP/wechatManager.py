@@ -185,7 +185,7 @@ def get_pic_info(result):
         if not start_time:
             r = re.search(r'开始时间:(.*)', words['words'])
             if r:
-                start_time = r.group(0).split(':')[1]
+                start_time = r.group(1).replace(':', '')
         if room_id and not hoster and round_number and start_time:
             hoster = '-'
         #房号，房主，局数，开始时间识别结束
@@ -888,7 +888,7 @@ class wechatInstance():
                         gameid = GameID.objects.get(club=clubInstance, gameid=room_data.playerData[num].id)
                         player = gameid.player
                         f = self.itchat_instance.search_friends(remarkName=player.nick_name)
-                        print('friends......')
+                        print('friends111......')
                         print(f)
                         print('..............')
                         if f:
@@ -1019,6 +1019,14 @@ class wechatInstance():
                                 alert_msg+= '本局房费: 无' + '\n'
                                 alert_msg+= '当前余分: '+str(player.current_score) + '\n'
                                 self.itchat_instance.send(alert_msg, wechat_uuid)
+                        #授信
+                        print('score_limit==============' + wechat_uuid + '--' + str(player.score_limit) + '--' + str(player.current_score) + '--' + str(player.score_limit))
+                        if wechat_uuid and player.score_limit !=0 and player.current_score <= player.score_limit:
+                            alert_msg = player.nick_name + '\n'
+                            alert_msg+= '上分提醒\n'
+                            alert_msg+= '当前余分: '+str(player.current_score) + '\n'
+                            alert_msg+= player.score_limit_desc + '\n'
+                            self.itchat_instance.send(alert_msg, wechat_uuid)
                     except:
                         traceback.print_exc()
                         self.itchat_instance.send('发生异常！', 'filehelper')
@@ -1108,6 +1116,16 @@ class wechatInstance():
                 self.itchat_instance.send('局数：' + str(room_data.roundCounter), 'filehelper')
                 self.itchat_instance.send('开始时间：' + str(room_data.startTime), 'filehelper') 
                 '''
+                #管理员
+                manager_wechat_uuids = []
+                for manager in Manager.objects.filter(club=clubInstance):
+                    f = self.itchat_instance.search_friends(remarkName=manager.nick_name)
+                    if f:
+                        if isinstance(f,list):
+                            manager_wechat_uuids.append(f[0]['UserName'])
+                        elif isinstance(f,dict):
+                            manager_wechat_uuids.append(f['UserName'])
+
                 rules = []
                 clubInstance = Clubs.objects.get(user_name=clubInstance.user_name)
                 if clubInstance.cost_param == None or clubInstance.cost_param == 'none' or clubInstance.cost_param == '':
@@ -1124,30 +1142,38 @@ class wechatInstance():
                     gameid = None
                     player = None
                     wechat_uuid = None
+                    has_gameid = False
 
                     playserScore = room_data.playerData[num].score 
                     is_host = 0
                     if room_data.playerData[num].name == room_data.roomHoster:
                         is_host = 1
-                    try:
-                        gameid = GameID.objects.get(club=clubInstance, gameid=room_data.playerData[num].id)
-                        player = gameid.player
-                        f = self.itchat_instance.search_friends(remarkName=player.nick_name)
-                        print('friends......')
-                        print(f)
-                        print('..............')
-                        if f:
-                            if isinstance(f,list):
-                                wechat_uuid = f[0]['UserName']
-                            elif isinstance(f,dict):
-                                wechat_uuid = f['UserName']
 
-                    except GameID.DoesNotExist:
+                    gameids = GameID.objects.filter(club=clubInstance, gameid=room_data.playerData[num].id)
+                    for gameid in gameids:
+                        try:
+                            player = Player.objects.get(id=gameid.player_id, is_del=0)
+                            f = self.itchat_instance.search_friends(remarkName=player.nick_name)
+                            print('friends......')
+                            print(f)
+                            print('..............')
+                            if f:
+                                if isinstance(f,list):
+                                    wechat_uuid = f[0]['UserName']
+                                elif isinstance(f,dict):
+                                    wechat_uuid = f['UserName']
+                            has_gameid = True
+                            break
+                        except Player.DoesNotExist:
+                            pass
+
+                    if not has_gameid:
                         self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：' + room_data.playerData[num].name, 'filehelper')
                         player = Player(wechat_nick_name=room_data.playerData[num].name, nick_name=room_data.playerData[num].name, club=clubInstance, current_score=0, history_profit=0)
                         player.save()
                         gameid = GameID(club=clubInstance, player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
                         gameid.save()
+
                     if is_host:
                         player.today_hoster_number += 1
                     try:
@@ -1272,6 +1298,18 @@ class wechatInstance():
                                 alert_msg+= '本局房费: 无' + '\n'
                                 alert_msg+= '当前余分: '+str(player.current_score) + '\n'
                                 self.itchat_instance.send(alert_msg, wechat_uuid)
+                        #授信
+                        if  player.score_limit !=0 and player.current_score <= -player.score_limit:
+                            alert_msg = player.nick_name + '\n'
+                            alert_msg+= '上分提醒\n'
+                            alert_msg+= '当前余分: '+str(player.current_score) + '\n'
+                            alert_msg+= player.score_limit_desc + '\n'
+                            alert_msg+= '本条消息来自傻瓜机器人自动回复\n'
+                            if wechat_uuid:
+                                self.itchat_instance.send(alert_msg, wechat_uuid)
+                            for manager_wechat_uuid in manager_wechat_uuids:
+                                self.itchat_instance.send(alert_msg, manager_wechat_uuid)
+
                     except:
                         traceback.print_exc()
                         self.itchat_instance.send('发生异常！', 'filehelper')

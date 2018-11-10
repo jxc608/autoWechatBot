@@ -91,6 +91,29 @@
                             </form>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <b>管理员设置</b>
+                        </li>
+                        <li class="list-group-item">
+                            {% for m in manager%}
+                                {{m.wechat_nick_name}}({{m.nick_name}})<a href="javascript:void(0)" onclick="del_manager({{m.id}})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                            {% endfor %}
+                        </li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="wechat_nick_name">微信昵称:</label>
+                                <input type="email" class="form-control" id="wechat_nick_name" placeholder="请输入微信昵称" value="">
+                              </div>
+                              <div class="form-group">
+                                <label for="gameid">备注昵称:</label>
+                                <input type="email" class="form-control" id="nick_name" placeholder="请输入备注昵称" value="">
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="wechat_friends()">添加</button>
+                              </div>
+                            </form>
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>修改密码</b>
                         </li>
                         <li class="list-group-item">
@@ -124,6 +147,32 @@
                 </div>
             </div>
         </div>
+    </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        请选择绑定的微信
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <tbody id="friends_div">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <!--<button type="button" class="btn btn-primary" onclick="add_gameid()">
+                        添加
+                    </button>-->
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
     </div>
     <script>
         change_mode();
@@ -233,6 +282,91 @@
             },function(data){
                 if(data.result == 0){
                     alert('清空成功！');
+                }
+            },"json");
+        }
+
+        function wechat_friends(){
+            var player_id = 0;
+            if($('#wechat_nick_name').val()==''){
+                alert("请输入微信昵称。");
+                return;
+            }
+            if($('#nick_name').val()==''){
+                alert("请输入备注昵称。");
+                return;
+            }
+            /*if($('#profit_'+player_id).val()==''){
+                alert("请输入盈利状况。");
+                return;
+            }*/
+            $.post("/wechat_friends",{
+                id:player_id,
+                nick_name:$('#nick_name').val(),
+                wechat_nick_name:$('#wechat_nick_name').val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    if (data.list.length==0){
+                        alert("没有找到好友");
+                        return;
+                    }
+                    html = '';
+                    for(var i=0;i<data.list.length;i++){
+                        html+='<tr>';
+                        //html+='    <td width="30%">';
+                        //html+='        <img src="data:image/png;base64,'+data.list[i].HeadImgUrl+'"/>';
+                        //html+='    </td>';
+                        html+='    <td width="60%">';
+                        html+=  data.list[i].NickName+'<br/>'+data.list[i].Signature;
+                        html+='    </td>';
+                        html+='    <td width="10%">';
+                        btn = "add_manager('" + data.list[i].UserName+"','"+ data.list[i].NickName+"')";
+                        html+='        <button type="button" class="btn btn-default" onclick="'+btn+'">绑定</button>';
+                        html+='    </td>';
+                        html+='</tr>';
+                    }
+                    $('#friends_div').html(html);
+                    $('#myModal').modal();;
+
+                }
+                else if (data.result == 2){
+                    alert('请先微信扫码登录');
+                    window.location.href = "/";
+                }
+                else if (data.result == 3)
+                    alert(data.msg);
+            },"json");
+        }
+
+        function add_manager(user_name, nick_name){
+            $.post("/add_manager",{
+                user_name:user_name,
+                nick_name:$('#nick_name').val(),
+                wechat_nick_name:nick_name,
+
+            },function(data){
+                if(data.result == 0){
+                    alert('添加成功！');
+                    $('#myModal').modal('hide');
+                    window.location.reload();
+                }
+                else if (data.result == 2)
+                    alert('请先微信扫码登录');
+                else if (data.result == 3)
+                    alert(data.msg);
+            },"json");
+        }
+
+        function del_manager(id){
+            if(confirm("确定要删除吗？") == false)
+                return;
+            $.post("/del_manager",{
+                id:id
+            },function(data){
+                if(data.result == 0){
+                    alert('删除成功！');
+                    window.location.reload();
                 }
             },"json");
         }

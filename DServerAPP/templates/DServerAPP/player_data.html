@@ -62,16 +62,16 @@
                         </li>
                         <li class="list-group-item">
                             <form class="form">
-                              <div class="form-group">
+                              <!--<div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="wechat_bind_all()">一键绑定</button>
-                              </div>
+                              </div>-->
                             </form>
                             <script type="">
-                                function wechat_bind_all(){
+                                /*function wechat_bind_all(){
                                     if(confirm('确定要绑定吗？')==false)
                                         return;
                                     $("#bind_form").submit();
-                                }
+                                }*/
                             </script>
                         </li>
                         <li class="list-group-item">
@@ -224,6 +224,7 @@
                     alert('绑定成功！');
                     $('#is_bind').html('<span style="color:green">已绑定</span>');
                     $('#wechat_nick_name_'+player_id).val(nick_name)
+                    $('#myModal').modal('hide');;
                 }
                 else if (data.result == 2)
                     alert('请先微信扫码登录');

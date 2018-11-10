@@ -33,6 +33,8 @@ class Player(models.Model):
     history_cost = models.IntegerField(default=0)
     introducer = models.CharField(max_length=200, default='none')
     today_hoster_number = models.IntegerField(default=0)
+    score_limit = models.IntegerField(default=0)
+    score_limit_desc = models.CharField(max_length=500)
     is_del = models.IntegerField(default=0)
     is_bind = models.IntegerField(default=0)
 
@@ -78,5 +80,11 @@ class ScoreChange(models.Model):
     score = models.IntegerField(default=0) 
     agent = models.CharField(max_length=500)
     ip = models.CharField(max_length=20)
+    create_time = models.IntegerField(default=0)
+
+class Manager(models.Model):
+    club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
+    wechat_nick_name = models.CharField(max_length=200)
+    nick_name = models.CharField(max_length=200)
     create_time = models.IntegerField(default=0)
 

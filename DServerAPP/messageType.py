@@ -10,7 +10,3 @@ CDKEY_USED = 10005
 def createMessage(success, messageCode, content):
     jsonData = {'result':success, 'messageCode':messageCode, 'content':content}
     return json.dumps(jsonData)
-
-
-
-

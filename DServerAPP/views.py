@@ -231,6 +231,36 @@ def bot_wechat_bind_all(request):
         traceback.print_exc()
         return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
 
+def bot_wechat_bind_manager(request):
+    try:
+        key = request.GET.get("key")
+        if not bot_key_check(key):
+            return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
+
+        club_name = request.GET.get('name')
+        user_name = request.GET.get('user_name')
+        nick_name = request.GET.get('nick_name')
+        wechat_nick_name = request.GET.get('wechat_nick_name')
+
+        club = Clubs.objects.get(user_name=club_name)
+
+        bot = wechatManager.wechatInstance.new_instance(club.user_name)
+        wx_login = bot.is_login()
+        uuid = None
+        if not wx_login or club.expired_time < time.time():
+            return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+
+        code, msg = bot.set_alias(user_name, nick_name)
+        if code == 0:
+            manager = Manager(wechat_nick_name=wechat_nick_name, nick_name=nick_name, club=club, create_time=int(time.time()))
+            manager.save()
+            return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'result': 3, 'msg':msg}), content_type="application/json")
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
+
 def check_wx_login(request):
     params = {'name':request.session['club']}
     bot_info = bot_request(request.session['club'], '/bot_check_login', params)
@@ -520,9 +550,11 @@ def player_data(request):
         gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
         if gameids.count() == 0:
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
-        player_id = gameids[0]['player_id']
-    if gameid_search:        
-        players = Player.objects.filter(club=club, id=player_id, is_del=0).order_by('-current_score')
+    if gameid_search:
+        for gameid in gameids:        
+            players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
+            if players:
+                break
     elif nickname_search:
         players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
     else:
@@ -541,7 +573,16 @@ def player_stat(request):
     gameid_search = request.GET.get('gameid', '')
     club = Clubs.objects.get(user_name=request.session['club'])
 
-    if nickname_search:
+    if gameid_search:
+        search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
+        if search_gameids.count() == 0:
+            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+    if gameid_search:
+        for gameid in search_gameids:        
+            players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
+            if players_cost:
+                break
+    elif nickname_search:
         players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
     else:
         players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
@@ -550,7 +591,12 @@ def player_stat(request):
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
 
-    if nickname_search:
+    if gameid_search:
+        for gameid in search_gameids:        
+            players_profit = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_profit')
+            if players_profit:
+                break
+    elif nickname_search:
         players_profit = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_profit')
     else:
         players_profit = Player.objects.filter(club=club, is_del=0).order_by('-history_profit')
@@ -569,6 +615,35 @@ def player_stat(request):
             }
         )
     return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+
+def add_manager(request):
+    user_name = request.POST.get('user_name')
+    nick_name = request.POST.get('nick_name')
+    wechat_nick_name = request.POST.get('wechat_nick_name')
+
+    params = {
+                'name':request.session['club'],
+                'nick_name':nick_name,
+                'wechat_nick_name':wechat_nick_name,
+                'user_name':user_name
+             }
+
+    bot_info = bot_request(request.session['club'], '/bot_wechat_bind_manager', params)
+
+    return HttpResponse(json.dumps(bot_info), content_type="application/json")
+
+def del_manager(request):
+    manager_id = int(request.POST.get('id'))
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    manager = None
+    try:
+        manager = Manager.objects.get(id=manager_id, club=club)
+    except manager.DoesNotExist:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+        
+    manager.delete()
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def add_player(request):
     nickname = request.POST.get('nickname')
@@ -623,20 +698,30 @@ def add_gameid(request):
 
     gameID = GameID.objects.filter(gameid=gameid, club=club)
     if len(gameID) > 0:
-        player_id = gameID[0].player_id
-        ids_count = GameID.objects.filter(player_id=player_id).values("gameid").distinct().count()
-        if ids_count > 1:
-            return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
-        GameID.objects.filter(player_id=player_id).update(player_id=player.id)
-        Score.objects.filter(player_id=player_id).update(player_id=player.id)
-        ScoreChange.objects.filter(player_id=player_id).update(player_id=player.id)
-        original_player = Player.objects.get(id=player_id)
-        player.current_score += original_player.current_score
-        player.history_profit += original_player.history_profit
-        player.history_cost += original_player.history_cost
-        player.today_hoster_number += original_player.today_hoster_number
-        player.save()
-        original_player.delete()
+        original_player = None
+        for g in gameID:
+            try:
+                original_player = Player.objects.get(id=g.player_id, is_del=0)
+                break
+            except Player.DoesNotExist:
+                pass
+        if original_player:
+            ids_count = GameID.objects.filter(player_id=original_player.id).values("gameid").distinct().count()
+            if ids_count > 1:
+                return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+
+            GameID.objects.filter(gameid=original_player.id).update(player_id=player.id)
+            Score.objects.filter(player_id=original_player.id).update(player_id=player.id)
+            ScoreChange.objects.filter(player_id=original_player.id).update(player_id=player.id)
+            player.current_score += original_player.current_score
+            player.history_profit += original_player.history_profit
+            player.history_cost += original_player.history_cost
+            player.today_hoster_number += original_player.today_hoster_number
+            player.save()
+            original_player.delete()
+        else:
+            gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=player.nick_name)
+            gameid.save()
     else:
         gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=player.nick_name)
         gameid.save()
@@ -726,6 +811,22 @@ def minus_score(request):
         bot_request(club.user_name, '/bot_notice', params)
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
 
+def add_score_limit(request):
+    player_id = int(request.POST.get('id'))
+    score = abs(int(request.POST.get('score',0)))
+    score_desc = request.POST.get('score_desc')
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+    player = Player.objects.get(id=player_id)
+    if player.club_id != club.uuid:
+        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+    player.score_limit = score
+    player.score_limit_desc = score_desc
+
+    player.save()
+
+    return HttpResponse(json.dumps({'result': 0, 'score_limit':player.score_limit}), content_type="application/json")
+
 def score_change(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
@@ -737,9 +838,11 @@ def score_change(request):
         gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
         if gameids.count() == 0:
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
-        player_id = gameids[0]['player_id']
-    if gameid_search:        
-        players = Player.objects.filter(club=club, is_del=0, id=player_id).order_by('-current_score')
+    if gameid_search:
+        for gameid in gameids:        
+            players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
+            if players:
+                break
     elif nickname_search:
         players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
     else:
@@ -874,7 +977,8 @@ def delete_wrongimage(request):
 def setting(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     params = club.cost_param.split("|")
-    return render(request, 'DServerAPP/setting.html', {'club':club, 'params':params})
+    manager = Manager.objects.filter(club=club)
+    return render(request, 'DServerAPP/setting.html', {'club':club, 'params':params, 'manager':manager})
 
 def is_number(num):
 
@@ -964,7 +1068,7 @@ def del_data(request):
     sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
     cursor.execute(sql)
     sql = " update DServerAPP_player"
-    sql+= " set current_score=0,history_profit=0,today_hoster_number=0"
+    sql+= " set current_score=0,history_profit=0,today_hoster_number=0,history_cost=0"
     sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
     cursor.execute(sql)
     sql = " delete from DServerAPP_score"
