@@ -21,6 +21,7 @@ class Clubs(models.Model):
     cost_mode = models.IntegerField(default=0)#管理费模式 固定 还是 百分比
     cost_param = models.CharField(max_length=1000, default='none')
     profit = models.IntegerField(default=0)
+    refresh_time = models.IntegerField(default=0)
 
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
@@ -51,6 +52,7 @@ class Score(models.Model):
     is_host = models.IntegerField(default=0)
     create_time = models.DateTimeField('create time')
     room_id = models.CharField(max_length=20)
+    refresh_time = models.DateTimeField('refresh time')
 
 class HistoryGame(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
@@ -63,6 +65,7 @@ class HistoryGame(models.Model):
     create_time = models.DateTimeField('create time')
     cost = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
+    refresh_time = models.DateTimeField('refresh time')
 
 class Cdkey(models.Model):
     cdkey = models.CharField(primary_key=True, max_length=50)

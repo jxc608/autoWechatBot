@@ -497,7 +497,7 @@ def room_data(request):
     orderby = request.GET.get('order', 'round')
 
     club = Clubs.objects.get(user_name=request.session['club'])
-    rooms = HistoryGame.objects.filter(club=club, create_time__startswith=day)
+    rooms = HistoryGame.objects.filter(club=club, refresh_time__startswith=day)
     total_cost = 0
     total_score = 0
     total_round = 0
@@ -526,27 +526,31 @@ def player_room_data(request):
     orderby = request.GET.get('order', 'round')
     players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
+    list_ = []
     for player in players:
         player.gameids = GameID.objects.filter(player_id=player.id)
-        player.total_round = Score.objects.filter(player_id=player.id, create_time__startswith=day).count()
-        player.total_cost = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('cost'))['cost__sum']
+        player.total_round = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).count()
+        if player.total_round == 0:
+            continue
+        player.total_cost = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('cost'))['cost__sum']
         if player.total_cost == None:
             player.total_cost = 0
-        player.total_score = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('score'))['score__sum']
+        player.total_score = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('score'))['score__sum']
         if player.total_score == None:
             player.total_score = 0    
-        player.total_host = Score.objects.filter(player_id=player.id, create_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
+        player.total_host = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
         if player.total_host == None:
             player.total_host = 0
+        list_.append(player)
     if orderby == 'round':  
-        players = sorted(players, key=lambda players : players.total_round, reverse=True) 
+        list_ = sorted(list_, key=lambda list_ : list_.total_round, reverse=True) 
     elif orderby == 'host':  
-        players = sorted(players, key=lambda players : players.total_host, reverse=True)
+        list_ = sorted(list_, key=lambda list_ : list_.total_host, reverse=True)
     elif orderby == 'score':  
-        players = sorted(players, key=lambda players : players.total_score, reverse=True)
+        list_ = sorted(list_, key=lambda list_ : list_.total_score, reverse=True)
     elif orderby == 'cost':  
-        players = sorted(players, key=lambda players : players.total_cost, reverse=True)
-    return render(request, 'DServerAPP/player_room_data.html', {'players':players,'day':day})
+        list_ = sorted(list_, key=lambda list_ : list_.total_cost, reverse=True)
+    return render(request, 'DServerAPP/player_room_data.html', {'players':list_,'day':day})
     
 def player_data(request):
     nickname_search = request.GET.get('nickname','')
@@ -1071,6 +1075,13 @@ def update_cost_mode(request):
     else:
         club.cost_param = '%s|%s' % (param1, param2)
 
+    club.save()
+    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def update_refresh_time(request):
+    refresh_time = int(request.POST.get('refresh_time'))
+    club = Clubs.objects.get(user_name=request.session['club'])
+    club.refresh_time = refresh_time
     club.save()
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 

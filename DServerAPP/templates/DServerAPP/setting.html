@@ -91,6 +91,20 @@
                             </form>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <b>数据刷新时间</b>
+                        </li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="refresh_time">每天:</label>
+                                <input type="email" class="form-control" id="refresh_time" placeholder="请输入刷新时间" value="{{club.refresh_time}}">点
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-default" onclick="update_refresh_time()">保存</button>
+                              </div>
+                            </form>
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>管理员设置</b>
                         </li>
                         <li class="list-group-item">
@@ -366,6 +380,21 @@
             },function(data){
                 if(data.result == 0){
                     alert('删除成功！');
+                    window.location.reload();
+                }
+            },"json");
+        }
+
+        function update_refresh_time(id){
+            if($('#refresh_time').val()==''){
+                alert("请输入刷新时间。");
+                return;
+            }
+            $.post("/update_refresh_time",{
+                refresh_time:$('#refresh_time').val()
+            },function(data){
+                if(data.result == 0){
+                    alert('保存成功！');
                     window.location.reload();
                 }
             },"json");

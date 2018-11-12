@@ -50,5 +50,6 @@ urlpatterns = [
     path('add_manager', views.add_manager, name='add_manager'),
     path('bot_wechat_bind_manager', views.bot_wechat_bind_manager, name='bot_wechat_bind_manager'),
     path('del_manager', views.del_manager, name='del_manager'),
+    path('update_refresh_time', views.update_refresh_time, name='update_refresh_time'),
 
 ]
