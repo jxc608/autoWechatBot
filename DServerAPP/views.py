@@ -104,10 +104,7 @@ def bot_notice(request):
         club_name = request.GET.get('name')
         player_id = int(request.GET.get('player_id'))
         msg = request.GET.get('msg')
-
-        player = Player.objects.get(id=player_id)
-        if not player.is_bind:
-            return HttpResponse(json.dumps({'result': 3}), content_type="application/json")
+        to_manager = request.GET.get('manager', False)
 
         club = Clubs.objects.get(user_name=club_name)
 
@@ -117,9 +114,19 @@ def bot_notice(request):
         if not wx_login or club.expired_time < time.time():
             return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
 
-        list_ = bot.itchat_instance.search_friends(remarkName=player.nick_name)
-        if list_:
-            list_[0].send(msg)
+        if to_manager:
+            for manager in Manager.objects.filter(club=club):
+                f = bot.itchat_instance.search_friends(remarkName=manager.nick_name)
+                if f:
+                    f[0].send(msg)
+
+        else:
+            player = Player.objects.get(id=player_id)
+            if not player.is_bind:
+                return HttpResponse(json.dumps({'result': 3}), content_type="application/json")
+            list_ = bot.itchat_instance.search_friends(remarkName=player.nick_name)
+            if list_:
+                list_[0].send(msg)
         return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
     except:
         traceback.print_exc()
@@ -762,18 +769,21 @@ def add_score(request):
         ip = request.META['REMOTE_ADDR']
 
     score_change = ScoreChange(player=player, score=score, agent=agent, ip=ip, create_time=int(time.time()))
-    score_change.save();
+    score_change.save()
+    msg = player.nick_name+' 上分\n'
+    msg+= '上次积分:%s\n' % current_score
+    msg+= '本次上分:%s\n' % score
+    msg+= '当前余分:%s\n' % player.current_score
+    params = {
+        'name':club.user_name,
+        'player_id':player_id,
+        'msg':msg,
+    }
     if notice:
-        msg = '上分\n'
-        msg+= '上次积分:%s\n' % current_score
-        msg+= '本次上分:%s\n' % score
-        msg+= '当前余分:%s\n' % player.current_score
-        params = {
-            'name':club.user_name,
-            'player_id':player_id,
-            'msg':msg
-        }
         bot_request(club.user_name, '/bot_notice', params)
+    params['manager'] = True
+    bot_request(club.user_name, '/bot_notice', params)
+
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
 
 def minus_score(request):
@@ -798,17 +808,20 @@ def minus_score(request):
 
     score_change = ScoreChange(player=player, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save();
+    msg = player.nick_name+' 下分\n'
+    msg+= '上次积分:%s\n' % current_score
+    msg+= '本次下分:-%s\n' % score
+    msg+= '当前余分:%s\n' % player.current_score
+    params = {
+        'name':club.user_name,
+        'player_id':player_id,
+        'msg':msg,
+    }
     if notice:
-        msg = '下分\n'
-        msg+= '上次积分:%s\n' % current_score
-        msg+= '本次下分:-%s\n' % score
-        msg+= '当前余分:%s\n' % player.current_score
-        params = {
-            'name':club.user_name,
-            'player_id':player_id,
-            'msg':msg
-        }
         bot_request(club.user_name, '/bot_notice', params)
+    params['manager'] = True
+    bot_request(club.user_name, '/bot_notice', params)
+
     return HttpResponse(json.dumps({'result': 0, 'current_score':player.current_score}), content_type="application/json")
 
 def add_score_limit(request):
