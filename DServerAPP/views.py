@@ -1019,7 +1019,7 @@ def update_cost_mode(request):
         param3 = param3.strip()  
 
     if mode == 0:
-        if not param1.isdigit() or not param3.isdigit():
+        if not is_number(param1) or not is_number(param3):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         list_ = param2.split('_')
         for index, x in enumerate(list_):
