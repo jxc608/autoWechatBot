@@ -518,6 +518,23 @@ def room_data(request):
 
     return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total':total, 'total_cost':total_cost, 'total_score':total_score, 'total_round':total_round, 'total_profit':total_profit, 'day':day})
 
+def clear_room_data(request):
+    day = datetime.datetime.now().strftime('%Y-%m-%d')
+    if request.GET.get('date'):
+        day = request.GET.get('date')
+    orderby = request.GET.get('order', 'round')
+
+    club = Clubs.objects.get(user_name=request.session['club'])
+    rooms = HistoryGame.objects.filter(club=club, refresh_time__startswith=day)
+    for room in rooms:
+        if room.cost == 0:
+            continue
+        hc = HistoryGameClearCost(history_id=room.id,cost=room.cost)
+        hc.save()
+        room.cost = 0
+        room.save()
+    return HttpResponseRedirect('/room_data?date=%s' % request.GET.get('date'))
+
 def player_room_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     day = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -626,6 +643,34 @@ def player_stat(request):
             }
         )
     return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+
+def clear_player_stat(request):
+    nickname_search = request.GET.get('nickname','')
+    gameid_search = request.GET.get('gameid', '')
+    club = Clubs.objects.get(user_name=request.session['club'])
+
+    if gameid_search:
+        search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
+        if search_gameids.count() == 0:
+            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+    if gameid_search:
+        for gameid in search_gameids:
+            players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
+            if players_cost:
+                break
+    elif nickname_search:
+        players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
+    else:
+        players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
+
+    for player in players_cost:
+        if player.history_cost == 0:
+            continue
+        pc = PlayerClearCost(player_id=player.id, history_cost=player.history_cost)
+        pc.save()
+        player.history_cost = 0
+        player.save()
+    return HttpResponseRedirect('/player_stat?nickname=%s&gameid=%s' % (nickname_search, gameid_search))
 
 def add_manager(request):
     user_name = request.POST.get('user_name')

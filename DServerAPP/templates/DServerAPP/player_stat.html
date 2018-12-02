@@ -58,6 +58,10 @@
                               <div class="form-group">
                                 <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
                               </div>
+
+                              <div class="form-group">
+                                <button type="button" class="btn btn-danger" onclick="clearData()">清除管理费</button>
+                              </div>
                             </form>
                         </li>
                         <li class="list-group-item">
@@ -112,6 +116,12 @@
 
         function refresh(){
             window.location.reload();
+        }
+
+        function clearData() {
+            if(confirm('清除管理费后不可恢复，是否确认清除？')) {
+                window.location.href = "/clear_player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            }
         }
     </script>
 </body>

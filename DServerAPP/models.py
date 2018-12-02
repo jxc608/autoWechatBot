@@ -39,6 +39,11 @@ class Player(models.Model):
     is_del = models.IntegerField(default=0)
     is_bind = models.IntegerField(default=0)
 
+class PlayerClearCost(models.Model):
+    player_id = models.IntegerField(default=0)
+    history_cost = models.IntegerField(default=0)
+    create_time = models.DateTimeField(auto_now_add=True)
+
 class GameID(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)    
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
@@ -66,6 +71,11 @@ class HistoryGame(models.Model):
     cost = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
     refresh_time = models.DateTimeField('refresh time')
+
+class HistoryGameClearCost(models.Model):
+    history_id = models.IntegerField(default=0)
+    cost = models.IntegerField(default=0)
+    create_time = models.DateTimeField(auto_now_add=True)
 
 class Cdkey(models.Model):
     cdkey = models.CharField(primary_key=True, max_length=50)
