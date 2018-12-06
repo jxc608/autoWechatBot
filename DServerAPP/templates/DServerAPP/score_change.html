@@ -87,7 +87,7 @@
                                         <td width="20%">
                                             {{player.nick_name}}<br/>
                                             授信:<span id="score_limit_{{player.id}}">{{player.score_limit}}</span><br/>
-                                            <button type="button" class="btn btn-default" onclick="score_limit_modal({{player.id}}, '{{player.score_limit}}', '{{player.score_limit_desc}}')">授信</button>
+                                            <button type="button" class="btn btn-default" limit_desc="{{ player.score_limit_desc }}" onclick="score_limit_modal({{player.id}}, '{{player.score_limit}}')">授信</button>
                                         </td>
                                         <td width="20%">
                                             {% for gameid in player.gameids %}
@@ -288,9 +288,10 @@
             },"json");
         }
 
-        function score_limit_modal(id, score_limit, score_limit_desc){
+        function score_limit_modal(id, score_limit){
             player_id = id;
             $('#score_limit').val(score_limit);
+            score_limit_desc = $(event.target).attr("limit_desc");
             $('#score_limit_desc').val(score_limit_desc);
             $('#scoreLimit').modal();;
         }

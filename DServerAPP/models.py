@@ -23,6 +23,9 @@ class Clubs(models.Model):
     profit = models.IntegerField(default=0)
     refresh_time = models.IntegerField(default=0)
 
+    def __str__(self):
+        return self.user_name
+
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE)
     wechat_id = models.CharField(max_length=200)
@@ -38,6 +41,9 @@ class Player(models.Model):
     score_limit_desc = models.CharField(max_length=500)
     is_del = models.IntegerField(default=0)
     is_bind = models.IntegerField(default=0)
+
+    def __str__(self):
+        return  self.nick_name
 
 class PlayerClearCost(models.Model):
     player_id = models.IntegerField(default=0)
@@ -71,6 +77,9 @@ class HistoryGame(models.Model):
     cost = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
     refresh_time = models.DateTimeField('refresh time')
+
+    def __str__(self):
+        return "%s_%s" % (self.room_id, self.hoster_name)
 
 class HistoryGameClearCost(models.Model):
     history_id = models.IntegerField(default=0)
