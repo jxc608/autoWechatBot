@@ -53,10 +53,7 @@
                                 <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="search()">查询</button>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
+                                <button type="button" class="btn btn-primary" onclick="search()">查询</button>
                               </div>
                             </form>
                         </li>
@@ -104,11 +101,13 @@
                                             </td>
                                             <td width="25%" align="center" id="is_bind">
                                                 {% if player.is_bind == 0%}
+                                                    <!--
                                                     <span style="color:red">未绑定</span>
+                                                    -->
+                                                    <button type="button" class="btn btn-default" style="color: red" onclick="wechat_friends({{player.id}})">未绑定</button>
                                                 {% else %}
-                                                    <span style="color:green">已绑定</span>
+                                                    <button type="button" class="btn btn-default" style="color: green" onclick="wechat_friends({{player.id}})">已绑定</button>
                                                 {% endif %}
-                                                <button type="button" class="btn btn-default" onclick="wechat_friends({{player.id}})">绑定</button>
                                             </td>
                                            <!-- <td>
                                                 {{player.history_profit}}
@@ -195,7 +194,7 @@
                         html+='    </td>';
                         html+='    <td width="10%">';
                         btn = "wechat_bind("+player_id+",'" + data.list[i].UserName+"','"+ data.list[i].NickName+"')";
-                        html+='        <button type="button" class="btn btn-default" onclick="'+btn+'">绑定</button>';
+                        html+='        <button type="button" class="btn btn-primary" onclick="'+btn+'">绑定</button>';
                         html+='    </td>';
                         html+='</tr>';
                     }
@@ -233,9 +232,6 @@
             },"json");
         }
 
-        function refresh(){
-            window.location.reload();
-        }
     </script>
 </body>
 </html>

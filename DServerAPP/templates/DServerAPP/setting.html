@@ -86,7 +86,7 @@
                                   </div>
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="update_cost()">保存</button>
+                                <button type="button" class="btn btn-primary" onclick="update_cost()">保存</button>
                               </div>
                             </form>
                         </li>
@@ -100,7 +100,7 @@
                                 <input type="email" class="form-control" id="refresh_time" placeholder="请输入刷新时间" value="{{club.refresh_time}}">点
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="update_refresh_time()">保存</button>
+                                <button type="button" class="btn btn-primary" onclick="update_refresh_time()">保存</button>
                               </div>
                             </form>
                         </li>
@@ -109,7 +109,7 @@
                         </li>
                         <li class="list-group-item">
                             {% for m in manager%}
-                                {{m.wechat_nick_name}}({{m.nick_name}})<a href="javascript:void(0)" onclick="del_manager({{m.id}})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                {{m.wechat_nick_name}}({{m.nick_name}})<a style="margin-left: 20px;color: #337ab7" href="javascript:void(0)" onclick="del_manager({{m.id}})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
                             {% endfor %}
                         </li>
                         <li class="list-group-item">
@@ -123,7 +123,7 @@
                                 <input type="email" class="form-control" id="nick_name" placeholder="请输入备注昵称" value="">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="wechat_friends()">添加</button>
+                                <button type="button" class="btn btn-primary" onclick="wechat_friends()">添加</button>
                               </div>
                             </form>
                         </li>
@@ -133,7 +133,7 @@
                         <li class="list-group-item">
                             <form>
                                 <div class="form-group">
-                                    <label for="account">源密码：</label>
+                                    <label for="account">原密码：</label>
                                     <input type="password" class="form-control" id="old_passwd" name="old_passwd" placeholder="">
                                 </div>
                                 <div class="form-group">
@@ -145,13 +145,13 @@
                                     <input type="password" class="form-control" id="re_passwd" name="re_passwd" placeholder="">
                                 </div>
                             </form>
-                            <button type="button" class="btn btn-default" onclick="change_passwd()">修改密码</button>
+                            <button type="button" class="btn btn-warning" onclick="change_passwd()">修改密码</button>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>数据清空</b>
                         </li>
                         <li class="list-group-item">
-                            <button type="button" class="btn btn-default" onclick="del_data()">数据清空</button>
+                            <button type="button" class="btn btn-danger" onclick="del_data()">数据清空</button>
                         </li>
                     </ul>
                   </div>

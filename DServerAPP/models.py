@@ -41,7 +41,8 @@ class Clubs(models.Model):
     cost_mode = models.IntegerField(default=0, choices=COST_MODE, verbose_name='管理模式')#管理费模式 固定 还是 百分比
     cost_param = models.CharField(max_length=1000, default='none', verbose_name='管理费参数')
     profit = models.IntegerField(default=0, verbose_name='利润')
-    refresh_time = models.IntegerField(default=0, verbose_name='使用cdkey次数')
+    # 该字段暂时没用？
+    refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据')
 
     def __str__(self):
         return self.user_name
@@ -55,7 +56,8 @@ class Player(models.Model):
     wechat_id = models.CharField(max_length=200, verbose_name="微信ID")
     wechat_uuid = models.CharField(max_length=200, verbose_name="微信UUID")
     wechat_nick_name = models.CharField(max_length=200, verbose_name="微信昵称")
-    nick_name = models.CharField(max_length=200, verbose_name="游戏中昵称")
+    # 备注昵称，绑定时，会同时更新到微信的remarkName【微信昵称本身绑定时作为第一匹配条件，remarkName第二匹配】
+    nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
     current_score = models.IntegerField(default=0, verbose_name="当前分数")
     history_profit = models.IntegerField(default=0, verbose_name="总利润")
     history_cost = models.IntegerField(default=0, verbose_name="总消费")
@@ -169,9 +171,10 @@ class ScoreChange(models.Model):
         verbose_name_plural = verbose_name
 
 class Manager(models.Model):
+    #只有管理员才能上传图片？
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     wechat_nick_name = models.CharField(max_length=200, verbose_name="微信昵称")
-    nick_name = models.CharField(max_length=200, verbose_name="昵称")
+    nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
 
     class Meta:
