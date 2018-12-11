@@ -53,12 +53,8 @@
                                 <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="search()">查询</button>
+                                <button type="button" class="btn btn-primary" onclick="search()">查询</button>
                               </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
-                              </div>
-
                               <div class="form-group">
                                 <button type="button" class="btn btn-danger" onclick="clearData()">清除管理费</button>
                               </div>
@@ -112,10 +108,6 @@
     <script>
         function search(){
             window.location.href = "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
-        }
-
-        function refresh(){
-            window.location.reload();
         }
 
         function clearData() {

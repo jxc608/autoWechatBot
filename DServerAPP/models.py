@@ -97,7 +97,7 @@ class GameID(models.Model):
 
 class Score(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, verbose_name="玩家")
-    score = models.IntegerField(default=0, verbose_name="分数")
+    score = models.IntegerField(default=0, verbose_name="得分")
     cost = models.IntegerField(default=0, verbose_name="消费")
     is_host = models.IntegerField(default=0, choices=IS_HOST, verbose_name="是否是房主")
     create_time = models.DateTimeField(verbose_name="创建时间")
@@ -105,7 +105,7 @@ class Score(models.Model):
     refresh_time = models.DateTimeField(verbose_name="最近更新时间")
 
     class Meta:
-        verbose_name = "得分情况"
+        verbose_name = "得分记录"
         verbose_name_plural = verbose_name
 
 class HistoryGame(models.Model):
@@ -167,7 +167,7 @@ class ScoreChange(models.Model):
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
 
     class Meta:
-        verbose_name = "分数变更记录"
+        verbose_name = "分数手动修改"
         verbose_name_plural = verbose_name
 
 class Manager(models.Model):

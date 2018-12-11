@@ -752,6 +752,7 @@ def add_gameid(request):
     except Player.DoesNotExist:
         return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
 
+    # 当gameid已经存在，且已经有人的这一段，没有看懂
     gameID = GameID.objects.filter(gameid=gameid, club=club)
     if len(gameID) > 0:
         original_player = None
@@ -894,6 +895,7 @@ def score_change(request):
     gameid_search = request.GET.get('gameid', '')
     orderby = request.GET.get('order', 'round')
     club = Clubs.objects.get(user_name=request.session['club'])
+    # gameid和player都有关联，按照查询条件直接筛选即可，不必做如此分步判断？
 
     player_id = 0
     if gameid_search:
