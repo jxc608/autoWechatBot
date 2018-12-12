@@ -109,7 +109,7 @@
                         </li>
                         <li class="list-group-item">
                             {% for m in manager%}
-                                {{m.wechat_nick_name}}({{m.nick_name}})<a style="margin-left: 20px;color: #337ab7" href="javascript:void(0)" onclick="del_manager({{m.id}})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                {{m.wechat_nick_name}}({{m.nick_name}})<a style="margin-left: 20px;color: red" href="javascript:void(0)" onclick="del_manager({{m.id}})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
                             {% endfor %}
                         </li>
                         <li class="list-group-item">

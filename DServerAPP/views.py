@@ -140,7 +140,7 @@ def bot_wechat_friends(request):
             return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
 
         club_name = request.GET.get('name')
-        player_id = int(request.GET.get('id'))
+        # player_id = int(request.GET.get('id'))
         nick_name = request.GET.get('nick_name')
         wechat_nick_name = request.GET.get('wechat_nick_name')
 
@@ -197,46 +197,46 @@ def bot_wechat_bind(request):
         traceback.print_exc()
         return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
 
-def bot_wechat_bind_all(request):
-    try:
-        key = request.POST.get("key")
-        if not bot_key_check(key):
-            return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
-        club_name = request.POST.get('name')
-        player_ids = request.POST.getlist('player_ids')
-        wechat_nick_names = request.POST.getlist('wechat_nick_names')
-        nick_names = request.POST.getlist('nick_names')
-
-        club = Clubs.objects.get(user_name=club_name)
-
-        bot = wechatManager.wechatInstance.new_instance(club.user_name)
-        wx_login = bot.is_login()
-        uuid = None 
-        if not wx_login or club.expired_time < time.time():
-            return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
-        for index, player_id in enumerate(player_ids):
-            player = Player.objects.get(id=int(player_id))
-            if player.club_id != club.uuid:
-                return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-            if player.is_bind:
-                continue
-            if wechat_nick_names[index].strip() == '' or nick_names[index].strip() == '':
-                continue
-            friends = bot.search_friends_by_nickname(wechat_nick_names[index])
-            if len(friends) > 0:
-                print(friends)
-                code, msg = bot.set_alias(friends[0]['UserName'], nick_names[index])
-                if code == 0:
-                    player.is_bind = 1
-                    print('bind ===='+player.nick_name+' --- '+player.wechat_nick_name)
-            player.nick_name = nick_names[index]
-            player.wechat_nick_name = wechat_nick_names[index]
-            player.save()
-
-        return HttpResponse(json.dumps({'result':0}), content_type="application/json")
-    except:
-        traceback.print_exc()
-        return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
+# def bot_wechat_bind_all(request):
+#     try:
+#         key = request.POST.get("key")
+#         if not bot_key_check(key):
+#             return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
+#         club_name = request.POST.get('name')
+#         player_ids = request.POST.getlist('player_ids')
+#         wechat_nick_names = request.POST.getlist('wechat_nick_names')
+#         nick_names = request.POST.getlist('nick_names')
+#
+#         club = Clubs.objects.get(user_name=club_name)
+#
+#         bot = wechatManager.wechatInstance.new_instance(club.user_name)
+#         wx_login = bot.is_login()
+#         uuid = None
+#         if not wx_login or club.expired_time < time.time():
+#             return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
+#         for index, player_id in enumerate(player_ids):
+#             player = Player.objects.get(id=int(player_id))
+#             if player.club_id != club.uuid:
+#                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
+#             if player.is_bind:
+#                 continue
+#             if wechat_nick_names[index].strip() == '' or nick_names[index].strip() == '':
+#                 continue
+#             friends = bot.search_friends_by_nickname(wechat_nick_names[index])
+#             if len(friends) > 0:
+#                 print(friends)
+#                 code, msg = bot.set_alias(friends[0]['UserName'], nick_names[index])
+#                 if code == 0:
+#                     player.is_bind = 1
+#                     print('bind ===='+player.nick_name+' --- '+player.wechat_nick_name)
+#             player.nick_name = nick_names[index]
+#             player.wechat_nick_name = wechat_nick_names[index]
+#             player.save()
+#
+#         return HttpResponse(json.dumps({'result':0}), content_type="application/json")
+#     except:
+#         traceback.print_exc()
+#         return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
 
 def bot_wechat_bind_manager(request):
     try:
@@ -284,13 +284,13 @@ def get_uuid(request):
     return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
 
 def wechat_friends(request):
-    player_id = int(request.POST.get('id'))
+    # player_id = int(request.POST.get('id'))
     nick_name = request.POST.get('nick_name')
     wechat_nick_name = request.POST.get('wechat_nick_name')
 
     params = {
                 'name':request.session['club'],
-                'id':player_id,
+                # 'id':player_id,
                 'nick_name':nick_name,
                 'wechat_nick_name':wechat_nick_name
              }
@@ -316,23 +316,23 @@ def wechat_bind(request):
 
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
-def wechat_bind_all(request):
-    player_ids = request.POST.getlist('player_id')
-    wechat_nick_names = request.POST.getlist('wechat_nick_name')
-    nick_names = request.POST.getlist('nick_name')
-    params = {
-        'name':request.session['club'],
-        'player_ids':player_ids,
-        'wechat_nick_names':wechat_nick_names,
-        'nick_names':nick_names,
-    }
-    bot_info = bot_request(request.session['club'], '/bot_wechat_bind_all', params, 'POST')
-
-    return render(request, 'DServerAPP/wechat_bind_all.html', bot_info)
+# def wechat_bind_all(request):
+#     player_ids = request.POST.getlist('player_id')
+#     wechat_nick_names = request.POST.getlist('wechat_nick_name')
+#     nick_names = request.POST.getlist('nick_name')
+#     params = {
+#         'name':request.session['club'],
+#         'player_ids':player_ids,
+#         'wechat_nick_names':wechat_nick_names,
+#         'nick_names':nick_names,
+#     }
+#     bot_info = bot_request(request.session['club'], '/bot_wechat_bind_all', params, 'POST')
+#
+#     return render(request, 'DServerAPP/wechat_bind_all.html', bot_info)
 
 
 def is_login(request):
-    if not request.session.get('login') or  request.session.get('login') == False:
+    if not request.session.get('login') or request.session.get('login') == False:
         return False
     else:
         return True
@@ -431,10 +431,10 @@ def login_password(request):
             return render(request, 'DServerAPP/login.html', {"pwd": 1, "pwct": "账号不存在"})
     
    
-def login_smscode(request):
-    username=request.POST.get('username','')
-    smscode=request.POST.get('smscode','')
-    return HttpResponse('username='+username+"&password="+password)
+# def login_smscode(request):
+#     username=request.POST.get('username','')
+#     smscode=request.POST.get('smscode','')
+#     return HttpResponse('username='+username+"&password="+password)
 
 def add_time(request):
     username=request.session['club'];
@@ -741,6 +741,7 @@ def del_player(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def add_gameid(request):
+    # 对应，添加小号
     player_id = int(request.POST.get('id'))
     gameid = int(request.POST.get('gameid'))
 

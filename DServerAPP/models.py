@@ -42,7 +42,7 @@ class Clubs(models.Model):
     cost_param = models.CharField(max_length=1000, default='none', verbose_name='管理费参数')
     profit = models.IntegerField(default=0, verbose_name='利润')
     # 该字段暂时没用？
-    refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据')
+    refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据，暂时无用')
 
     def __str__(self):
         return self.user_name
@@ -60,7 +60,7 @@ class Player(models.Model):
     nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
     current_score = models.IntegerField(default=0, verbose_name="当前分数")
     history_profit = models.IntegerField(default=0, verbose_name="总利润")
-    history_cost = models.IntegerField(default=0, verbose_name="总消费")
+    history_cost = models.IntegerField(default=0, verbose_name="总管理费")
     introducer = models.CharField(max_length=200, default='none', verbose_name="介绍人")
     today_hoster_number = models.IntegerField(default=0, verbose_name="今日开房次数")
     score_limit = models.IntegerField(default=0, verbose_name="分数上限")
@@ -98,7 +98,7 @@ class GameID(models.Model):
 class Score(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, verbose_name="玩家")
     score = models.IntegerField(default=0, verbose_name="得分")
-    cost = models.IntegerField(default=0, verbose_name="消费")
+    cost = models.IntegerField(default=0, verbose_name="管理费")
     is_host = models.IntegerField(default=0, choices=IS_HOST, verbose_name="是否是房主")
     create_time = models.DateTimeField(verbose_name="创建时间")
     room_id = models.CharField(max_length=20, verbose_name="房间ID")
@@ -113,11 +113,11 @@ class HistoryGame(models.Model):
     room_id = models.CharField(max_length=10, verbose_name="房间号")
     hoster_name = models.CharField(max_length=20, verbose_name="主机名称")
     hoster_id = models.IntegerField(default=0, verbose_name="主机ID")
-    round_number = models.IntegerField(default=0, verbose_name="不知道？round_number")
+    round_number = models.IntegerField(default=0, verbose_name="对局数，游戏几局几胜？")
     start_time = models.CharField(max_length=20, verbose_name="游戏开始时间")
     player_data = models.CharField(max_length=1000,default='none', verbose_name="游戏数据")#playerResult.playerData的数组
     create_time = models.DateTimeField(verbose_name="创建时间")
-    cost = models.IntegerField(default=0, verbose_name="消费")
+    cost = models.IntegerField(default=0, verbose_name="管理费")
     score = models.IntegerField(default=0, verbose_name="得分")
     refresh_time = models.DateTimeField(verbose_name="最近刷新时间")
 

@@ -42,7 +42,7 @@
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <button type="button" class="btn btn-default" onclick="delete_all()">一键删除</button>
+                            <button type="button" class="btn btn-danger" onclick="delete_all()">一键删除</button>
                         </li>
                         <li class="list-group-item">
 
@@ -81,10 +81,6 @@
         </div>
     </div>
     <script>
-        function search(){
-            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
-        }
-
         function delete1(id){
             $.post("/delete_wrongimage",{
                 id:id,
