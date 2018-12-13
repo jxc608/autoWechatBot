@@ -59,7 +59,7 @@ class Player(models.Model):
     # 备注昵称，绑定时，会同时更新到微信的remarkName【微信昵称本身绑定时作为第一匹配条件，remarkName第二匹配】
     nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
     current_score = models.IntegerField(default=0, verbose_name="当前分数")
-    history_profit = models.IntegerField(default=0, verbose_name="总利润")
+    history_profit = models.IntegerField(default=0, verbose_name="总利润/战绩？")
     history_cost = models.IntegerField(default=0, verbose_name="总管理费")
     introducer = models.CharField(max_length=200, default='none', verbose_name="介绍人")
     today_hoster_number = models.IntegerField(default=0, verbose_name="今日开房次数")
@@ -85,14 +85,14 @@ class PlayerClearCost(models.Model):
         verbose_name_plural = verbose_name
 
 class GameID(models.Model):
-    #一个俱乐部中的某用户，出现在了某个game中
+    #一个俱乐部中的某用户，在game图片中的id对应
     player = models.ForeignKey(Player, on_delete=models.CASCADE, verbose_name="用户")
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     game_nick_name = models.CharField(max_length=200, verbose_name="游戏中昵称")
-    gameid = models.CharField(max_length=20, verbose_name="游戏ID")
+    gameid = models.CharField(max_length=20, verbose_name="图片中的playerid")
 
     class Meta:
-        verbose_name = "游戏信息"
+        verbose_name = "玩家游戏信息"
         verbose_name_plural = verbose_name
 
 class Score(models.Model):

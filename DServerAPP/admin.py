@@ -28,12 +28,14 @@ class DateStampRangeFilter(DateRangeFilter):
         Pop the original parameters, and return the date filter & other filter
         parameters.
         """
-
-        cl.params.pop(self.lookup_kwarg_since, None)
-        cl.params.pop(self.lookup_kwarg_upto, None)
-        return ({
-                    'get_query': cl.params,
-                },)
+        qryParam = {'get_query': cl.params}
+        ks = cl.params.pop(self.lookup_kwarg_since, None)
+        if ks:
+            qryParam['get_query'][self.lookup_kwarg_since] = ks
+        ku = cl.params.pop(self.lookup_kwarg_upto, None)
+        if ku:
+            qryParam['get_query'][self.lookup_kwarg_upto] = ku
+        return (qryParam)
 
     def queryset(self, request, queryset):
         if hasattr(self, "lookup_kwarg_since_value"):

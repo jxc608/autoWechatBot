@@ -57,83 +57,83 @@ def getSortedDict(dict):
     keys.sort() 
     return [dict[key] for key in keys] 
 
-def getRoomIDAndHoster(rowData, index):
-    print('walawala===='+rowData[index].words)
-    roomId = 0
-    hoster = ''
-    flag1 = rowData[index].words.find(':')
-    rawId = rowData[index].words[flag1 + 1:].strip().replace(' ','')
+# def getRoomIDAndHoster(rowData, index):
+#     print('walawala===='+rowData[index].words)
+#     roomId = 0
+#     hoster = ''
+#     flag1 = rowData[index].words.find(':')
+#     rawId = rowData[index].words[flag1 + 1:].strip().replace(' ','')
+#
+#     if rawId.isdigit():
+#         roomId = int(rawId)
+#     else:
+#         numberList = []
+#         for char in rawId:
+#             if char.isdigit():
+#                 numberList.append(int(char))
+#                 print(char)
+#             else:
+#                 print('fuck:' + char)
+#
+#         length = len(numberList)
+#         roomId = 0
+#         for num in range(0, len(numberList)):
+#             roomId += numberList[num] * pow(10, length - num - 1)
+#     print('the roomId is:' + str(roomId))
+#     flag2 = rowData[index + 1].words.find(':')
+#     hoster = rowData[index + 1].words[flag2 + 1:]
+#     return roomId, hoster
 
-    if rawId.isdigit():
-        roomId = int(rawId)
-    else:
-        numberList = []
-        for char in rawId:
-            if char.isdigit():
-                numberList.append(int(char))
-                print(char)
-            else:
-                print('fuck:' + char)
-        
-        length = len(numberList)
-        roomId = 0
-        for num in range(0, len(numberList)):
-            roomId += numberList[num] * pow(10, length - num - 1)
-    print('the roomId is:' + str(roomId))
-    flag2 = rowData[index + 1].words.find(':')
-    hoster = rowData[index + 1].words[flag2 + 1:]
-    return roomId, hoster
+# def getRoundNumberAndStartTime(rowData):
+#     roundNumber = 0
+#     idLeftPos = 0
+#     startTime = ''
+#     flag1 = rowData[0].words.find(':')
+#     print('the round number string is:' + rowData[0].words[flag1 + 1:])
+#     roundNumber = int(rowData[0].words[flag1 + 1:])
+#     print('the new round nubmer is:' + str(roundNumber))
+#     flag2 = rowData[1].words.find(':')
+#     startTime = rowData[1].words[flag2 + 1:]
+#     if '开' in rowData[1].words:
+#         index = rowData[1].words.find('开')
+#         idLeftPos = int(rowData[1].chars[index]['location']['left']) + int(rowData[1].chars[index]['location']['width']) + 13
+#     if '始' in rowData[1].words:
+#         index = rowData[1].words.find('始')
+#         idLeftPos = int(rowData[1].chars[index]['location']['left'])
+#     if '时' in rowData[1].words:
+#         index = rowData[1].words.find('时')
+#         idLeftPos = int(rowData[1].chars[index]['location']['left']) - int(rowData[1].chars[index]['location']['width']) - 26
+#     if '间' in rowData[1].words:
+#         index = rowData[1].words.find('间')
+#         idLeftPos = int(rowData[1].chars[index]['location']['left']) - int(rowData[1].chars[index]['location']['width']) * 2 - 26
+#     return roundNumber, startTime, idLeftPos
 
-def getRoundNumberAndStartTime(rowData):
-    roundNumber = 0
-    idLeftPos = 0
-    startTime = ''
-    flag1 = rowData[0].words.find(':')
-    print('the round number string is:' + rowData[0].words[flag1 + 1:])
-    roundNumber = int(rowData[0].words[flag1 + 1:])
-    print('the new round nubmer is:' + str(roundNumber))
-    flag2 = rowData[1].words.find(':')
-    startTime = rowData[1].words[flag2 + 1:]
-    if '开' in rowData[1].words:
-        index = rowData[1].words.find('开')
-        idLeftPos = int(rowData[1].chars[index]['location']['left']) + int(rowData[1].chars[index]['location']['width']) + 13
-    if '始' in rowData[1].words:
-        index = rowData[1].words.find('始')
-        idLeftPos = int(rowData[1].chars[index]['location']['left'])
-    if '时' in rowData[1].words:
-        index = rowData[1].words.find('时')
-        idLeftPos = int(rowData[1].chars[index]['location']['left']) - int(rowData[1].chars[index]['location']['width']) - 26
-    if '间' in rowData[1].words:
-        index = rowData[1].words.find('间')
-        idLeftPos = int(rowData[1].chars[index]['location']['left']) - int(rowData[1].chars[index]['location']['width']) * 2 - 26
-    return roundNumber, startTime, idLeftPos
+# def updatePlayerScore(gameid, score):
+#     try:
+#         gameID = GameID.objects.get(gameid=gameid)
+#         return 0
+#     except GameID.DoesNotExist:
+#         return -1
 
-def updatePlayerScore(gameid, score):
-    try:
-        gameID = GameID.objects.get(gameid=gameid)
-        return 0
-    except GameID.DoesNotExist:
-        return -1
+# def getPlayerScore(nickName, itchatInstance, self):
+#     try:
+#         player = Player.objects.get(wechat_nick_name=nickName, club=self.club)
+#         itchatInstance.send('用户当前分数：' + str(player.current_score) + \
+#         '用户历史战绩：' + str(player.history_profit), 'filehelper')
+#     except Player.DoesNotExist:
+#         itchatInstance.send('用户:' + nickName + '不存在，请先注册用户', 'filehelper')
+#         return '命令执行失败: %s' % msg['Content']
 
-def getPlayerScore(nickName, itchatInstance, self):
-    try:
-        player = Player.objects.get(wechat_nick_name=nickName, club=self.club)
-        itchatInstance.send('用户当前分数：' + str(player.current_score) + \
-        '用户历史战绩：' + str(player.history_profit), 'filehelper')
-    except Player.DoesNotExist:
-        itchatInstance.send('用户:' + nickName + '不存在，请先注册用户', 'filehelper')
-        return '命令执行失败: %s' % msg['Content']
-
-def get_data_pos(index, result):
-    pos = {}
-    pos = []
-    for i, words in enumerate(result):
-        if i <= index:
-            continue
-        left = words['chars'][0]['location']['left']
-        pos.append(left)
-    pos.sort()
-    print(pos)
+# def get_data_pos(index, result):
+#     pos = {}
+#     pos = []
+#     for i, words in enumerate(result):
+#         if i <= index:
+#             continue
+#         left = words['chars'][0]['location']['left']
+#         pos.append(left)
+#     pos.sort()
+#     print(pos)
 
 def get_pic_info(result):
     print(result)
@@ -284,6 +284,8 @@ def get_pic_info(result):
         total += abs(p.score)
         room_data.playerData.append(p)
 
+    # 如果能识别正负，加下面的部分有什么用？如果不能，用abs做什么？偶尔能识别？，下面第一条，不管怎么样，都是正数吧，除非是排序上正数总体在前
+    # 默认似乎是降序排列的，但最好是能完美识别，不然太依赖顺序了
     score = 0
     for playerData in room_data.playerData:
         if score + abs(playerData.score) > total / 2:
@@ -632,6 +634,7 @@ class wechatInstance():
             timeArray = time.strptime(today_time_start, "%Y-%m-%d %H:%M:%S")
             today_time_start = int(time.mktime(timeArray))
 
+            # 这个刷新时间有什么用？
             refresh_time = timezone.now()
             if time.time() < today_time_start + clubInstance.refresh_time * 3600:
                 refresh_time = timezone.now() - datetime.timedelta(days=1)
@@ -683,7 +686,6 @@ class wechatInstance():
                 
                 for num in range(0, len(room_data.playerData)):
                     costed = False
-                    gameid = None
                     player = None
                     wechat_uuid = None
                     has_gameid = False
@@ -927,31 +929,31 @@ class wechatInstance():
         print(user_name)
         print(r)
 
-    def search_friends_by_nickname(self, wechat_nick_name):
-        list_ = []
-        has_nickname = []
-        f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
-
-        if isinstance(f,list):
-            for ff in f:
-                data = {
-                    "NickName":ff["NickName"],
-                    "UserName":ff["UserName"],
-                    "Signature":ff["Signature"],
-                    "HeadImgUrl":ff["HeadImgUrl"],
-                }
-                has_nickname.append(ff["NickName"])
-                list_.append(data)
-        elif isinstance(f,dict):
-            data = {
-                "NickName":f["NickName"],
-                "UserName":f["UserName"],
-                "Signature":f["Signature"],
-                "HeadImgUrl":f["HeadImgUrl"],
-            }
-            has_nickname.append(f["NickName"])
-            list_.append(data)
-        return list_
+    # def search_friends_by_nickname(self, wechat_nick_name):
+    #     list_ = []
+    #     has_nickname = []
+    #     f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
+    #
+    #     if isinstance(f,list):
+    #         for ff in f:
+    #             data = {
+    #                 "NickName":ff["NickName"],
+    #                 "UserName":ff["UserName"],
+    #                 "Signature":ff["Signature"],
+    #                 "HeadImgUrl":ff["HeadImgUrl"],
+    #             }
+    #             has_nickname.append(ff["NickName"])
+    #             list_.append(data)
+    #     elif isinstance(f,dict):
+    #         data = {
+    #             "NickName":f["NickName"],
+    #             "UserName":f["UserName"],
+    #             "Signature":f["Signature"],
+    #             "HeadImgUrl":f["HeadImgUrl"],
+    #         }
+    #         has_nickname.append(f["NickName"])
+    #         list_.append(data)
+    #     return list_
 
     def search_friends(self, wechat_nick_name, remarkName):
         list_ = []
