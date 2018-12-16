@@ -2,12 +2,12 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import *
-import re
 import uuid
 from django.utils import timezone
 from . import messageType
 import itchat
 import _thread
+from .utils import is_number
 from . import wechatManager
 import time,datetime,json
 from django.db import connection
@@ -1044,15 +1044,6 @@ def setting(request):
     params = club.cost_param.split("|")
     manager = Manager.objects.filter(club=club)
     return render(request, 'DServerAPP/setting.html', {'club':club, 'params':params, 'manager':manager})
-
-def is_number(num):
-
-    regex = re.compile(r"^(-?\d+)(\.\d*)?$")
-
-    if re.match(regex,num):
-        return True
-    else:
-        return False
 
 def update_cost_mode(request):
     mode = int(request.POST.get('mode'))
