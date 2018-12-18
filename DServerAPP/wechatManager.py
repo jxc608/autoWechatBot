@@ -7,9 +7,9 @@ from aip import AipOcr
 from .models import *
 from . import playerResult
 from django.utils import timezone
-from django.db import connection
 from django.conf import settings
 from .utils import *
+import _thread
 
 # 定义常量  
 APP_ID = '11756002'
@@ -244,9 +244,69 @@ class wechatInstance():
         gameid.save()
         return player
 
+    def scoreLimit(self, player, wechat_uuid):
+        if player.current_score <= -player.score_limit:
+            alert_msg = player.nick_name + '\n'
+            alert_msg += '上分提醒\n'
+            alert_msg += '当前余分: %s\n' % player.current_score
+            alert_msg += player.score_limit_desc + '\n'
+            alert_msg += '本条消息来自傻瓜机器人自动回复\n'
+            if wechat_uuid:
+                self.itchat_instance.send(alert_msg, wechat_uuid)
+
+            # 管理员
+            manager_wechat_uuids = []
+            for manager in Manager.objects.filter(club=self.club):
+                f = self.itchat_instance.search_friends(remarkName=manager.nick_name)
+                if f:
+                    if isinstance(f, list):
+                        manager_wechat_uuids.append(f[0]['UserName'])
+                    elif isinstance(f, dict):
+                        manager_wechat_uuids.append(f['UserName'])
+            for manager_wechat_uuid in manager_wechat_uuids:
+                self.itchat_instance.send(alert_msg, manager_wechat_uuid)
+
+    def calCostMode(self, rules, roomPlayData, num):
+        if len(rules) > 0:
+            costMode = self.club.cost_mode
+            if costMode == 0 and num < int(rules[0]):
+                value = int(rules[2])
+                params = rules[1].split('_')
+                if is_number(params[num]):
+                    cost = int(params[num])
+                else:
+                    cost = int(roomPlayData.score * float(params[num]))
+                # 超过分数才计算
+                if roomPlayData.score <= value:
+                    cost = 0
+            elif costMode == 1 and num < int(rules[0]):
+                ranges = rules[1].split('*')
+                costs = rules[2].split('*')
+                for index, range_ in enumerate(ranges):
+                    if num == index:
+                        costs_ = costs[index].split('_')
+                        for rindex, rrange_ in enumerate(range_.split('_')):
+                            if roomPlayData.score < int(rrange_):
+                                cost = int(costs_[rindex])
+                                break
+                if cost <= 0:
+                    cost = 0
+            elif costMode == 2:
+                values = rules[0].split('_')
+                costs = rules[1].split('_')
+                can_cost = False
+                for index, value in enumerate(values):
+                    if roomPlayData.score >= int(value):
+                        can_cost = True
+                        break
+                # 所有固定模式
+                if can_cost:
+                    cost = int(costs[index])
+        return cost
+
     def __init__(self, uuid):
-        self.qrid = itchat.get_QRuuid()
-        self.logined = False
+        # self.qrid = itchat.get_QRuuid()
+        # self.logined = False
         self.itchat_instance = itchat.new_instance()
         try:
             self.club = Clubs.objects.get(user_name=uuid)
@@ -528,12 +588,6 @@ class wechatInstance():
         # 接受图片的逻辑处理
         @self.itchat_instance.msg_register([PICTURE])
         def download_files_new(msg):
-            # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
-            if self.club.expired_time < time.time():
-                self.itchat_instance.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
-                self.itchat_instance.logout()
-                return
-
             if msg['ToUserName'] != 'filehelper':
                 return
 
@@ -589,7 +643,6 @@ class wechatInstance():
                 if self.club.cost_param != None and self.club.cost_param != 'none' and self.club.cost_param != '':
                     rules = self.club.cost_param
                     rules = rules.split('|')
-                costMode = self.club.cost_mode
                 clubProfit = 0
                 
                 for num in range(0, len(room_data.playerData)):
@@ -597,8 +650,7 @@ class wechatInstance():
                     player = None
                     wechat_uuid = None
                     has_gameid = False
-                    cost = 0
-                    is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
+
 
                     # 获取当前用户的username用来发送消息
                     try:
@@ -616,46 +668,13 @@ class wechatInstance():
                     if not has_gameid:
                         player = self.createTempPlayer(room_data, num)
 
-                    if is_host:
-                        player.today_hoster_number += 1
                     try:
-                        last_current_score = player.current_score;
-                        if len(rules) > 0:
-                            if costMode == 0 and num < int(rules[0]):
-                                value = int(rules[2])
-                                params = rules[1].split('_')
-                                if is_number(params[num]):
-                                    cost = int(params[num])
-                                else:
-                                    cost = int(roomPlayData.score * float(params[num]))
-                                # 超过分数才计算
-                                if roomPlayData.score <= value:
-                                    cost = 0
-                            elif costMode == 1 and num < int(rules[0]):
-                                ranges = rules[1].split('*')
-                                costs = rules[2].split('*')
-                                for index, range_ in enumerate(ranges):
-                                    if num == index:
-                                        costs_ = costs[index].split('_')
-                                        for rindex, rrange_ in enumerate(range_.split('_')):
-                                            if roomPlayData.score < int(rrange_):
-                                                cost = int(costs_[rindex])
-                                                break
-                                if cost <= 0:
-                                    cost = 0
-                            elif costMode == 2:
-                                values = rules[0].split('_')
-                                costs = rules[1].split('_')
-                                can_cost = False
-                                for index, value in enumerate(values):
-                                    if roomPlayData.score >= int(value):
-                                        can_cost = True
-                                        break
-                                #所有固定模式
-                                if can_cost:
-                                    cost = int(costs[index])
-
-                        # 整合三个mode下的代码，原型
+                        is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
+                        if is_host:
+                            player.today_hoster_number += 1
+                        last_current_score = player.current_score
+                        # 计算管理费
+                        cost = self.calCostMode(rules, roomPlayData, num)
                         score = Score(player=player, score=roomPlayData.score - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId, refresh_time=refresh_time)
                         score.save()
                         player.current_score = player.current_score + roomPlayData.score - cost
@@ -678,27 +697,7 @@ class wechatInstance():
                             self.itchat_instance.send(alert_msg, wechat_uuid)
 
                         #授信
-                        if player.score_limit !=0 and player.current_score <= -player.score_limit:
-                            alert_msg = player.nick_name + '\n'
-                            alert_msg += '上分提醒\n'
-                            alert_msg += '当前余分: %s\n' % player.current_score
-                            alert_msg += player.score_limit_desc + '\n'
-                            alert_msg += '本条消息来自傻瓜机器人自动回复\n'
-                            if wechat_uuid:
-                                self.itchat_instance.send(alert_msg, wechat_uuid)
-
-                            # 管理员
-                            manager_wechat_uuids = []
-                            for manager in Manager.objects.filter(club=self.club):
-                                f = self.itchat_instance.search_friends(remarkName=manager.nick_name)
-                                if f:
-                                    if isinstance(f, list):
-                                        manager_wechat_uuids.append(f[0]['UserName'])
-                                    elif isinstance(f, dict):
-                                        manager_wechat_uuids.append(f['UserName'])
-                            for manager_wechat_uuid in manager_wechat_uuids:
-                                self.itchat_instance.send(alert_msg, manager_wechat_uuid)
-
+                        self.scoreLimit(player, wechat_uuid)
                     except:
                         traceback.print_exc()
                         self.itchat_instance.send('发生异常！', 'filehelper')
@@ -708,7 +707,7 @@ class wechatInstance():
             self.club.profit += clubProfit
             self.club.save()
             pic_msg+= '-------------------------------------\n'
-            pic_msg+= '获得管理费：' + str(clubProfit)
+            pic_msg+= '获得管理费：%s' % clubProfit
             self.itchat_instance.send(pic_msg, 'filehelper') 
             return '@%s@%s' % (typeSymbol, msg.fileName)
 
@@ -735,38 +734,36 @@ class wechatInstance():
         return self.itchat_instance.get_QRuuid()
 
     def check_login(self, uuid):
-        self.checked = False
-        def _check():
-            while  not self.checked:
-                status = self.itchat_instance.check_login(uuid)
-                print('check login.'+status)
-
-                if status == '200':
-                    userInfo = self.itchat_instance.web_init()
-                    self.itchat_instance.show_mobile_login()
-                    self.itchat_instance.get_contact(update=True)
-                    output_info('Login successfully as %s'%userInfo['User']['NickName'])
-                    self.itchat_instance.start_receiving()
-                    self.itchat_instance.run(blockThread=False)
-                    print('start itchat....')
-                    self.checked = True
-                elif status == '201':
-                    pass
-                else:
-                    self.checked = True
+        success = False
+        while 1:
+            status = itchat.check_login(uuid)
+            if status == '200':
+                success = True
+                break
+            elif status == '201':
+                # 等待确认
                 time.sleep(1)
-        t = threading.Thread(target=_check)
-        t.setDaemon(True)
-        t.start()
+            elif status == '408':
+                # 二维码失效
+                output_info('Reloading QR Code')
+                break
+        if success:
+            # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
+            if self.club.expired_time < time.time():
+                self.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
+                self.itchat_instance.logout()
+            else:
+                userInfo = self.itchat_instance.web_init()
+                self.itchat_instance.show_mobile_login()
+                self.itchat_instance.get_contact(update=True)
+                output_info('Login successfully as %s' % userInfo['User']['NickName'])
+                self.itchat_instance.start_receiving()
+                _thread.start_new_thread(self.itchat_instance.run, ())
 
     def logout(self):
         self.itchat_instance.logout()
 
-    def run(self):
-        print('thread start')
-        self.itchat_instance.run()
-
-    def send(self, user_name, msg):
+    def send(self, msg, user_name):
         r = self.itchat_instance.send(msg, user_name)
         print(msg)
         print(user_name)
