@@ -136,7 +136,8 @@ def get_data_pos(index, result):
     print(pos)
 
 def get_pic_info(result):
-    print(result)
+    # print(result)
+    # return
     room_id = 0
     hoster = None
     hoster_id = 0
@@ -291,6 +292,63 @@ def get_pic_info(result):
         else:
             playerData.score = abs(playerData.score)
         score += abs(playerData.score)
+    print(room_data)
+    return room_data
+
+def get_template_pic_info(result):
+    room_id = 0
+    hoster = None
+    hoster_id = 0
+    round_number = 0
+    start_time = None
+
+    data_list = []
+    for index, words in enumerate(result):
+        if not room_id and words["word_name"] == "room_id":
+            room_id = words["word"]
+        elif not hoster and words["word_name"] == "hoster_name":
+            hoster = words["word"]
+        elif not round_number and words["word_name"] == "round_number":
+            round_number = words["word"]
+        elif not start_time and words["word_name"] == "start_date":
+            start_time = words["word"]
+        if room_id and not hoster and round_number and start_time:
+            hoster = '-'
+
+        r = re.match(r'player_info#(\d+)#(.*)', words["word_name"], re.M | re.I)
+        if r:
+            player_index = int(r.group(1))
+            player_attr = r.group(2)
+            while(len(data_list) < player_index):
+                data_list.append({})
+            data_list[player_index-1][player_attr] = words["word"]
+
+    room_data = playerResult.roomData()
+    room_data.roomId = room_id
+    room_data.startTime = start_time
+    room_data.roomHoster = hoster
+    room_data.roundCounter = round_number
+    total = 0
+    for player in data_list:
+        print("内容:\n%s" % player)
+        p = playerResult.playerData()
+        p.name = player['name']
+        p.id = int(player['id'])
+        p.score = int(player['score'])
+        total += abs(p.score)
+        room_data.playerData.append(p)
+        if p.name == hoster:
+            hoster_id = p.id
+
+    room_data.roomHosterId = hoster_id
+    score = 0
+    for playerData in room_data.playerData:
+        if score + abs(playerData.score) > total / 2:
+            playerData.score = -abs(playerData.score)
+        else:
+            playerData.score = abs(playerData.score)
+        score += abs(playerData.score)
+    print(room_data)
     return room_data
 
 #itchat 实例列表
@@ -1065,15 +1123,22 @@ class wechatInstance():
                 }.get(msg.type, 'fil')
 
             # 网络图片文字文字识别接口
-            result = aipOcr.accurate(get_file_content(img_file),options)
+            # result = aipOcr.accurate(get_file_content(img_file),options)
+            result = aipOcr.custom(get_file_content(img_file), "64809cb9569bd1f748cf42344ba736fe")
 
             #从识别的文本中抓取最终结果
-            resultDir = result['direction']#0:是正常方向，3是顺时针90度
-            wordsArray = result['words_result']
-            room_data = get_pic_info(wordsArray)
-            total_score = 0
-            for playerData in room_data.playerData:
-                total_score += playerData.score
+            # resultDir = result['direction']#0:是正常方向，3是顺时针90度
+            # wordsArray = result['words_result']
+            try:
+                print("log_id: %s" % result["data"]["logId"])
+                room_data = get_template_pic_info(result["data"]["ret"])
+                total_score = 0
+                for playerData in room_data.playerData:
+                    total_score += playerData.score
+            except:
+                erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
+                self.itchat_instance.send(erro_msg, 'filehelper')
+                return
 
             if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0\
                      or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
