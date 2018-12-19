@@ -1149,7 +1149,8 @@ class wechatInstance():
                 erro_msg+= 'roomHoster:' + str(room_data.roomHoster) + '\n'
                 erro_msg+= 'roundCounter:' + str(room_data.roundCounter) + '\n'
                 erro_msg+= 'players:' + str(len(room_data.playerData)) + '\n'
-                erro_msg+= 'total_score:' + str(total_score)
+                erro_msg+= 'total_score:' + str(total_score) + '\n'
+                erro_msg += '请试着上传原图，或者联系管理员'
 
                 wrong_image = WrongImage(club_name=clubInstance.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
