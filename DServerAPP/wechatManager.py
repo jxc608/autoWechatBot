@@ -217,7 +217,6 @@ def get_pic_info(result):
 _list = {}
 
 class wechatInstance():
-
     def scanError(self, room_data, total_score, fileName):
         erro_msg = ""
         if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0 \
@@ -765,10 +764,6 @@ class wechatInstance():
 
     def send(self, msg, user_name):
         r = self.itchat_instance.send(msg, user_name)
-        print(msg)
-        print(user_name)
-        print(r)
-
 
     def getWechatUserByRemarkName(self, remarkName):
         user = None

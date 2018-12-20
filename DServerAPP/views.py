@@ -8,7 +8,6 @@ from . import messageType
 import itchat
 import _thread
 from .utils import is_number
-from . import wechatManager
 import time,datetime,json
 from django.db import connection
 from django.conf import settings
@@ -20,18 +19,14 @@ import json
 import traceback
 
 
+
 def timestamp2string(timeStamp): 
   try: 
     timeArray = time.localtime(timeStamp)
     return time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
   except Exception as e: 
     print(e)
-    return '' 
-def bot_key_check(key):
-    if key == settings.BOT_KEY:
-        return True
-    else:
-        return False
+    return ''
 
 def bot_request(club_name, url, params, method='GET'):
     club = Clubs.objects.get(user_name=club_name)
@@ -67,20 +62,7 @@ def bot_get_uuid(request):
         traceback.print_exc()
         return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
 
-def bot_check_login(request):
-    try:
-        key = request.GET.get("key")
-        if not bot_key_check(key):
-            return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
 
-        club_name = request.GET.get('name')
-        bot = wechatManager.wechatInstance.new_instance(club_name)
-        wx_login = bot.is_login()
-
-        return HttpResponse(json.dumps({'login': wx_login}), content_type="application/json")
-    except:
-        traceback.print_exc()
-        return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
 
 def bot_logout(request):
     try:
@@ -268,9 +250,15 @@ def bot_wechat_bind_manager(request):
         traceback.print_exc()
         return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
 
+def get_bot_param(request):
+    params = {}
+    params["name"] = request.session['club']
+    params["key"] = request.GET.get("key")
+    return params
+
 def check_wx_login(request):
-    params = {'name':request.session['club']}
-    bot_info = bot_request(request.session['club'], '/bot_check_login', params)
+    params = get_bot_param(request)
+    bot_info = bot_check_login(params)
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
 def wx_logout(request):
