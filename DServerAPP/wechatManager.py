@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.conf import settings
 from .utils import *
 import _thread
+import base64
 
 # 定义常量  
 APP_ID = '11756002'
@@ -213,10 +214,68 @@ def get_pic_info(result):
         score += abs(playerData.score)
     return room_data
 
+
+def get_template_pic_info(result):
+    room_id = 0
+    hoster = None
+    hoster_id = 0
+    round_number = 0
+    start_time = None
+
+    data_list = []
+    for index, words in enumerate(result):
+        if not room_id and words["word_name"] == "room_id":
+            room_id = words["word"]
+        elif not hoster and words["word_name"] == "hoster_name":
+            hoster = words["word"]
+        elif not round_number and words["word_name"] == "round_number":
+            round_number = words["word"]
+        elif not start_time and words["word_name"] == "start_date":
+            start_time = words["word"]
+        if room_id and not hoster and round_number and start_time:
+            hoster = '-'
+
+        r = re.match(r'player_info#(\d+)#(.*)', words["word_name"], re.M | re.I)
+        if r:
+            player_index = int(r.group(1))
+            player_attr = r.group(2)
+            while(len(data_list) < player_index):
+                data_list.append({})
+            data_list[player_index-1][player_attr] = words["word"]
+
+    room_data = playerResult.roomData()
+    room_data.roomId = room_id
+    room_data.startTime = start_time
+    room_data.roomHoster = hoster
+    room_data.roundCounter = round_number
+    total = 0
+    for player in data_list:
+        print("内容:\n%s" % player)
+        p = playerResult.playerData()
+        p.name = player['name']
+        p.id = int(player['id'])
+        p.score = int(player['score'])
+        total += abs(p.score)
+        room_data.playerData.append(p)
+        if p.name == hoster:
+            hoster_id = p.id
+
+    room_data.roomHosterId = hoster_id
+    score = 0
+    for playerData in room_data.playerData:
+        if score + abs(playerData.score) > total / 2:
+            playerData.score = -abs(playerData.score)
+        else:
+            playerData.score = abs(playerData.score)
+        score += abs(playerData.score)
+    print(room_data)
+    return room_data
+
 #itchat 实例列表
 _list = {}
 
 class wechatInstance():
+
     def scanError(self, room_data, total_score, fileName):
         erro_msg = ""
         if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0 \
@@ -312,279 +371,9 @@ class wechatInstance():
         except:
             print("club未找到：" % uuid)
 
-        # # 接受文字命令的 逻辑处理
-        # #@self.itchat_instance.msg_register(itchat.content.TEXT)
-        # def simple_reply(msg):
-        #     self.club = Clubs.objects.get(user_name=self.club.user_name)
-        #     if self.club.expired_time < time.time():
-        #         self.itchat_instance.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
-        #         self.itchat_instance.logout()
-        #         return
-        #     if msg['ToUserName'] == 'filehelper':
-        #         if msg['Type'] == 'Text':
-        #             contentSplit = msg['Content'].split('**')
-        #
-        #             #注册用户
-        #             if contentSplit[0] == '注册':
-        #                  if len(contentSplit) != 2:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1])
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + ' 已经存在。', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #                  except Player.DoesNotExist:
-        #                      player = Player(wechat_nick_name=contentSplit[1], club=self.club, current_score=0, history_profit=0)
-        #                      player.save()
-        #                      self.itchat_instance.send('注册用户:' + player.wechat_nick_name, 'filehelper')
-        #                      return '命令执行完成: %s' % msg['Content']
-        #
-        #             #绑定游戏id
-        #             elif contentSplit[0] == '绑定游戏id':
-        #                  if  len(contentSplit) != 4:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  player = None
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                  except Player.DoesNotExist:
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  try:
-        #                      gameID = GameID.objects.get(gameid=contentSplit[2])
-        #                      if gameID.player.wechat_nick_name == 'tempUser':
-        #                          gameID.player.wechat_nick_name = contentSplit[1]
-        #                          gameID.player.save()
-        #                          self.itchat_instance.send('游戏id绑定成功', 'filehelper')
-        #                          return '命令执行成功: %s' % msg['Content']
-        #                      else :
-        #                          self.itchat_instance.send('游戏id已绑定', 'filehelper')
-        #                          return '命令执行失败: %s' % msg['Content']
-        #                  except GameID.DoesNotExist:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                      gameID = GameID(player=player, gameid=contentSplit[2], game_nick_name=contentSplit[3])
-        #                      gameID.save()
-        #                      self.itchat_instance.send('游戏id绑定成功', 'filehelper')
-        #                      return '命令执行成功: %s' % msg['Content']
-        #
-        #             #上分
-        #             elif contentSplit[0] == '上分':
-        #                  if  len(contentSplit) != 3:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                      player.current_score = player.current_score + int(contentSplit[2])
-        #                      player.save()
-        #                  except Player.DoesNotExist:
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #                  except TypeError:
-        #                      self.itchat_instance.send('类型错误，请检查上分参数', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '上分成功, 上分数量' + str(contentSplit[2]), 'filehelper')
-        #                      return '命令执行成功: %s' % msg['Content']
-        #                  self.itchat_instance.send('上分:' + contentSplit[1], 'filehelper')
-        #                  return '命令执行成功: %s' % msg['Content']
-        #             #下分
-        #             elif contentSplit[0] == '下分':
-        #                  if  len(contentSplit) != 3:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #                  current_score = 0
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                      downNumber = int(contentSplit[2])
-        #                      if player.current_score < downNumber:
-        #                          self.itchat_instance.send('用户分数不足,当前分数：' + str(player.current_score), 'filehelper')
-        #                          return '命令执行失败: %s' % msg['Content']
-        #                      else :
-        #                          current_score = player.current_score = player.current_score - downNumber
-        #                          player.save()
-        #                  except Player.DoesNotExist:
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #                  except TypeError:
-        #                      self.itchat_instance.send('类型错误，请检查上分参数', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  self.itchat_instance.send('用户:' + contentSplit[1] + '下分成功, 下分数量' + str(contentSplit[2])\
-        #                  + '当前分数：' + str(current_score) , 'filehelper')
-        #                  return '命令执行成功: %s' % msg['Content']
-        #
-        #
-        #             #查看单个用户战绩
-        #             elif contentSplit[0] == '查看单个用户战绩':
-        #                  if  len(contentSplit) != 2:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  getPlayerScore(contentSplit[1], self.itchat_instance, self)
-        #
-        #                  return '命令执行成功: %s' % msg['Content']
-        #
-        #             #查看所有用户战绩
-        #             elif contentSplit[0] == '查看所有用户战绩':
-        #                  players = Player.objects.filter(club=self.club)
-        #                  result = '';
-        #                  for player in players:
-        #                     result += player.wechat_nick_name + '当前分数：' + str(player.current_score) + '\n' + \
-        #                                     player.wechat_nick_name + '历史战绩：' + str(player.history_profit) + '\n\n';
-        #                  self.itchat_instance.send(result, 'filehelper')
-        #                  return '命令执行成功: %s' % msg['Content']
-        #
-        #             #设置管理费模式
-        #             elif contentSplit[0] == '设置手续费模式':#0：固定分数段模式，1：百分比模式，
-        #                  if  len(contentSplit) != 3:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #                  try:
-        #                      self.club.cost_mode = int(contentSplit[1])
-        #                      self.club.cost_param = contentSplit[2]
-        #                      self.club.save()
-        #                  except TypeError:
-        #                      self.itchat_instance.send('类型错误，请检查参数', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  self.itchat_instance.send('设置手续费模式:' + contentSplit[1], 'filehelper')
-        #                  return '命令执行成功: %s' % msg['Content']
-        #
-        #
-        #             #查看盈利
-        #             elif contentSplit[0] == '查看整体盈利':
-        #                  self.itchat_instance.send('查看整体盈利:' + str(self.club.profit), 'filehelper')
-        #                  return '命令执行成功: %s' % msg['Content']
-        #
-        #             #用户改名
-        #             elif contentSplit[0] == '用户改名':
-        #                  if  len(contentSplit) != 3:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                      player.wechat_nick_name = contentSplit[2]
-        #                      player.save()
-        #                      self.itchat_instance.send('用户改名:' + contentSplit[1], 'filehelper')
-        #                      return '命令执行成功: %s' % msg['Content']
-        #                  except Player.DoesNotExist:
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  self.itchat_instance.send('用户改名:' + contentSplit[1], 'filehelper')
-        #                  return '命令执行成功: %s' % msg['Content']
-        #
-        #             #新增介绍人
-        #             elif contentSplit[0] == '新增介绍人':
-        #                  if  len(contentSplit) != 3:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                      player.introducer = contentSplit[2]
-        #                      player.save()
-        #                      self.itchat_instance.send('设置介绍人成功！' + player.wechat_nick_name + ' 现在的介绍人是：' + player.introducer , 'filehelper')
-        #                      return '命令执行成功: %s' % msg['Content']
-        #                  except Player.DoesNotExist:
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #             #查看介绍人
-        #             elif contentSplit[0] == '查看介绍人':
-        #                  if  len(contentSplit) != 2:
-        #                      self.itchat_instance.send('参数错误', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #                  try:
-        #                      player = Player.objects.get(wechat_nick_name=contentSplit[1], club=self.club)
-        #                      self.itchat_instance.send(player.wechat_nick_name + '现在的介绍人是：' + player.introducer , 'filehelper')
-        #                      return '命令执行成功: %s' % msg['Content']
-        #                  except Player.DoesNotExist:
-        #                      self.itchat_instance.send('用户:' + contentSplit[1] + '不存在，请先注册用户', 'filehelper')
-        #                      return '命令执行失败: %s' % msg['Content']
-        #
-        #             #查看房主
-        #             elif contentSplit[0] == '查看房主':
-        #                  players = Player.objects.filter(club=self.club)
-        #                  for player in players:
-        #                      if player.today_hoster_number > 0:
-        #                         getPlayerScore(player[num].wechat_nick_name + '今日房主数量：' + str(player[num].today_hoster_number) , self.itchat_instance)
-        #
-        #             #注销
-        #             elif contentSplit[0] == '注销':
-        #                 self.itchat_instance.send('再见！', 'filehelper')
-        #                 self.itchat_instance.logout()
-        #
-        #             #查看用户战绩
-        #             elif contentSplit[0] == '查看游戏用户战绩':
-        #                 if len(contentSplit) != 2:
-        #                     self.itchat_instance.send('参数错误', 'filehelper')
-        #                     return '命令执行失败: %s' % msg['Content']
-        #                 cursor=connection.cursor()
-        #                 sql = " select player.* from DServerAPP_player player , DServerAPP_gameid gameid"
-        #                 sql+= " where player.id=gameid.player_id and gameid='"+contentSplit[1]+"'"
-        #                 cursor.execute(sql)
-        #                 players = cursor.fetchall()
-        #                 result = '';
-        #                 for player in players:
-        #                    result += player[2] + '当前分数：' + str(player[4]) + '\n' + \
-        #                                    player[2] + '历史战绩：' + str(player[5]) + '\n\n';
-        #                 self.itchat_instance.send(result, 'filehelper')
-        #                 return '命令执行成功: %s' % msg['Content']
-        #             #错误图片
-        #             elif contentSplit[0] == '错误图片':
-        #                 date = None
-        #                 club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
-        #
-        #                 if len(contentSplit) == 2:
-        #                     date = contentSplit[1]
-        #                 else:
-        #                     date = datetime.datetime.now().strftime('%Y-%m-%d')
-        #                 cursor=connection.cursor()
-        #                 sql = " select image from DServerAPP_wrongimage"
-        #                 sql+= " where club_name='" +self.club.user_name+ "' and from_unixtime(create_time,'%Y-%m-%d')='"+date+"'"
-        #                 cursor.execute(sql)
-        #                 objs = cursor.fetchall()
-        #
-        #                 for obj in objs:
-        #                     img_file = club_path + obj[0]
-        #                     self.itchat_instance.send_image(img_file, 'filehelper')
-        #                 if len(objs) == 0:
-        #                     self.itchat_instance.send("无错误图片", 'filehelper')
-        #             elif contentSplit[0] == '好友':
-        #                 #print(self.itchat_instance.get_friends(update=True))
-        #                 f = self.itchat_instance.search_friends(remarkName='夜魔1')
-        #                 print(f)
-        #                 print(type(f))
-        #                 '''
-        #                 f = self.itchat_instance.search_friends(remarkName='创世纪')
-        #                 if f:
-        #                     print(f[0]['UserName'])
-        #                     print(self.itchat_instance.set_alias(f[0]['UserName'], '夜魔1'))
-        #                     f = self.itchat_instance.search_friends(remarkName='夜魔1')
-        #                     print(f[0]['UserName'])
-        #                 '''
-        #             elif len(contentSplit) == 1:
-        #                 try :
-        #                     theID = int(contentSplit[0])
-        #                     gameID = GameID(gameid=theID)
-        #                     self.itchat_instance.send('用户当前分数：' + str(gameID.player.current_score) + \
-        #                     '用户历史战绩：' + str(gameID.player.history_profit), 'filehelper')
-        #                 except GameID.DoesNotExist:
-        #                     self.itchat_instance.send('用户' + str(theID) + '不存在', 'filehelper')
-        #                 except:
-        #                     self.itchat_instance.send('发生异常', 'filehelper')
-        #
-        #             return '命令执行完成: %s' % msg['Content']
-
-
-        # 接受图片的逻辑处理
+        '''
+        接受图片的逻辑处理
+        '''
         @self.itchat_instance.msg_register([PICTURE])
         def download_files_new(msg):
             if msg['ToUserName'] != 'filehelper':
@@ -606,8 +395,37 @@ class wechatInstance():
 
             #从识别的文本中抓取最终结果
             # resultDir = result['direction']#0:是正常方向，3是顺时针90度
-            wordsArray = result['words_result']
-            room_data = get_pic_info(wordsArray)
+            # wordsArray = result['words_result']
+            # room_data = get_pic_info(wordsArray)
+            # result = aipOcr.accurate(get_file_content(img_file),options)
+
+            tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
+            # for tempSign in tempAry:
+
+            result = self.custom(get_file_content(img_file), 1)
+            if result["error_code"] == 17:
+                erro_msg = '百度识别次数达到上限，请联系管理员'
+                self.itchat_instance.send(erro_msg, 'filehelper')
+                return
+            if result["error_code"] == 272000:
+                #     模板不匹配
+                continue
+            try:
+                print("log_id: %s" % result["data"]["logId"])
+                room_data = get_template_pic_info(result["data"]["ret"])
+                if len(room_data.playerData) > 9:
+                    erro_msg = '识别用户超过9个，请联系管理员'
+                    self.send(erro_msg, 'filehelper')
+                    return
+                total_score = 0
+                for playerData in room_data.playerData:
+                    total_score += playerData.score
+                break
+            except:
+                erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
+                self.send(erro_msg, 'filehelper')
+                return
+
             total_score = 0
             for playerData in room_data.playerData:
                 total_score += playerData.score
@@ -649,7 +467,6 @@ class wechatInstance():
                     player = None
                     wechat_uuid = None
                     has_gameid = False
-
 
                     # 获取当前用户的username用来发送消息
                     try:
@@ -709,6 +526,20 @@ class wechatInstance():
             pic_msg+= '获得管理费：%s' % clubProfit
             self.itchat_instance.send(pic_msg, 'filehelper') 
             return '@%s@%s' % (typeSymbol, msg.fileName)
+
+    def custom(self, image, classifierId, options=None):
+        """
+            自定义模板文字识别，分类器
+        """
+        options = options or {}
+
+        data = {}
+        data['image'] = base64.b64encode(image).decode()
+        data['classifierId'] = classifierId
+
+        data.update(options)
+
+        return self._request(self.__customUrl, data)
 
     @classmethod
     def new_instance(cls, club):
