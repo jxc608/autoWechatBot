@@ -762,6 +762,11 @@ class wechatInstance():
     def logout(self):
         self.itchat_instance.logout()
 
+    def sendByRemarkName(self, msg, remarkName):
+        f = self.getWechatUserByRemarkName(remarkName=remarkName)
+        if f:
+            f[0].send(msg)
+
     def send(self, msg, user_name):
         r = self.itchat_instance.send(msg, user_name)
 
