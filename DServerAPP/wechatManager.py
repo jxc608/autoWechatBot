@@ -9,6 +9,7 @@ from . import playerResult
 from django.utils import timezone
 from django.db import connection
 from django.conf import settings
+import base64
 
 # 定义常量  
 APP_ID = '11756002'
@@ -354,7 +355,7 @@ def get_template_pic_info(result):
 #itchat 实例列表
 _list = {}
 
-class wechatInstance():
+class wechatInstance(AipOcr):
 
     def __init__(self,uuid):
         clubInstance = None
@@ -1123,41 +1124,40 @@ class wechatInstance():
                 }.get(msg.type, 'fil')
 
             # 从识别的文本中抓取最终结果
-            result = aipOcr.accurate(get_file_content(img_file), options)
-            resultDir = result['direction']#0:是正常方向，3是顺时针90度
-            wordsArray = result['words_result']
-            room_data = get_pic_info(wordsArray)
-            total_score = 0
-            for playerData in room_data.playerData:
-                total_score += playerData.score
+            # result = aipOcr.accurate(get_file_content(img_file), options)
+            # resultDir = result['direction']#0:是正常方向，3是顺时针90度
+            # wordsArray = result['words_result']
+            # room_data = get_pic_info(wordsArray)
+            # total_score = 0
+            # for playerData in room_data.playerData:
+            #     total_score += playerData.score
 
             # # 网络图片文字文字识别接口
             # tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
             # # result = aipOcr.accurate(get_file_content(img_file),options)
             # for tempSign in tempAry:
-            #     result = aipOcr.custom(get_file_content(img_file), tempSign)
-            #     if result["error_code"] == 17:
-            #         erro_msg = '百度识别次数达到上限，请联系管理员'
-            #         self.itchat_instance.send(erro_msg, 'filehelper')
-            #         return
-            #     if result["error_code"] == 272000:
-            #     #     模板不匹配
-            #         continue
-            #     try:
-            #         print("log_id: %s" % result["data"]["logId"])
-            #         room_data = get_template_pic_info(result["data"]["ret"])
-            #         if len(room_data.playerData) > 9:
-            #             erro_msg = '识别用户超过9个，请联系管理员'
-            #             self.itchat_instance.send(erro_msg, 'filehelper')
-            #             return
-            #         total_score = 0
-            #         for playerData in room_data.playerData:
-            #             total_score += playerData.score
-            #         break
-            #     except:
-            #         erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
-            #         self.itchat_instance.send(erro_msg, 'filehelper')
-            #         return
+            result = self.custom_classify(get_file_content(img_file), 1)
+            if result["error_code"] == 17:
+                erro_msg = '百度识别次数达到上限，请联系管理员'
+                self.itchat_instance.send(erro_msg, 'filehelper')
+                return
+            # if result["error_code"] == 272000:
+            # #     模板不匹配
+            #     continue
+            try:
+                print("log_id: %s" % result["data"]["logId"])
+                room_data = get_template_pic_info(result["data"]["ret"])
+                if len(room_data.playerData) > 9:
+                    erro_msg = '识别用户超过9个，请联系管理员'
+                    self.itchat_instance.send(erro_msg, 'filehelper')
+                    return
+                total_score = 0
+                for playerData in room_data.playerData:
+                    total_score += playerData.score
+            except:
+                erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
+                self.itchat_instance.send(erro_msg, 'filehelper')
+                return
 
 
             if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0\
@@ -1428,6 +1428,21 @@ class wechatInstance():
             return True
         else:
             return False
+
+    @classmethod
+    def custom_classify(self, image, classifierId, options=None):
+        """
+            自定义模板文字识别
+        """
+        options = options or {}
+
+        data = {}
+        data['image'] = base64.b64encode(image).decode()
+        data['classifierId'] = classifierId
+
+        data.update(options)
+
+        return aipOcr._request(url='https://aip.baidubce.com/rest/2.0/solution/v1/iocr/recognise', data=data)
 
     def is_login(self):
         if self.itchat_instance.alive:
