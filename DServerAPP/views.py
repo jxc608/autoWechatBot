@@ -14,9 +14,7 @@ from django.conf import settings
 from django.db.models import Sum
 import xlwt
 import io
-import requests
 import json
-import traceback
 from . import wechatDeal
 
 
@@ -28,48 +26,6 @@ def timestamp2string(timeStamp):
   except Exception as e: 
     print(e)
     return ''
-
-# def bot_wechat_bind_all(request):
-#     try:
-#         key = request.POST.get("key")
-#         if not bot_key_check(key):
-#             return HttpResponse(json.dumps({'msg':'key error'}), content_type="application/json")
-#         club_name = request.POST.get('name')
-#         player_ids = request.POST.getlist('player_ids')
-#         wechat_nick_names = request.POST.getlist('wechat_nick_names')
-#         nick_names = request.POST.getlist('nick_names')
-#
-#         club = Clubs.objects.get(user_name=club_name)
-#
-#         bot = wechatManager.wechatInstance.new_instance(club.user_name)
-#         wx_login = bot.is_login()
-#         uuid = None
-#         if not wx_login or club.expired_time < time.time():
-#             return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
-#         for index, player_id in enumerate(player_ids):
-#             player = Player.objects.get(id=int(player_id))
-#             if player.club_id != club.uuid:
-#                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-#             if player.is_bind:
-#                 continue
-#             if wechat_nick_names[index].strip() == '' or nick_names[index].strip() == '':
-#                 continue
-#             friends = bot.search_friends_by_nickname(wechat_nick_names[index])
-#             if len(friends) > 0:
-#                 print(friends)
-#                 code, msg = bot.set_alias(friends[0]['UserName'], nick_names[index])
-#                 if code == 0:
-#                     player.is_bind = 1
-#                     print('bind ===='+player.nick_name+' --- '+player.wechat_nick_name)
-#             player.nick_name = nick_names[index]
-#             player.wechat_nick_name = wechat_nick_names[index]
-#             player.save()
-#
-#         return HttpResponse(json.dumps({'result':0}), content_type="application/json")
-#     except:
-#         traceback.print_exc()
-#         return HttpResponse(json.dumps({'result': 4}), content_type="application/json")
-
 
 def get_bot_param(request):
     params = {}
@@ -154,12 +110,8 @@ def index(request):
         club.expired = True
     else:
         timeArray = time.localtime(club.expired_time)
-        print(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
-    print(club.expired_time_desc)
-    bot_info = {'wx_login':False, 'uuid':None}
     if not club.expired:
-        params = {'name':club.user_name}
         params = get_bot_param(request)
         bot_info = wechatDeal.bot_get_uuid(params)
     print(bot_info)
@@ -554,7 +506,7 @@ def add_gameid(request):
                 if ids_count > 1:
                     return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
 
-                GameID.objects.filter(gameid=original_player.id).update(player_id=player.id)
+                GameID.objects.filter(gameid=gameid).update(player_id=player.id)
                 Score.objects.filter(player_id=original_player.id).update(player_id=player.id)
                 ScoreChange.objects.filter(player_id=original_player.id).update(player_id=player.id)
                 player.current_score += original_player.current_score

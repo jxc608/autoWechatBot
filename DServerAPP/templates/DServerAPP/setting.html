@@ -280,6 +280,7 @@
             },function(data){
                 if(data.result == 0){
                     alert('修改成功！');
+                    window.location.reload();
                 } else if(data.result == 1){
                     alert('源密码不正确！');
                 } else if(data.result == 2){

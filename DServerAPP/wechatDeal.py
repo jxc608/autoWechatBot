@@ -4,6 +4,7 @@ import json
 import traceback
 from .models import Clubs, Manager, Player
 import time
+import _thread
 
 def bot_check_login(params):
     try:
@@ -24,7 +25,8 @@ def bot_get_uuid(params):
         uuid = None
         if not wx_login:
             uuid = bot.get_uuid()
-            bot.check_login(uuid)
+            _thread.start_new_thread(bot.check_login, (uuid,))
+            # bot.check_login(uuid)
 
         return{'wx_login':wx_login, 'uuid': uuid}
     except:
@@ -105,7 +107,6 @@ def bot_wechat_bind(params):
 def bot_wechat_bind_manager(params):
     try:
         club_name = params["name"]
-        player_id = int(params["id"])
         user_name = params['user_name']
         nick_name = params['nick_name']
         wechat_nick_name = params['wechat_nick_name']
@@ -123,17 +124,16 @@ def bot_wechat_bind_manager(params):
             manager.save()
             return {'result': 0}
         else:
-            {'result': 3, 'msg':msg}
+            return {'result': 3, 'msg':msg}
     except:
         traceback.print_exc()
-        {'result': 4}
+        return {'result': 4}
 
 def bot_wechat_friends(params):
     try:
         club_name = params["name"]
         nick_name = params['nick_name']
         wechat_nick_name = params['wechat_nick_name']
-
         club = Clubs.objects.get(user_name=club_name)
 
         bot = wechatManager.wechatInstance.new_instance(club.user_name)

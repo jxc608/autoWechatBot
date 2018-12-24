@@ -400,35 +400,31 @@ class wechatInstance():
             # result = aipOcr.accurate(get_file_content(img_file),options)
 
             tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
-            # for tempSign in tempAry:
+            for tempSign in tempAry:
 
-            result = self.custom(get_file_content(img_file), 1)
-            if result["error_code"] == 17:
-                erro_msg = '百度识别次数达到上限，请联系管理员'
-                self.itchat_instance.send(erro_msg, 'filehelper')
-                return
-            if result["error_code"] == 272000:
-                #     模板不匹配
-                continue
-            try:
-                print("log_id: %s" % result["data"]["logId"])
-                room_data = get_template_pic_info(result["data"]["ret"])
-                if len(room_data.playerData) > 9:
-                    erro_msg = '识别用户超过9个，请联系管理员'
+                result = aipOcr.custom(get_file_content(img_file), tempSign)
+                if result["error_code"] == 17:
+                    erro_msg = '百度识别次数达到上限，请联系管理员'
+                    self.itchat_instance.send(erro_msg, 'filehelper')
+                    return
+                if result["error_code"] == 272000:
+                    #     模板不匹配
+                    continue
+                try:
+                    print("log_id: %s" % result["data"]["logId"])
+                    room_data = get_template_pic_info(result["data"]["ret"])
+                    if len(room_data.playerData) > 9:
+                        erro_msg = '识别用户超过9个，请联系管理员'
+                        self.send(erro_msg, 'filehelper')
+                        return
+                    total_score = 0
+                    for playerData in room_data.playerData:
+                        total_score += playerData.score
+                    break
+                except:
+                    erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
                     self.send(erro_msg, 'filehelper')
                     return
-                total_score = 0
-                for playerData in room_data.playerData:
-                    total_score += playerData.score
-                break
-            except:
-                erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
-                self.send(erro_msg, 'filehelper')
-                return
-
-            total_score = 0
-            for playerData in room_data.playerData:
-                total_score += playerData.score
 
             if self.scanError(room_data, total_score, msg.fileName):
                 # 图片无法识别
@@ -566,13 +562,14 @@ class wechatInstance():
     def check_login(self, uuid):
         success = False
         while 1:
-            status = itchat.check_login(uuid)
+            status = self.itchat_instance.check_login(uuid)
             if status == '200':
                 success = True
                 break
             elif status == '201':
                 # 等待确认
                 time.sleep(1)
+                print("wait for confirm: wechat login")
             elif status == '408':
                 # 二维码失效
                 output_info('Reloading QR Code')
