@@ -325,14 +325,15 @@ class wechatInstance():
                 self.itchat_instance.send(alert_msg, manager_wechat_uuid)
 
     def calCostMode(self, rules, roomPlayData, num):
+        cost = 0
         if len(rules) > 0:
             costMode = self.club.cost_mode
             if costMode == 0 and num < int(rules[0]):
                 value = int(rules[2])
                 params = rules[1].split('_')
-                if is_number(params[num]):
+                if type(eval(params[num])) == int:
                     cost = int(params[num])
-                else:
+                elif type(eval(params[num])) == float:
                     cost = int(roomPlayData.score * float(params[num]))
                 # 超过分数才计算
                 if roomPlayData.score <= value:
