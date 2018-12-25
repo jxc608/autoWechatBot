@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'DServer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'auto_accounting',
+        'NAME': 'auto_accounting_test',
         'USER': 'root',
         'PASSWORD': 'autoAccounting1989',
         'HOST': '127.0.0.1',
@@ -141,7 +141,10 @@ CRONJOBS = [
     ('0 0 * * *', 'blog.core.task')
 ]
 
+GRAPPELLI_ADMIN_TITLE = "机器人后台管理系统"
+
 #机器人进程
-BOT_SERVERS = ['http://127.0.0.1:8081','http://127.0.0.1:8082']
-BOT_RING = HashRing(BOT_SERVERS)
-BOT_KEY = 'We1kskbot2018'
+# BOT_SERVERS = ['http://127.0.0.1:8081','http://127.0.0.1:8082']
+# BOT_SERVERS = ['http://127.0.0.1:8000']
+# BOT_RING = HashRing(BOT_SERVERS)
+# BOT_KEY = 'We1kskbot2018'
