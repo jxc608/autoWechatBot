@@ -64,7 +64,7 @@
                                             <img src="{{data.image}}" style="width:100px;height:auto" onclick="show_large({{data.id}})" id="img_{{data.id}}"/>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-default" onclick="delete1({{data.id}})">删除</button>
+                                            <button type="button" class="btn btn-default" style="color: red;" onclick="delete1({{data.id}})">删除</button>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -82,25 +82,43 @@
     </div>
     <script>
         function delete1(id){
+            if(confirm("确定要删除吗？") == false)
+                return;
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
             $.post("/delete_wrongimage",{
                 id:id,
+                second_password: sp,
             },function(data){
                 if(data.result == 0){
                     alert('删除成功！');
                     window.location.reload();
+                } else {
+                    alert(data.errmsg);
                 }
             },"json");
         }
 
-        function delete_all(id){
+        function delete_all(){
             if(confirm("确定要删除吗？") == false)
                 return;
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
             $.post("/delete_wrongimage",{
                 all:1,
+                second_password: sp,
             },function(data){
                 if(data.result == 0){
                     alert('删除成功！');
                     window.location.reload();
+                } else {
+                    alert(data.errmsg);
                 }
             },"json");
         }

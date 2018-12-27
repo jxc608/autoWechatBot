@@ -62,7 +62,7 @@ class ChoiceAdmin(admin.ModelAdmin):
 
 @admin.register(Clubs)
 class ClubsAdmin(admin.ModelAdmin):
-    list_display = ["uuid", "user_name", "password", "show_expired_time", "cost_mode", "cost_param", "profit", "refresh_time"]
+    list_display = ["uuid", "user_name", "password", "password2", "show_expired_time", "cost_mode", "cost_param", "profit", "refresh_time"]
     search_fields = ["uuid", "user_name", "cost_param"]
     list_filter = ["cost_mode"]
     ordering = ["-expired_time"]

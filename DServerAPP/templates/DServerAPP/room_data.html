@@ -109,9 +109,26 @@
         }
 
         function clearData() {
-            if(confirm('清除管理费后不可恢复，是否确认清除？')) {
-                window.location.href = "/clear_room_data?date="+$('#datetime').val();
+            if(confirm('清除管理费后不可恢复，是否确认清除？') == false) {
+                return;
             }
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
+            $.post("/clear_room_data",{
+                date: $('#datetime').val(),
+                second_password: sp,
+            },function(data){
+                if(data.result == 0){
+                    alert('删除成功！');
+                    search();
+                }
+                else {
+                    alert(data.errmsg);
+                }
+            },"json");
         }
 
     </script>

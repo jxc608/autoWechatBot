@@ -37,6 +37,7 @@ class Clubs(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='uuid')
     user_name = models.CharField(max_length=20, verbose_name='名称')
     password = models.CharField(max_length=20, verbose_name='密码')
+    password2 = models.CharField(max_length=20, verbose_name='二级密码')
     expired_time = models.DecimalField(max_digits=19, decimal_places=6, verbose_name='过期时间')
     cost_mode = models.IntegerField(default=0, choices=COST_MODE, verbose_name='管理模式')#管理费模式 固定 还是 百分比
     cost_param = models.CharField(max_length=1000, default='none', verbose_name='管理费参数')

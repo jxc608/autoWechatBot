@@ -135,24 +135,43 @@ def register(request):
     username=request.POST.get('username','')
     password=request.POST.get('password','')
     cpassword=request.POST.get('cpassword','')
-
-    if username == None:
-        return render(request, 'DServerAPP/register.html', {"account": 1, "acct":"账号为空" })
-    elif password == '': 
-        return render(request, 'DServerAPP/register.html', {"pwd": 1, "pwct": "密码为空"})
+    password2 = request.POST.get("password2")
+    result = {
+        "username": username,
+        "password": password,
+        "cpassword": cpassword,
+        "password2": password2
+    }
+    err = False
+    if username == "":
+        result["account"] = 1
+        result["acct"] = "账号为空"
+        err = True
+    elif password == '':
+        result["pwd"] = 1
+        result["pwct"] = "密码为空"
+        err = True
     elif  password != cpassword:
-        return render(request, 'DServerAPP/register.html', {"pwd": 1, "pwct": "两次密码不一致"})
+        result["pwd"] = 1
+        result["pwct"] = "两次密码不一致"
+        err = True
+    elif password2 == "":
+        result["pwd"] = 1
+        result["pwct"] = "二级密码为空"
+        err = True
+    if err:
+        return render(request, 'DServerAPP/register.html', result)
 
-    try:
-        club = Clubs.objects.get(user_name=username)
-        return render(request, 'DServerAPP/register.html', {"account": 1, "acct":"账号已注册" })
-    except Clubs.DoesNotExist:
-        password=request.POST.get('password','')
+    if Clubs.objects.filter(user_name=username).count() > 0:
+        return render(request, 'DServerAPP/register.html', {"account": 1, "acct": "账号已注册"})
+    else:
+        password = request.POST.get('password', '')
         expired = time.time() + 3600 * 12
 
-        club = Clubs(uuid=uuid.uuid1(), user_name = username, password=password, expired_time=expired, cost_mode=0, cost_param='')
+        club = Clubs(uuid=uuid.uuid1(), user_name=username, password=password, password2=password2,
+                     expired_time=expired, cost_mode=0, cost_param='')
         club.save()
-        return render(request, 'DServerAPP/register.html', {"account": 2, "acct":"注册成功！" })
+        return render(request, 'DServerAPP/register.html', {"account": 2, "acct": "注册成功！"})
 
 def change_passwd(request):
     old_passwd = request.POST.get('old_passwd','')
@@ -275,20 +294,28 @@ def room_data(request):
     return render(request, 'DServerAPP/room_data.html', {'rooms':rooms, 'total':total, 'total_cost':total_cost, 'total_score':total_score, 'total_round':total_round, 'total_profit':total_profit, 'day':day})
 
 def clear_room_data(request):
-    day = datetime.datetime.now().strftime('%Y-%m-%d')
-    if request.GET.get('date'):
-        day = request.GET.get('date')
-
+    second_password = request.POST.get("second_password", '')
     club = Clubs.objects.get(user_name=request.session['club'])
-    rooms = HistoryGame.objects.filter(club=club, refresh_time__startswith=day)
-    for room in rooms:
-        if room.cost == 0:
-            continue
-        hc = HistoryGameClearCost(history_id=room.id,cost=room.cost)
-        hc.save()
-        room.cost = 0
-        room.save()
-    return HttpResponseRedirect('/room_data?date=%s' % request.GET.get('date'))
+    result = {'result': 0}
+    if second_password != club.password2:
+        result["result"] = 1
+        result["errmsg"] = "二级密码不正确"
+    else:
+        day = datetime.datetime.now().strftime('%Y-%m-%d')
+        if request.POST.get('date'):
+            day = request.POST.get('date')
+
+        club = Clubs.objects.get(user_name=request.session['club'])
+        rooms = HistoryGame.objects.filter(club=club, refresh_time__startswith=day)
+        for room in rooms:
+            if room.cost == 0:
+                continue
+            hc = HistoryGameClearCost(history_id=room.id,cost=room.cost)
+            hc.save()
+            room.cost = 0
+            room.save()
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def player_room_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -399,32 +426,38 @@ def player_stat(request):
     return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def clear_player_stat(request):
-    nickname_search = request.GET.get('nickname','')
-    gameid_search = request.GET.get('gameid', '')
+    second_password = request.POST.get("second_password", '')
     club = Clubs.objects.get(user_name=request.session['club'])
-
-    if gameid_search:
-        search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
-        if search_gameids.count() == 0:
-            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
-    if gameid_search:
-        for gameid in search_gameids:
-            players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
-            if players_cost:
-                break
-    elif nickname_search:
-        players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
+    result = {'result': 0}
+    if second_password != club.password2:
+        result["result"] = 1
+        result["errmsg"] = "二级密码不正确"
     else:
-        players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
+        nickname_search = request.POST.get('nickname','')
+        gameid_search = request.POST.get('gameid', '')
 
-    for player in players_cost:
-        if player.history_cost == 0:
-            continue
-        pc = PlayerClearCost(player_id=player.id, history_cost=player.history_cost)
-        pc.save()
-        player.history_cost = 0
-        player.save()
-    return HttpResponseRedirect('/player_stat?nickname=%s&gameid=%s' % (nickname_search, gameid_search))
+        if gameid_search:
+            search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
+            if search_gameids.count() == 0:
+                return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+        if gameid_search:
+            for gameid in search_gameids:
+                players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
+                if players_cost:
+                    break
+        elif nickname_search:
+            players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
+        else:
+            players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
+
+        for player in players_cost:
+            if player.history_cost == 0:
+                continue
+            pc = PlayerClearCost(player_id=player.id, history_cost=player.history_cost)
+            pc.save()
+            player.history_cost = 0
+            player.save()
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def add_manager(request):
     user_name = request.POST.get('user_name')
@@ -469,17 +502,23 @@ def add_player(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def del_player(request):
-    player_id = int(request.POST.get('id'))
+    second_password = request.POST.get("second_password")
     club = Clubs.objects.get(user_name=request.session['club'])
+    result = {'result': 0}
+    if second_password != club.password2:
+        result["result"] = 1
+        result["errmsg"] = "二级密码不正确"
+    else:
+        player_id = int(request.POST.get('id'))
+        try:
+            player = Player.objects.get(id=player_id, club=club)
+            player.is_del = 1
+            player.save()
+        except Player.DoesNotExist:
+            result["result"] = 2
+            result["errmsg"] = "玩家不存在"
 
-    try:
-        player = Player.objects.get(id=player_id, club=club)
-        player.is_del = 1
-        player.save()
-    except Player.DoesNotExist:
-        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-
-    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def add_gameid(request):
     # 对应，添加小号
@@ -527,21 +566,26 @@ def add_gameid(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def del_gameid(request):
-    player_id = int(request.POST.get('id'))
-    gameid = int(request.POST.get('gameid'))
-
+    second_password = request.POST.get("second_password")
     club = Clubs.objects.get(user_name=request.session['club'])
+    result = {'result': 0}
+    if second_password != club.password2:
+        result["result"] = 1
+        result["errmsg"] = "二级密码不正确"
+    else:
+        player_id = int(request.POST.get('id'))
+        gameid = int(request.POST.get('gameid'))
+        if Player.objects.filter(id=player_id, club=club).count() == 0:
+            result["result"] = 1
+            result["errmsg"] = "用户不存在"
+        else:
+            GameID.objects.filter(player_id=player_id, gameid=gameid, club=club).delete()
 
-    if Player.objects.filter(id=player_id, club=club).count() == 0:
-        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
-
-    GameID.objects.filter(player_id=player_id, gameid=gameid).delete()
-
-    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def add_score(request):
     player_id = int(request.POST.get('id'))
-    score = int(request.POST.get('score'))
+    score = abs(int(request.POST.get('score')))
     notice = request.POST.get('notice') == 'true'
 
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -579,7 +623,7 @@ def add_score(request):
 
 def minus_score(request):
     player_id = int(request.POST.get('id'))
-    score = int(request.POST.get('score'))
+    score = abs(int(request.POST.get('score')))
     notice = request.POST.get('notice') == 'true'
 
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -766,18 +810,21 @@ def wrong_image(request):
     return render(request, 'DServerAPP/wrong_image.html', {'club':club, 'list':list_})
 
 def delete_wrongimage(request):
-    wrong_id = request.POST.get('id')
-    del_all = request.POST.get('all', 0)
+    second_password = request.POST.get("second_password")
     club = Clubs.objects.get(user_name=request.session['club'])
+    result = {'result': 0}
+    if second_password != club.password2:
+        result["result"] = 1
+        result["errmsg"] = "二级密码不正确"
+    else:
+        wrong_id = request.POST.get('id')
+        del_all = request.POST.get('all', 0)
+        if del_all == "1":
+            WrongImage.objects.filter(club_name=club.user_name).delete()
+        elif wrong_id != "":
+            WrongImage.objects.filter(id=wrong_id).delete()
 
-    cursor=connection.cursor()
-    sql = " delete from DServerAPP_wrongimage"
-    sql+= " where club_name='" +club.user_name + "'"
-    if wrong_id:
-        sql+= " and id=" + wrong_id
-    cursor.execute(sql)
-
-    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def setting(request):
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -864,21 +911,27 @@ def update_refresh_time(request):
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
 def del_data(request):
+    second_password = request.POST.get("second_password")
     club = Clubs.objects.get(user_name=request.session['club'])
-    cursor=connection.cursor()
-    sql = " delete from DServerAPP_historygame"
-    sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
-    cursor.execute(sql)
-    sql = " update DServerAPP_player"
-    sql+= " set current_score=0,history_profit=0,today_hoster_number=0,history_cost=0"
-    sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
-    cursor.execute(sql)
-    sql = " delete from DServerAPP_score"
-    sql+= " where player_id in ("
-    sql+= " select id from DServerAPP_player where club_id='" +str(club.uuid).replace('-','') + "'"
-    sql+= ")"
-    cursor.execute(sql)
-    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    result = {'result': 0}
+    if second_password != club.password2:
+        result["result"] = 1
+        result["errmsg"] = "二级密码不正确"
+    else:
+        cursor=connection.cursor()
+        sql = " delete from DServerAPP_historygame"
+        sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
+        cursor.execute(sql)
+        sql = " update DServerAPP_player"
+        sql+= " set current_score=0,history_profit=0,today_hoster_number=0,history_cost=0"
+        sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
+        cursor.execute(sql)
+        sql = " delete from DServerAPP_score"
+        sql+= " where player_id in ("
+        sql+= " select id from DServerAPP_player where club_id='" +str(club.uuid).replace('-','') + "'"
+        sql+= ")"
+        cursor.execute(sql)
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def stat_xls(request):
     club = Clubs.objects.get(user_name=request.session['club'])

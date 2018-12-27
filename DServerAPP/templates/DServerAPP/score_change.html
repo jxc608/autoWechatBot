@@ -104,8 +104,8 @@
                                             <button type="button" class="btn btn-default" style="color: red;" onclick="del_player({{player.id}})">删除</button>
                                         </td>
                                         <td width="20%">
-                                            <input type="email" class="form-control" id="score_{{player.id}}" value="">
                                             <button type="button" class="btn btn-default" onclick="add_score({{player.id}})">上分+</button>
+                                            <input type="number" class="form-control" id="score_{{player.id}}" value="">
                                             <button type="button" class="btn btn-default" onclick="minus_score({{player.id}})">下分-</button>
                                         </td>
                                        <!-- <td>
@@ -246,18 +246,22 @@
         function del_gameid(player_id, gameid){
             if(confirm('确定要删除吗？')==false)
                 return;
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
             $.post("/del_gameid",{
                 id:player_id,
                 gameid:gameid,
+                second_password: sp,
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
-                if(data.result == 1)
-                    alert('用户不存在！');
-                else if(data.result == 2)
-                    alert('游戏ID已绑定到其他用户！');
-                else if(data.result == 0){
+                if(data.result == 0){
                     alert('删除成功！')
                     window.location.reload();
+                } else {
+                    alert(data.errmsg);
                 }
             },"json");
         }
@@ -344,16 +348,22 @@
         function del_player(player_id){
             if(confirm('确定要删除吗？')==false)
                 return;
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
             $.post("/del_player",{
                 id:player_id,
-
+                second_password: sp,
             },function(data){
                 if(data.result == 0){
                     alert('删除成功！');
                     window.location.reload();
                 }
-                else if (data.result == 2)
-                    alert('玩家不存在');
+                else {
+                    alert(data.errmsg);
+                }
             },"json");
         }
     </script>

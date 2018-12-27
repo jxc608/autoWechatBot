@@ -276,10 +276,13 @@ _list = {}
 
 class wechatInstance():
 
-    def scanError(self, room_data, total_score, fileName):
+    def scanError(self, room_data):
+        total_score = 0
+        for playerData in room_data.playerData:
+            total_score += playerData.score
         erro_msg = ""
         if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0 \
-                or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
+                or room_data.roundCounter == 0 or len(room_data.playerData) == 0 or len(room_data.playerData) > 9:
             erro_msg = '图片无法识别\n'
             erro_msg += 'roomId:%s\n' % room_data.roomId
             erro_msg += 'startTime:%s\n' % room_data.startTime
@@ -289,16 +292,12 @@ class wechatInstance():
             erro_msg += 'players:%s\n' % len(room_data.playerData)
             erro_msg += 'total_score:%s' % total_score
 
-            wrong_image = WrongImage(club_name=self.club.user_name, image=fileName, create_time=int(time.time()))
-            wrong_image.save()
-            self.itchat_instance.send(erro_msg, 'filehelper')
         return erro_msg
 
-    def createTempPlayer(self, room_data, num):
-        self.itchat_instance.send('用户id：' + str(room_data.playerData[num].id) + '没有注册, 创建临时账号：' + room_data.playerData[num].name, 'filehelper')
-        player = Player(wechat_nick_name=room_data.playerData[num].name, nick_name=room_data.playerData[num].name, club=self.club, current_score=0, history_profit=0)
+    def createTempPlayer(self, roomPlayData):
+        player = Player(wechat_nick_name=roomPlayData.name, nick_name=roomPlayData.name, club=self.club, current_score=0, history_profit=0)
         player.save()
-        gameid = GameID(club=self.club, player=player, gameid=room_data.playerData[num].id, game_nick_name=room_data.playerData[num].name)
+        gameid = GameID(club=self.club, player=player, gameid=roomPlayData.id, game_nick_name=roomPlayData.name)
         gameid.save()
         return player
 
@@ -400,36 +399,37 @@ class wechatInstance():
             # room_data = get_pic_info(wordsArray)
             # result = aipOcr.accurate(get_file_content(img_file),options)
 
+            erro_msg = ""
             tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
             for tempSign in tempAry:
-
                 result = aipOcr.custom(get_file_content(img_file), tempSign)
-                if result["error_code"] == 17:
-                    erro_msg = '百度识别次数达到上限，请联系管理员'
-                    self.itchat_instance.send(erro_msg, 'filehelper')
-                    return
                 if result["error_code"] == 272000:
                     #     模板不匹配
                     continue
+                if result["error_code"] == 17:
+                    erro_msg = '百度识别次数达到上限，请联系管理员'
+                    break
                 try:
                     print("log_id: %s" % result["data"]["logId"])
                     room_data = get_template_pic_info(result["data"]["ret"])
-                    if len(room_data.playerData) > 9:
-                        erro_msg = '识别用户超过9个，请联系管理员'
-                        self.send(erro_msg, 'filehelper')
-                        return
-                    total_score = 0
-                    for playerData in room_data.playerData:
-                        total_score += playerData.score
                     break
                 except:
                     erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
-                    self.send(erro_msg, 'filehelper')
-                    return
 
-            if self.scanError(room_data, total_score, msg.fileName):
+            if erro_msg == "":
+                erro_msg = self.scanError(room_data)
+            if erro_msg != "":
                 # 图片无法识别
+                wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
+                wrong_image.save()
+                self.itchat_instance.send(erro_msg, 'filehelper')
                 return
+
+            existCount = HistoryGame.objects.filter(club_id=self.club.uuid, room_id=room_data.roomId, start_time=room_data.startTime).count()
+            if existCount > 0:
+                self.itchat_instance.send('数据已入库！', 'filehelper')
+                return
+
             #根据刷新时间设置，设置入库时间
             today_time_start = '%s-%s-%s 0:0:0' % (timezone.now().year, timezone.now().month, timezone.now().day)
             timeArray = time.strptime(today_time_start, "%Y-%m-%d %H:%M:%S")
@@ -439,87 +439,81 @@ class wechatInstance():
             refresh_time = timezone.now()
             if time.time() < today_time_start + self.club.refresh_time * 3600:
                 refresh_time = timezone.now() - datetime.timedelta(days=1)
-            try:
-                HistoryGame.objects.get(club_id=self.club.uuid, room_id=room_data.roomId, start_time=room_data.startTime)
-                self.itchat_instance.send('数据已入库！', 'filehelper')      
-                return ''
-            except HistoryGame.DoesNotExist:
-                playerData = []
-                for d in room_data.playerData:
-                    playerData.append(d.dumps())
-                historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, player_data=json.dumps(playerData), create_time=timezone.now(), refresh_time=refresh_time)
-                historyGame.save()
-                room_data.toString()
-                pic_msg = "房间ID：%s\n房主：%s\n房主ID：%s\n局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHoster,room_data.roomHosterId, room_data.roundCounter, room_data.startTime)
-                pic_msg+= '-------------------------------------\n'
 
-                rules = []
-                if self.club.cost_param != None and self.club.cost_param != 'none' and self.club.cost_param != '':
-                    rules = self.club.cost_param
-                    rules = rules.split('|')
-                clubProfit = 0
-                
-                for num in range(0, len(room_data.playerData)):
-                    roomPlayData = room_data.playerData[num]
-                    player = None
-                    wechat_uuid = None
-                    has_gameid = False
+            playerData = []
+            for d in room_data.playerData:
+                playerData.append(d.dumps())
+            historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, player_data=json.dumps(playerData), create_time=timezone.now(), refresh_time=refresh_time)
+            historyGame.save()
+            room_data.toString()
+            pic_msg = "房间ID：%s\n房主：%s\n房主ID：%s\n局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHoster,room_data.roomHosterId, room_data.roundCounter, room_data.startTime)
+            pic_msg+= '-----------------------------\n'
 
-                    # 获取当前用户的username用来发送消息
-                    try:
-                        matchGi = GameID.objects.get(club=self.club, gameid=roomPlayData.id, player__is_del=0)
-                    except GameID.DoesNotExist:
-                        pass
-                    else:
-                        has_gameid = True
-                        player = matchGi.player
-                        playerWechat = self.getWechatUserByRemarkName(player.nick_name)
-                        if playerWechat:
-                            wechat_uuid = playerWechat['UserName']
+            rules = []
+            if self.club.cost_param != None and self.club.cost_param != 'none' and self.club.cost_param != '':
+                rules = self.club.cost_param
+                rules = rules.split('|')
+            clubProfit = 0
 
-                    # 数据库中没有用户，自动增加
-                    if not has_gameid:
-                        player = self.createTempPlayer(room_data, num)
+            for num in range(0, len(room_data.playerData)):
+                roomPlayData = room_data.playerData[num]
+                wechat_uuid = None
 
-                    try:
-                        is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
-                        if is_host:
-                            player.today_hoster_number += 1
-                        last_current_score = player.current_score
-                        # 计算管理费
-                        cost = self.calCostMode(rules, roomPlayData, num)
-                        score = Score(player=player, score=roomPlayData.score - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId, refresh_time=refresh_time)
-                        score.save()
-                        player.current_score = player.current_score + roomPlayData.score - cost
-                        player.history_profit = player.history_profit + roomPlayData.score - cost
-                        player.history_cost += cost
-                        player.save()
-                        historyGame.cost += cost
-                        historyGame.score += roomPlayData.score - cost
-                        clubProfit += cost
-                        costShow1 = "  管理费: %s" % cost
-                        costShow2 = "  本局房费: %s" % cost
-                        if cost == 0:
-                            costShow1 = ""
-                            costShow2 = "  本局房费: 无"
-                        pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + \
-                                   costShow1 + '  总分数：' + str(player.current_score) + '\n'
-                        if wechat_uuid:
-                            self.itchat_instance.send_image(img_file, wechat_uuid)
-                            alert_msg = '%s\n上次积分: %s\n本局积分: %s\n%s\n当前余分: %s\n' % (player.nick_name, last_current_score, roomPlayData.score, costShow2, player.current_score)
-                            self.itchat_instance.send(alert_msg, wechat_uuid)
+                # 获取当前用户的username用来发送消息
+                giCount = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0).count()
+                # 数据库中没有用户，自动增加
+                if giCount > 1:
+                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, giCount),'filehelper')
+                    return
+                elif giCount == 0:
+                    self.itchat_instance.send('用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name), 'filehelper')
+                    player = self.createTempPlayer(roomPlayData)
+                    playerWechat = self.getWechatUserByRemarkName(player.nick_name)
+                    if playerWechat:
+                        wechat_uuid = playerWechat['UserName']
+                else:
+                    player = GameID.objects.get(club=self.club, gameid=roomPlayData.id, player__is_del=0)[0]
 
-                        #授信
-                        self.scoreLimit(player, wechat_uuid)
-                    except:
-                        traceback.print_exc()
-                        self.itchat_instance.send('发生异常！', 'filehelper')
-                        continue
-                historyGame.save()        
+                try:
+                    is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
+                    if is_host == 1:
+                        player.today_hoster_number += 1
+                    last_current_score = player.current_score
+                    # 计算管理费
+                    cost = self.calCostMode(rules, roomPlayData, num)
+                    score = Score(player=player, score=roomPlayData.score - cost, cost=cost, is_host=is_host, create_time=timezone.now(), room_id=room_data.roomId, refresh_time=refresh_time)
+                    score.save()
+                    player.current_score = player.current_score + roomPlayData.score - cost
+                    player.history_profit = player.history_profit + roomPlayData.score - cost
+                    player.history_cost += cost
+                    player.save()
+                    historyGame.cost += cost
+                    historyGame.score += roomPlayData.score - cost
+                    clubProfit += cost
+                    costShow1 = "  管理费: %s" % cost
+                    costShow2 = "  本局房费: %s" % cost
+                    if cost == 0:
+                        costShow1 = ""
+                        costShow2 = "  本局房费: 无"
+                    pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
+                    if wechat_uuid:
+                        self.itchat_instance.send_image(img_file, wechat_uuid)
+                        alert_msg = '%s\n上次积分: %s\n本局积分: %s\n%s\n当前余分: %s\n' % (player.nick_name, last_current_score, roomPlayData.score, costShow2, player.current_score)
+                        self.itchat_instance.send(alert_msg, wechat_uuid)
+
+                    #授信
+                    self.scoreLimit(player, wechat_uuid)
+                except:
+                    traceback.print_exc()
+                    errmsg = "发生异常：\n姓名: %s\nid: %s\n分数: %s" % (roomPlayData.name, roomPlayData.id, roomPlayData.score)
+                    print(errmsg)
+                    self.itchat_instance.send(errmsg, 'filehelper')
+                    continue
+            historyGame.save()
           
             self.club.profit += clubProfit
             self.club.save()
-            pic_msg+= '-------------------------------------\n'
+            pic_msg+= '-----------------------------\n'
             pic_msg+= '获得管理费：%s' % clubProfit
             self.itchat_instance.send(pic_msg, 'filehelper') 
             return '@%s@%s' % (typeSymbol, msg.fileName)
