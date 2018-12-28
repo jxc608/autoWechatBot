@@ -1133,31 +1133,33 @@ class wechatInstance(AipOcr):
             #     total_score += playerData.score
 
             # # 网络图片文字文字识别接口
-            # tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
+            tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
             # # result = aipOcr.accurate(get_file_content(img_file),options)
-            # for tempSign in tempAry:
-            result = self.custom_classify(get_file_content(img_file), 1)
-            if result["error_code"] == 17:
-                erro_msg = '百度识别次数达到上限，请联系管理员'
-                self.itchat_instance.send(erro_msg, 'filehelper')
-                return
-            # if result["error_code"] == 272000:
-            # #     模板不匹配
-            #     continue
-            try:
-                print("log_id: %s" % result["data"]["logId"])
-                room_data = get_template_pic_info(result["data"]["ret"])
-                if len(room_data.playerData) > 9:
-                    erro_msg = '识别用户超过9个，请联系管理员'
+            for tempSign in tempAry:
+                result = aipOcr.custom(get_file_content(img_file),tempSign)
+                # result = self.custom_classify(get_file_content(img_file), 1)
+                if result["error_code"] == 17:
+                    erro_msg = '百度识别次数达到上限，请联系管理员'
                     self.itchat_instance.send(erro_msg, 'filehelper')
                     return
-                total_score = 0
-                for playerData in room_data.playerData:
-                    total_score += playerData.score
-            except:
-                erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
-                self.itchat_instance.send(erro_msg, 'filehelper')
-                return
+                if result["error_code"] == 272000:
+                #     模板不匹配
+                    continue
+                try:
+                    print("log_id: %s" % result["data"]["logId"])
+                    room_data = get_template_pic_info(result["data"]["ret"])
+                    if len(room_data.playerData) > 9:
+                        erro_msg = '识别用户超过9个，请联系管理员'
+                        self.itchat_instance.send(erro_msg, 'filehelper')
+                        return
+                    total_score = 0
+                    for playerData in room_data.playerData:
+                        total_score += playerData.score
+                    break
+                except:
+                    erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
+                    self.itchat_instance.send(erro_msg, 'filehelper')
+                    return
 
 
             if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0\
