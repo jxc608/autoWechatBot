@@ -10,6 +10,8 @@ from django.utils import timezone
 from django.db import connection
 from django.conf import settings
 import base64
+import urllib.request, sys
+import ssl
 
 # 定义常量  
 APP_ID = '11756002'
@@ -42,6 +44,8 @@ def getCloseAnchor(map, Anchor, height):
 #lock = threading.Lock()
 
 def createQuadList(item):
+    import urllib.request
+    urllib.request.urlopen()
     quadList = []
     quadList.append(createCQ(item))
     return quadList
@@ -350,6 +354,89 @@ def get_template_pic_info(result):
             playerData.score = abs(playerData.score)
         score += abs(playerData.score)
     print(room_data)
+    return room_data
+
+
+def get_aliyun_pic_info(content):
+    print(content["sid"])
+    hoster_id = 0
+    infoDic = {}
+    keyAry = [
+        {"word": "房号：", "key": "room_id"},
+        {"word": "房主：", "key": "hoster"},
+        {"word": "局数：", "key": "round_number"},
+        {"word": "开始时间：", "key": "start_time"},
+        {"word": "玩家", "key": "name_pos"},
+        {"word": "D", "key": "id_pos"},
+        {"word": "积分", "key": "score_pos"},
+        {"word": "分享", "key": "share"},
+    ]
+
+    index = 0
+    playerIndex = 0
+    data_list = []
+    for words in content["prism_wordsInfo"]:
+        word = words["word"]
+        curKey = keyAry[index]
+        if index < 7:
+            if curKey["word"] in word:
+                if index < 4:
+                    pattern = "%s(.*)" % curKey["word"]
+                    r = re.search(pattern, word, re.M | re.I)
+                    infoDic[curKey["key"]] = r.group(1)
+                else:
+                    infoDic[curKey["key"]] = words["pos"][0]["x"]
+                index += 1
+        else:
+            # 处于识别玩家游戏信息阶段
+            if curKey["word"] in word:
+                # 终结字段识别
+                break
+            if playerIndex > len(data_list) - 1:
+                data_list.append({})
+            start = int(words["pos"][0]["x"])
+            if start > int(infoDic["score_pos"]):
+                data_list[playerIndex]["score"] = word
+                playerIndex += 1
+            elif start > int(infoDic["id_pos"]):
+                data_list[playerIndex]["id"] = word
+            elif start > int(infoDic["name_pos"]):
+                data_list[playerIndex]["name"] = word
+
+    room_data = playerResult.roomData()
+    room_data.roomId = infoDic["room_id"]
+    room_data.startTime = infoDic["start_time"]
+    room_data.roomHoster = infoDic["hoster"]
+    room_data.roundCounter = infoDic["round_number"]
+    total = 0
+    for player in data_list:
+        print("内容:\n%s" % player)
+        p = playerResult.playerData()
+        p.name = ""
+        try:
+            p.name = player['name']
+        except:
+            pass
+        try:
+            # 名字可能会没有，两者必须是整数才承认
+            p.id = int(player['id'])
+            p.score = int(player['score'])
+        except:
+            continue
+        total += abs(p.score)
+        room_data.playerData.append(p)
+        if p.name == infoDic["hoster"]:
+            hoster_id = p.id
+
+    room_data.roomHosterId = hoster_id
+    score = 0
+    for playerData in room_data.playerData:
+        if score + abs(playerData.score) > total / 2:
+            playerData.score = -abs(playerData.score)
+        else:
+            playerData.score = abs(playerData.score)
+        score += abs(playerData.score)
+    room_data.toString()
     return room_data
 
 #itchat 实例列表
@@ -908,7 +995,6 @@ class wechatInstance(AipOcr):
                 hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, \
                 player_data=json.dumps(playerData), create_time=timezone.now())
                 historyGame.save()
-                room_data.toString()
                 pic_msg = '房间ID：' + str(room_data.roomId) + '\n'
                 pic_msg+= '房主：' + str(room_data.roomHoster) + '\n'
                 pic_msg+= '房主ID：' + str(room_data.roomHosterId) + '\n'
@@ -1123,35 +1209,28 @@ class wechatInstance(AipOcr):
                 PICTURE: 'img',
                 }.get(msg.type, 'fil')
 
-            # 从识别的文本中抓取最终结果
-            # result = aipOcr.accurate(get_file_content(img_file), options)
-            # resultDir = result['direction']#0:是正常方向，3是顺时针90度
-            # wordsArray = result['words_result']
-            # room_data = get_pic_info(wordsArray)
-            # total_score = 0
-            # for playerData in room_data.playerData:
-            #     total_score += playerData.score
+            '''
+            阿里云识别
+            '''
+            host = 'https://ocrapi-advanced.taobao.com'
+            path = '/ocrservice/advanced'
+            method = 'POST'
+            appcode = 'a0ce79e60fc1405d8032b38dbb51f479'
+            url = host + path
 
-            # # 网络图片文字文字识别接口
-            # tempAry = ["64809cb9569bd1f748cf42344ba736fe", "e795a6b645d872e6e093550c9393b845"]
-            # # result = aipOcr.accurate(get_file_content(img_file),options)
-            # for tempSign in tempAry:
-                # result = aipOcr.custom(get_file_content(img_file),tempSign)
-            result = self.custom_classify(get_file_content(img_file), 1)
-            if result["error_code"] == 17:
-                erro_msg = '百度识别次数达到上限，请联系管理员'
-                self.itchat_instance.send(erro_msg, 'filehelper')
-                return
-            # if result["error_code"] == 272000:
-            # #     模板不匹配
-            #     continue
+            post_data = {"img": str(base64.b64encode(get_file_content(img_file)), "utf-8")}
+            post_data = json.dumps(post_data).encode("utf-8")
+            request = urllib.request.Request(url, post_data, method=method)
+            request.add_header('Authorization', 'APPCODE ' + appcode)
+            request.add_header('Content-Type', 'application/json; charset=UTF-8')
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            response = urllib.request.urlopen(request, context=ctx)
+            result = response.read()
+            result = json.loads(result)
             try:
-                print("log_id: %s" % result["data"]["logId"])
-                room_data = get_template_pic_info(result["data"]["ret"])
-                if len(room_data.playerData) > 9:
-                    erro_msg = '识别用户超过9个，请联系管理员'
-                    self.itchat_instance.send(erro_msg, 'filehelper')
-                    return
+                room_data = get_aliyun_pic_info(result)
                 total_score = 0
                 for playerData in room_data.playerData:
                     total_score += playerData.score
@@ -1163,7 +1242,7 @@ class wechatInstance(AipOcr):
 
 
             if room_data.startTime == '' or room_data.roomId == 0 or total_score != 0\
-                     or room_data.roundCounter == 0 or len(room_data.playerData) == 0:
+                     or room_data.roundCounter == 0 or len(room_data.playerData) == 0 or len(room_data.playerData) > 9:
                 erro_msg = '图片无法识别\n'
                 erro_msg+= 'roomId:' + str(room_data.roomId) + '\n'
                 erro_msg+= 'startTime:' + str(room_data.startTime) + '\n'
