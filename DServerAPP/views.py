@@ -531,7 +531,8 @@ def add_gameid(request):
         player = Player.objects.get(id=player_id, club=club)
         gameID = GameID.objects.filter(gameid=gameid, club=club)
 
-        # 当gameid已经存在，且已经有人的这一段，没有看懂
+        # 同样的gameID，还循环个啥呀
+        # 找到唯一没有被删除的改player，原始的origin也应该只有一个
         if len(gameID) > 0:
             original_player = None
             for g in gameID:
