@@ -72,8 +72,8 @@
                                 <tr>
                                     <th>昵称</th>
                                     <th>id</th>
-                                    <th><a href="javascript:void(0);" onclick="order_by('round')">总局数↑</a></th>
-                                    <th><a href="javascript:void(0);" onclick="order_by('score')">总分数↑</a></th>
+                                    <th><a href="javascript:void(0);" onclick="order_by('round')">局数↑</a></th>
+                                    <th><a href="javascript:void(0);" onclick="order_by('score')">分数↑</a></th>
                                     <th>操作</th>
                                    <!-- <th>历史总盈亏</th>-->
                                 </tr>
@@ -104,9 +104,9 @@
                                             <button type="button" class="btn btn-default" style="color: red;" onclick="del_player({{player.id}})">删除</button>
                                         </td>
                                         <td width="20%">
-                                            <button type="button" class="btn btn-default" onclick="add_score({{player.id}})">上分+</button>
+                                            <button type="button" class="btn btn-default" style="color: green" onclick="add_score({{player.id}})">上分+</button>
                                             <input type="number" class="form-control" id="score_{{player.id}}" value="">
-                                            <button type="button" class="btn btn-default" onclick="minus_score({{player.id}})">下分-</button>
+                                            <button type="button" class="btn btn-default" style="color: red" onclick="minus_score({{player.id}})">下分-</button>
                                         </td>
                                        <!-- <td>
                                             {{player.history_profit}}
@@ -232,13 +232,11 @@
                 gameid:$('#gameid_add').val(),
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
-                if(data.result == 1)
-                    alert('用户不存在！');
-                else if(data.result == 2)
-                    alert('游戏ID已添加到其他用户，请先从其他用户中删除！');
-                else if(data.result == 0){
+                if(data.result == 0){
                     alert('添加成功！')
                     window.location.reload();
+                } else {
+                    alert(data.errmsg)
                 }
             },"json");
         }
@@ -267,6 +265,9 @@
         }
 
         function add_score(player_id){
+            if(!confirm("您点击了上分，确定吗？")) {
+                return;
+            }
             if($('#score_'+player_id).val()==''){
                 alert("请输入上分分数。");
                 return;
@@ -324,6 +325,9 @@
         }
 
         function minus_score(player_id){
+            if(!confirm("您点击了【下分】，确定吗？")) {
+                return;
+            }
             if($('#score_'+player_id).val()==''){
                 alert("请输入下分分数。");
                 return;

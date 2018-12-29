@@ -108,7 +108,7 @@
 	</div>
     <script>
     
-        {% if wx_login == False %}
+        {% if club.expired == False and wx_login == False %}
         var qrcode = new QRCode('qrcode', {
           text: 'https://login.weixin.qq.com/l/{{uuid}}',
           width: 256,

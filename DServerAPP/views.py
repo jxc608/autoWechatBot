@@ -5,8 +5,6 @@ from .models import *
 import uuid
 from django.utils import timezone
 from . import messageType
-import itchat
-import _thread
 from .utils import is_number
 import time,datetime,json
 from django.db import connection
@@ -14,8 +12,8 @@ from django.conf import settings
 from django.db.models import Sum
 import xlwt
 import io
-import json
 from . import wechatDeal
+from functools import wraps
 
 
 
@@ -94,27 +92,30 @@ def wechat_bind(request):
 #     return render(request, 'DServerAPP/wechat_bind_all.html', bot_info)
 
 
-def is_login(request):
-    if not request.session.get('login') or request.session.get('login') == False:
-        return False
-    else:
-        return True
+def check_sys_login(f):
+    wraps(f)
 
+    def inner(request, *arg, **kwargs):
+        if not request.session.get('login') or request.session.get('login') == False:
+            return HttpResponseRedirect('/login')
+        else:
+            return f(request, *arg, **kwargs)
+    return inner
+
+@check_sys_login
 def index(request):
-    if is_login(request) == False:
-        return HttpResponseRedirect('/login')
     club = Clubs.objects.get(user_name=request.session['club'])
     club.expired = False
     if club.expired_time < time.time():
         club.expired_time_desc = '已失效'
         club.expired = True
+        bot_info = {"wx_login": False, "uuid": "0"}
     else:
         timeArray = time.localtime(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
-    if not club.expired:
         params = get_bot_param(request)
         bot_info = wechatDeal.bot_get_uuid(params)
-    print(bot_info)
+
     is_admin = False
     if club.user_name == '18811333964':
         is_admin = True
@@ -265,6 +266,7 @@ def get_cdkey(request):
         result.append(key.cdkey)
     return HttpResponse(json.dumps({'result': result}), content_type="application/json")
 
+@check_sys_login
 def room_data(request):
     day = datetime.datetime.now().strftime('%Y-%m-%d')
     if request.GET.get('date'):
@@ -317,6 +319,7 @@ def clear_room_data(request):
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
+@check_sys_login
 def player_room_data(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     day = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -350,7 +353,8 @@ def player_room_data(request):
     elif orderby == 'cost':  
         list_ = sorted(list_, key=lambda list_ : list_.total_cost, reverse=True)
     return render(request, 'DServerAPP/player_room_data.html', {'players':list_,'day':day})
-    
+
+@check_sys_login
 def player_data(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
@@ -376,7 +380,7 @@ def player_data(request):
     total = len(players)
     return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
-
+@check_sys_login
 def player_stat(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
@@ -526,45 +530,34 @@ def add_gameid(request):
     gameid = int(request.POST.get('gameid'))
 
     club = Clubs.objects.get(user_name=request.session['club'])
-
+    result = {"result": 0}
     try:
-        player = Player.objects.get(id=player_id, club=club)
-        gameID = GameID.objects.filter(gameid=gameid, club=club)
-
-        # 同样的gameID，还循环个啥呀
-        # 找到唯一没有被删除的改player，原始的origin也应该只有一个
-        if len(gameID) > 0:
-            original_player = None
-            for g in gameID:
-                try:
-                    original_player = Player.objects.get(id=g.player_id, is_del=0)
-                    break
-                except Player.DoesNotExist:
-                    pass
-            if original_player:
-                ids_count = GameID.objects.filter(player_id=original_player.id).values("gameid").distinct().count()
-                if ids_count > 1:
-                    return HttpResponse(json.dumps({'result': 2}), content_type="application/json")
-
-                GameID.objects.filter(gameid=gameid).update(player_id=player.id)
-                Score.objects.filter(player_id=original_player.id).update(player_id=player.id)
-                ScoreChange.objects.filter(player_id=original_player.id).update(player_id=player.id)
-                player.current_score += original_player.current_score
-                player.history_profit += original_player.history_profit
-                player.history_cost += original_player.history_cost
-                player.today_hoster_number += original_player.today_hoster_number
-                player.save()
-                original_player.delete()
-            else:
-                gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=player.nick_name)
-                gameid.save()
+        player = Player.objects.get(id=player_id, club=club, is_del=0)
+        gameIDAry = GameID.objects.filter(gameid=gameid, club=club, player__is_del=0)
+        # 每个club的每个gameid，对应的is_del为0的player，该只有一条
+        if gameIDAry.count() > 1:
+            result["result"] = 2
+            result["errmsg"] = "游戏ID已添加到其他用户，请先从其他用户中删除！"
+        elif gameIDAry.count() == 1:
+            original_player = gameIDAry[0].player
+            GameID.objects.filter(gameid=gameid, club=club, player__is_del=0).update(player_id=player.id)
+            Score.objects.filter(player_id=original_player.id).update(player_id=player.id)
+            ScoreChange.objects.filter(player_id=original_player.id).update(player_id=player.id)
+            player.current_score += original_player.current_score
+            player.history_profit += original_player.history_profit
+            player.history_cost += original_player.history_cost
+            player.today_hoster_number += original_player.today_hoster_number
+            player.save()
+            original_player.delete()
         else:
             gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=player.nick_name)
             gameid.save()
-    except Player.DoesNotExist:
-        return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
 
-    return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+    except Player.DoesNotExist:
+        result["result"] = 1
+        result["errmsg"] = "用户不存在"
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 def del_gameid(request):
     second_password = request.POST.get("second_password")
@@ -580,6 +573,7 @@ def del_gameid(request):
             result["result"] = 1
             result["errmsg"] = "用户不存在"
         else:
+            # 每个club的每个gameid，对应的is_del为0的player，该只有一条，就是下面的这一条
             GameID.objects.filter(player_id=player_id, gameid=gameid, club=club).delete()
 
     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -677,6 +671,7 @@ def add_score_limit(request):
 
     return HttpResponse(json.dumps({'result': 0, 'score_limit':player.score_limit}), content_type="application/json")
 
+@check_sys_login
 def score_change(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
@@ -786,6 +781,7 @@ def score_change_log(request):
         today_down = rr[0][0]
     return render(request, 'DServerAPP/score_change_log.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search, 'day':day, 'today_up':today_up, 'today_down':today_down})
 
+@check_sys_login
 def wrong_image(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
@@ -827,6 +823,7 @@ def delete_wrongimage(request):
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
+@check_sys_login
 def setting(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     params = club.cost_param.split("|")
