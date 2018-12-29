@@ -165,12 +165,13 @@ class wechatInstance():
             msg.download(img_file)
             typeSymbol = {PICTURE: 'img',}.get(msg.type, 'fil')
 
+            erro_msg = ""
             try:
                 result = self.get_aliyun_result(img_file)
                 room_data = get_aliyun_pic_info(result)
             except:
                 erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
-            if not erro_msg:
+            if erro_msg == "":
                 erro_msg = self.scanError(room_data)
             if erro_msg != "":
                 # 图片无法识别
