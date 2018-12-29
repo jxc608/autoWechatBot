@@ -540,15 +540,19 @@ def add_gameid(request):
             result["errmsg"] = "游戏ID已添加到其他用户，请先从其他用户中删除！"
         elif gameIDAry.count() == 1:
             original_player = gameIDAry[0].player
-            GameID.objects.filter(gameid=gameid, club=club, player__is_del=0).update(player_id=player.id)
-            Score.objects.filter(player_id=original_player.id).update(player_id=player.id)
-            ScoreChange.objects.filter(player_id=original_player.id).update(player_id=player.id)
-            player.current_score += original_player.current_score
-            player.history_profit += original_player.history_profit
-            player.history_cost += original_player.history_cost
-            player.today_hoster_number += original_player.today_hoster_number
-            player.save()
-            original_player.delete()
+            if original_player.id == player_id:
+                result["result"] = 3
+                result["errmsg"] = "已在该用户中"
+            else:
+                GameID.objects.filter(gameid=gameid, club=club, player__is_del=0).update(player_id=player.id)
+                Score.objects.filter(player_id=original_player.id).update(player_id=player.id)
+                ScoreChange.objects.filter(player_id=original_player.id).update(player_id=player.id)
+                player.current_score += original_player.current_score
+                player.history_profit += original_player.history_profit
+                player.history_cost += original_player.history_cost
+                player.today_hoster_number += original_player.today_hoster_number
+                player.save()
+                original_player.delete()
         else:
             gameid = GameID(player=player, club=club, gameid=gameid, game_nick_name=player.nick_name)
             gameid.save()
