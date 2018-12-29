@@ -92,7 +92,7 @@ class GameIdAdmin(admin.ModelAdmin):
 @admin.register(Score)
 class ScoreAdmin(admin.ModelAdmin):
     list_display = ["id", "player", "score", "cost", "is_host", "create_time", "room_id", "refresh_time"]
-    search_fields = ["player__nick_name", "room_id"]
+    search_fields = ["player__nick_name"]
     list_filter = ["is_host"]
     readonly_fields = ["player", "score", "cost", "is_host", "create_time", "room_id", "refresh_time"]
     ordering = ["refresh_time"]
