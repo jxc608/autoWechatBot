@@ -220,7 +220,7 @@ class wechatInstance():
                     self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, giCount),'filehelper')
                     return
                 elif gi.count() == 1:
-                    player = gi[0]
+                    player = gi[0].player
                 else:
                     self.itchat_instance.send('用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name), 'filehelper')
                     player = self.createTempPlayer(roomPlayData)
