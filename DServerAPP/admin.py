@@ -100,7 +100,7 @@ class ScoreAdmin(admin.ModelAdmin):
 @admin.register(HistoryGame)
 class HistoryGameAdmin(admin.ModelAdmin):
     list_display = ["id", "club", "room_id", "hoster_name", "hoster_id", "round_number", "start_time", "create_time", "cost", "score", "refresh_time"]
-    search_fields = ["club__user_name", "hoster_name", "hoster_id"]
+    search_fields = ["club__user_name", "room_id", "hoster_name", "hoster_id"]
     readonly_fields = ["club", "room_id", "hoster_name", "hoster_id", "round_number", "start_time", "player_data", "create_time", "cost", "score", "refresh_time"]
     ordering = ["-refresh_time"]
 
