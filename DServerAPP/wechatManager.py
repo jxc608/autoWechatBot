@@ -214,19 +214,19 @@ class wechatInstance():
                 wechat_uuid = None
 
                 # 获取当前用户的username用来发送消息
-                giCount = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0).count()
+                gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
                 # 数据库中没有用户，自动增加
-                if giCount > 1:
+                if gi.count() > 1:
                     self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, giCount),'filehelper')
                     return
-                elif giCount == 0:
+                elif gi.count() == 1:
+                    player = gi[0]
+                else:
                     self.itchat_instance.send('用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name), 'filehelper')
                     player = self.createTempPlayer(roomPlayData)
                     playerWechat = self.getWechatUserByRemarkName(player.nick_name)
                     if playerWechat:
                         wechat_uuid = playerWechat['UserName']
-                else:
-                    player = GameID.objects.get(club=self.club, gameid=roomPlayData.id, player__is_del=0)[0]
 
                 try:
                     is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
@@ -250,13 +250,13 @@ class wechatInstance():
                         costShow1 = ""
                         costShow2 = "  本局房费: 无"
                     pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
-                    if wechat_uuid:
+                    if wechat_uuid != None:
                         self.itchat_instance.send_image(img_file, wechat_uuid)
                         alert_msg = '%s\n上次积分: %s\n本局积分: %s\n%s\n当前余分: %s\n' % (player.nick_name, last_current_score, roomPlayData.score, costShow2, player.current_score)
                         self.itchat_instance.send(alert_msg, wechat_uuid)
 
-                    #授信
-                    self.scoreLimit(player, wechat_uuid)
+                        #授信检测
+                        self.scoreLimit(player, wechat_uuid)
                 except:
                     traceback.print_exc()
                     errmsg = "发生异常：\n姓名: %s\nid: %s\n分数: %s" % (roomPlayData.name, roomPlayData.id, roomPlayData.score)
@@ -317,8 +317,7 @@ class wechatInstance():
             alert_msg += '当前余分: %s\n' % player.current_score
             alert_msg += player.score_limit_desc + '\n'
             alert_msg += '本条消息来自傻瓜机器人自动回复\n'
-            if wechat_uuid:
-                self.itchat_instance.send(alert_msg, wechat_uuid)
+            self.itchat_instance.send(alert_msg, wechat_uuid)
 
             # 管理员
             manager_wechat_uuids = []
