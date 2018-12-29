@@ -141,7 +141,7 @@ class wechatInstance():
 
     def __init__(self, uuid):
         # self.qrid = itchat.get_QRuuid()
-        # self.logined = False
+        self.logined = False
         self.itchat_instance = itchat.new_instance()
         try:
             self.club = Clubs.objects.get(user_name=uuid)
@@ -394,10 +394,11 @@ class wechatInstance():
         return result
 
     def is_login(self):
-        if self.itchat_instance.alive:
-            return True
-        else:
-            return False
+        return self.logined
+        # if self.itchat_instance.alive:
+        #     return True
+        # else:
+        #     return False
 
     def get_uuid(self):
         return self.itchat_instance.get_QRuuid()
@@ -421,16 +422,18 @@ class wechatInstance():
             # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
             if self.club.expired_time < time.time():
                 self.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
-                self.itchat_instance.logout()
+                self.logout()
             else:
                 userInfo = self.itchat_instance.web_init()
                 self.itchat_instance.show_mobile_login()
                 self.itchat_instance.get_contact(update=True)
                 output_info('Login successfully as %s' % userInfo['User']['NickName'])
                 self.itchat_instance.start_receiving()
+                self.logined = True
                 _thread.start_new_thread(self.itchat_instance.run, ())
 
     def logout(self):
+        self.logined = False
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):
