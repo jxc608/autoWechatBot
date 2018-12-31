@@ -139,14 +139,16 @@ _list = {}
 
 class wechatInstance():
 
-    def __init__(self, uuid):
+    def __init__(self, clubName):
         # self.qrid = itchat.get_QRuuid()
         self.logined = False
         self.itchat_instance = itchat.new_instance()
+        self.club_name = clubName
+        self.club = None
         try:
-            self.club = Clubs.objects.get(user_name=uuid)
+            self.club = Clubs.objects.get(user_name=clubName)
         except:
-            print("club未找到：" % uuid)
+            print("club未找到：" % clubName)
 
         '''
         接受图片的逻辑处理
@@ -155,8 +157,15 @@ class wechatInstance():
         def download_files_new(msg):
             if msg['ToUserName'] != 'filehelper':
                 return
+            if self.club == None:
+                self.send('俱乐部未找到： %s' % self.club_name, 'filehelper')
+                return
+            elif self.club.expired_time < time.time():
+                self.send('俱乐部已过期： %s， 请与管理员确认' % self.club_name, 'filehelper')
+                return
 
-            self.itchat_instance.send('正在识别...', 'filehelper')
+            output_info("俱乐部：%s， %s 开始识别" % self.club.uuid, self.club.user_name)
+            self.send('正在识别...', 'filehelper')
 
             club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):
@@ -180,7 +189,7 @@ class wechatInstance():
                 self.itchat_instance.send(erro_msg, 'filehelper')
                 return
 
-            existCount = HistoryGame.objects.filter(club_id=self.club.uuid, room_id=room_data.roomId, start_time=room_data.startTime).count()
+            existCount = HistoryGame.objects.filter(club=self.club, room_id=room_data.roomId, start_time=room_data.startTime).count()
             if existCount > 0:
                 self.itchat_instance.send('数据已入库！', 'filehelper')
                 return
