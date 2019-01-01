@@ -454,7 +454,7 @@ class wechatInstance():
     def sendByRemarkName(self, msg, remarkName):
         f = self.getWechatUserByRemarkName(remarkName=remarkName)
         if f:
-            f[0].send(msg)
+            f.send(msg)
 
     def send(self, msg, user_name):
         self.itchat_instance.send(msg, user_name)
