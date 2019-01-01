@@ -57,10 +57,10 @@ def get_aliyun_pic_info(content):
     hoster_id = 0
     infoDic = {}
     keyAry = [
-        {"word": "房号：", "key": "room_id"},
-        {"word": "房主：", "key": "hoster"},
-        {"word": "局数：", "key": "round_number"},
-        {"word": "开始时间：", "key": "start_time"},
+        {"word": "房号", "key": "room_id"},
+        {"word": "房主", "key": "hoster"},
+        {"word": "局数", "key": "round_number"},
+        {"word": "开始时间", "key": "start_time"},
         {"word": "玩家", "key": "name_pos"},
         {"word": "D", "key": "id_pos"},
         {"word": "积分", "key": "score_pos"},
@@ -80,7 +80,11 @@ def get_aliyun_pic_info(content):
                 if index < 4:
                     pattern = "%s(.*)" % curKey["word"]
                     r = re.search(pattern, word, re.M | re.I)
-                    infoDic[curKey["key"]] = r.group(1)
+                    ct = r.group(1)
+                    # 部分识别不出冒号的问题
+                    if ct[0] == ":" or ct[0] == "：":
+                        ct = ct[1:]
+                    infoDic[curKey["key"]] = ct
                 else:
                     infoDic[curKey["key"]] = words["pos"][0]["x"]
                 index += 1
