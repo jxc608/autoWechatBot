@@ -37,7 +37,7 @@ def bot_get_uuid(params):
 def bot_notice(params):
     try:
         club_name = params["name"]
-        to_manager = False if not params.has_key("manager") else params["manager"]
+        to_manager = params.get("manager", False)
         msg = params["msg"]
         player_id = int(params["player_id"])
 

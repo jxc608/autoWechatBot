@@ -70,6 +70,8 @@ def get_aliyun_pic_info(content):
     index = 0
     playerIndex = 0
     data_list = []
+    # id下一个不为score，则识别score失败，默认1，同时增加一个
+    over_id = False
     for words in content["prism_wordsInfo"]:
         word = words["word"]
         curKey = keyAry[index]
@@ -87,14 +89,22 @@ def get_aliyun_pic_info(content):
             if curKey["word"] in word:
                 # 终结字段识别
                 break
+            start = int(words["pos"][0]["x"])
             if playerIndex > len(data_list) - 1:
                 data_list.append({})
-            start = int(words["pos"][0]["x"])
+            if over_id and start < int(infoDic["score_pos"]):
+                data_list[playerIndex]["score"] = "1"
+                playerIndex += 1
+                data_list.append({})
+                over_id = False
+
             if start > int(infoDic["score_pos"]):
+                over_id = False
                 data_list[playerIndex]["score"] = word
                 playerIndex += 1
             elif start > int(infoDic["id_pos"]):
                 data_list[playerIndex]["id"] = word
+                over_id = True
             elif start > int(infoDic["name_pos"]):
                 data_list[playerIndex]["name"] = word
 
@@ -106,18 +116,13 @@ def get_aliyun_pic_info(content):
     total = 0
     for player in data_list:
         print("内容:\n%s" % player)
-        p = playerResult.playerData()
-        p.name = ""
-        try:
-            p.name = player['name']
-        except:
-            pass
-        try:
-            # 名字可能会没有，两者必须是整数才承认
-            p.id = int(player['id'])
-            p.score = int(player['score'])
-        except:
+        if not "id" in player:
             continue
+
+        p = playerResult.playerData()
+        p.name = player.get("name", "")
+        p.score = int(player.get("score", "1"))
+        p.id = int(player['id'])
         total += abs(p.score)
         room_data.playerData.append(p)
         if p.name == infoDic["hoster"]:
@@ -164,8 +169,9 @@ class wechatInstance():
                 self.send('俱乐部已过期： %s， 请与管理员确认' % self.club_name, 'filehelper')
                 return
 
-            output_info("俱乐部：%s， %s 开始识别" % self.club.uuid, self.club.user_name)
-            self.send('正在识别...', 'filehelper')
+            beginStr = "俱乐部：%s，开始识别..." %  self.club.user_name
+            output_info(beginStr)
+            self.send("正在识别...", 'filehelper')
 
             club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):

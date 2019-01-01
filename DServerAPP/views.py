@@ -199,8 +199,8 @@ def login_password(request):
             if club.password != password:
                 return render(request, 'DServerAPP/login.html', {"pwd": 1, "pwct": "密码错误"})
             else:
-                request.session['login'] = True;
-                request.session['club'] = username;
+                request.session['login'] = True
+                request.session['club'] = username
                 #登录成功之后，渲染页面
                 return HttpResponseRedirect('/')
         except Clubs.DoesNotExist:
@@ -213,7 +213,7 @@ def login_password(request):
 #     return HttpResponse('username='+username+"&password="+password)
 
 def add_time(request):
-    username=request.session['club'];
+    username=request.session['club']
     cdkey=request.POST.get('cdkey')
     try:
         keyInstance = Cdkey.objects.get(cdkey=cdkey)
@@ -641,7 +641,7 @@ def minus_score(request):
         ip = request.META['REMOTE_ADDR']
 
     score_change = ScoreChange(player=player, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
-    score_change.save();
+    score_change.save()
     msg = player.nick_name+' 下分\n'
     msg+= '上次积分:%s\n' % current_score
     msg+= '本次下分:-%s\n' % score
@@ -970,7 +970,7 @@ def stat_xls(request):
         ws.write(index + 1, plus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
         ws.write(index + 1, plus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
         total_plus += player.current_score
-        index += 1;
+        index += 1
     ws.write(index + 1, plus_row1, '总数', title_style1)  #如果要写中文请使用UNICODE
     ws.write(index + 1, plus_row2, total_plus, title_style2)  #如果要写中文请使用UNICODE
 
@@ -984,7 +984,7 @@ def stat_xls(request):
         ws.write(index + 1, minus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
         ws.write(index + 1, minus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
         total_minus += player.current_score
-        index += 1;
+        index += 1
     ws.write(index + 1, minus_row1, '总数', title_style1)  #如果要写中文请使用UNICODE
     ws.write(index + 1, minus_row2, total_minus, title_style2)  #如果要写中文请使用UNICODE
 
