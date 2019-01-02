@@ -40,6 +40,9 @@ urlpatterns = [
     path('minus_score', views.minus_score, name='minus_score'),
     path('score_change', views.score_change, name='score_change'),
     path('score_change_log', views.score_change_log, name='score_change_log'),
+    path('nick_players', views.nick_players, name='nick_players'),
+    path('score_change_group', views.score_change_group, name='score_change_group'),
+    path('set_introducer', views.set_introducer, name='set_introducer'),
     path('add_gameid', views.add_gameid, name='add_gameid'),
     path('del_gameid', views.del_gameid, name='del_gameid'),
     # wx

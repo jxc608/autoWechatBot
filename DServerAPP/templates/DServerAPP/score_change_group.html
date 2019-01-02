@@ -1,0 +1,476 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        .top_panel {
+            margin-top: 100px;
+        }
+        .btn {
+            width: 100%;
+        }
+        .nospace{
+            margin:0px;
+            padding: 0px;
+        }
+    </style>
+    <title>用户数据【分组】</title>
+    <script src="{% static "common.js" %}"></script>
+    <script src="{% static "qrcode.min.js" %}"></script>
+</head>
+<body>
+    <div class="container-fluid nospace">
+        <div class="row nospace">
+            <div class="col-xs-12 nospace">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title text-center">用户数据【分组】</h3>
+                    </div>
+                  <div class="panel-body" style="padding:0px;margin:0px">
+                    <ul class="list-group">
+                        <li class="list-group-item" style="background-color:#f5f5f5;">
+                            <b>总计</b>
+                        </li>
+                        <li class="list-group-item">
+                             <b>玩家数:</b>{{total}}
+                        </li>
+                        <li class="list-group-item" style="background-color:#f5f5f5"><b>添加/查询</b></li>
+                        <li class="list-group-item">
+                            <form class="form-inline">
+                              <div class="form-group">
+                                <label for="nickname">昵称:</label>
+                                <input type="email" class="form-control" id="nickname" placeholder="请输入微信昵称" value="{{nickname}}">
+                              </div>
+                              <div class="form-group">
+                                <label for="gameid">gameid:</label>
+                                <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-primary" onclick="search()">查询</button>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-info" onclick="add()">添加</button>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-success" onclick="log()">上下分记录</button>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-warning" onclick="stat()">导出全员总账单</button>
+                              </div>
+                            </form>
+                        </li>
+                        <li class="list-group-item">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>昵称</th>
+                                    <th>id</th>
+                                    <th><a href="javascript:void(0);" onclick="order_by('round')">局数↑</a></th>
+                                    <th><a href="javascript:void(0);" onclick="order_by('score')">分数↑</a></th>
+                                    <th>操作</th>
+                                   <!-- <th>历史总盈亏</th>-->
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player in players %}
+                                    <tr>
+                                        <td width="20%">
+                                            {{player.nick_name}}<br/>
+                                            授信:<span id="score_limit_{{player.id}}">{{player.score_limit}}</span><br/>
+                                            <button type="button" class="btn btn-default" limit_desc="{{ player.score_limit_desc }}" onclick="score_limit_modal({{player.id}}, '{{player.score_limit}}')">授信</button>
+                                            <br>
+                                            <button type="button" class="btn btn-default" onclick="show_captain({{player.id}})">设置队长</button>
+                                        </td>
+                                        <td width="20%">
+                                            {% for gameid in player.gameids %}
+                                            {{gameid.gameid}}
+                                            <a href="javascrip:void(0);" onclick="del_gameid({{player.id}},{{gameid.gameid}})"><span style="font-size:20px">×</span></a>
+                                            <br/>
+                                            {% endfor %}
+                                            <button type="button" class="btn btn-default" onclick="show_modal({{player.id}})">添加小号</button>
+                                        </td>
+                                        <td width="20%">
+                                            {{player.total_round}}
+                                        </td>
+                                        <td width="20%">
+                                            <span id="current_score_{{player.id}}">
+                                            {{player.current_score}}
+                                            </span>
+                                            <button type="button" class="btn btn-default" style="color: red;" onclick="del_player({{player.id}})">删除</button>
+                                        </td>
+                                        <td width="20%">
+                                            <button type="button" class="btn btn-default" style="color: green" onclick="add_score({{player.id}})">上分+</button>
+                                            <input type="number" class="form-control" id="score_{{player.id}}" value="">
+                                            <button type="button" class="btn btn-default" style="color: red" onclick="minus_score({{player.id}})">下分-</button>
+                                        </td>
+                                       <!-- <td>
+                                            {{player.history_profit}}
+                                        </td>-->
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </li>
+                    </ul>
+                  </div>
+                  <div class="panel-footer text-right">
+                    <a class="btn btn-link" href="/">返回</a>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        请输入游戏id
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="email" class="form-control" id="gameid_add" placeholder="请输入gameid" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="add_gameid()">
+                        添加
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="scoreLimit" tabindex="-1" role="dialog" aria-labelledby="scoreLimitLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="scoreLimitLabel">
+                        授信
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="email" class="form-control" id="score_limit" placeholder="请输入授信额" value="">
+                    <textarea class="form-control" id="score_limit_desc" name="score_limit_desc" rows="5" style="min-width: 90%" placeholder="请输入授信超出提示" ></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="add_score_limit()">
+                        保存
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="introducerModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        请输入昵称
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control" id="nick_search" placeholder="请输入游戏昵称" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="qrybyNick()">
+                        查询
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <div class="modal fade" id="nickModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        请输入昵称
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <th>微信昵称</th>
+                            <th>游戏昵称</th>
+                            <th>当前分数</th>
+                            <th>操作</th>
+                        </thead>
+                        <tbody id="nick_table"></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+
+    <script>
+        var player_id;
+        function show_modal(id){
+            player_id = id;
+            $('#myModal').modal();
+        }
+        
+        function show_captain(id) {
+            player_id = id;
+            $("#introducerModal").modal();
+        }
+
+        function qrybyNick() {
+            var nickName = $("#nick_search").val();
+            if(nickName == "") {
+                alert("请输入昵称");
+                return;
+            } else {
+                $.post("/nick_players", {
+                    nick: nickName
+                }, function (data) {
+                    $("#nick_table").html("");
+                    if(data.players.length == 0) {
+                        alert("未找到数据");
+                    } else {
+                        for(var i = 0; i < data.players.length; i++) {
+                            var curPlayer = data.players[i];
+                            var tr = "<tr>";
+                            tr +=  "<td>" + curPlayer.wechat_nick_name + "</td>";
+                            tr += "<td>" + curPlayer.nick_name + "</td>";
+                            tr += "<td>" + curPlayer.current_score + "</td>";
+                            tr += "<td><button class='btn btn-primary' type='button' onclick='setIntroducer("+curPlayer.id+")'>设置</td>";
+                            tr += "</tr>";
+                            $("#nick_table").append(tr);
+                            $("#nickModal").modal();
+                        }
+                    }
+                })
+            }
+        }
+
+        function setIntroducer(introducer) {
+            $.post("set_introducer", {
+                playerId: player_id,
+                introducer: introducer,
+            }, function (data) {
+                if(data.result == 0) {
+                    alert("设置成功");
+                    window.location.reload();
+                } else {
+                    alert(data.errmsg);
+                }
+            });
+        }
+
+        function search(){
+            window.location.href = "/score_change_group?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+        }
+
+        function order_by(order){
+            window.location.href = "/score_change_group?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&order="+order;
+        }
+
+        function log(){
+            window.location.href = "/score_change_log";
+        }
+
+        function stat(){
+            window.location.href = "/stat_xls";
+        }
+
+        function add(){
+            if($('#nickname').val()==''){
+                alert("请输入昵称。");
+                return;
+            }
+            if($('#gameid').val()==''){
+                alert("请输入游戏id。");
+                return;
+            }
+            $.post("/add_player",{
+                nickname:$('#nickname').val(),
+                gameid:$('#gameid').val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 1)
+                    alert('昵称已存在！');
+                else if(data.result == 2)
+                    alert('游戏ID已存在！');
+                else if(data.result == 0){
+                    alert('添加成功！')
+                    window.location.reload();
+                }
+            },"json");
+        }
+
+        function add_gameid(){
+            if($('#gameid_add').val()==''){
+                alert("请输入游戏id。");
+                return;
+            }
+            if(confirm('确定要添加吗？')==false)
+                return;
+            $.post("/add_gameid",{
+                id:player_id,
+                gameid:$('#gameid_add').val(),
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    alert('添加成功！')
+                    window.location.reload();
+                } else {
+                    alert(data.errmsg)
+                }
+            },"json");
+        }
+
+        function del_gameid(player_id, gameid){
+            if(confirm('确定要删除吗？')==false)
+                return;
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
+            $.post("/del_gameid",{
+                id:player_id,
+                gameid:gameid,
+                second_password: sp,
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    alert('删除成功！')
+                    window.location.reload();
+                } else {
+                    alert(data.errmsg);
+                }
+            },"json");
+        }
+
+        function add_score(player_id){
+            if(!confirm("您点击了上分，确定吗？")) {
+                return;
+            }
+            if($('#score_'+player_id).val()==''){
+                alert("请输入上分分数。");
+                return;
+            }
+            if (confirm("要通知玩家吗？通知请先微信扫码登录。") == true)
+                notice = true;
+            else
+                notice = false;
+
+            $.post("/add_score",{
+                id:player_id,
+                score:$('#score_'+player_id).val(),
+                notice:notice
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    $('#current_score_'+player_id).html(data.current_score);
+                    alert('上分成功！')   
+                }
+            },"json");
+        }
+
+        function score_limit_modal(id, score_limit){
+            player_id = id;
+            $('#score_limit').val(score_limit);
+            score_limit_desc = $(event.target).attr("limit_desc");
+            $('#score_limit_desc').val(score_limit_desc);
+            $('#scoreLimit').modal();;
+        }
+
+        function add_score_limit(){
+            if($('#score_limit').val()==''){
+                alert("请输入授信分数。");
+                return;
+            }
+
+            if($('#score_limit_desc').val()==''){
+                alert("请输入授信超出提示。");
+                return;
+            }
+
+            $.post("/add_score_limit",{
+                id:player_id,
+                score:$('#score_limit').val(),
+                score_desc:$('#score_limit_desc').val(),
+
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    $('#score_limit_'+player_id).html(data.score_limit);
+                    alert('授信成功！')   
+                    $('#scoreLimit').modal('hide');
+                }
+            },"json");
+        }
+
+        function minus_score(player_id){
+            if(!confirm("您点击了【下分】，确定吗？")) {
+                return;
+            }
+            if($('#score_'+player_id).val()==''){
+                alert("请输入下分分数。");
+                return;
+            }
+            if (confirm("要通知玩家吗？通知请先微信扫码登录。") == true)
+                notice = true;
+            else
+                notice = false;
+            $.post("/minus_score",{
+                id:player_id,
+                score:$('#score_'+player_id).val(),
+                notice:notice
+                //profit:$('#profit_'+player_id).val(),
+            },function(data){
+                if(data.result == 0){
+                    $('#current_score_'+player_id).html(data.current_score);
+                    alert('下分成功！')   
+                }
+            },"json");
+        }
+
+        function del_player(player_id){
+            if(confirm('确定要删除吗？')==false)
+                return;
+            var sp = prompt("请输入二级密码");
+            if(sp == "") {
+                alert("二级密码不能为空");
+                return;
+            }
+            $.post("/del_player",{
+                id:player_id,
+                second_password: sp,
+            },function(data){
+                if(data.result == 0){
+                    alert('删除成功！');
+                    window.location.reload();
+                }
+                else {
+                    alert(data.errmsg);
+                }
+            },"json");
+        }
+    </script>
+</body>
+</html>

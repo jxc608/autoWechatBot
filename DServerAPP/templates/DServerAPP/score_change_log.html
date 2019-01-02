@@ -61,10 +61,7 @@
                                 <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="search()">查询</button>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-default" onclick="refresh()">刷新</button>
+                                <button type="button" class="btn btn-primary" onclick="search()">查询</button>
                               </div>
                             </form>
                         </li>
@@ -131,10 +128,6 @@
 
         function search(){
             window.location.href = "/score_change_log?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&date="+$('#datetime').val();;
-        }
-
-        function refresh(){
-            window.location.reload();
         }
     </script>
 </body>

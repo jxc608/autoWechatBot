@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from .models import *
 import uuid
 from django.utils import timezone
+from django.core import serializers
 from . import messageType
 from .utils import is_number
 import time,datetime,json
@@ -681,21 +682,13 @@ def score_change(request):
     gameid_search = request.GET.get('gameid', '')
     orderby = request.GET.get('order', 'round')
     club = Clubs.objects.get(user_name=request.session['club'])
-    # gameid和player都有关联，按照查询条件直接筛选即可，不必做如此分步判断？
 
+    players = Player.objects.filter(club=club, is_del=0)
+    if nickname_search:
+        players = players.filter(nick_name__contains=nickname_search)
     if gameid_search:
-        gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
-        if gameids.count() == 0:
-            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
-    if gameid_search:
-        for gameid in gameids:        
-            players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
-            if players:
-                break
-    elif nickname_search:
-        players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
-    else:
-        players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
+        gamePlayers = GameID.objects.filter(gameid=gameid_search, club=club).values("player").distinct()
+        players = players.filter(id__in=gamePlayers)
 
     for player in players:
         player.gameids = GameID.objects.filter(player_id=player.id)
@@ -709,7 +702,34 @@ def score_change(request):
     total = len(players)
     return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
+@check_sys_login
+def score_change_group(request):
+    club = Clubs.objects.get(user_name=request.session['club'])
+    qryDate = True
+    date = request.POST.get("date", time.strftime("%Y-%m-%d", time.localtime(time.time())))
 
+
+    introducers = Player.objects.filter(club=club, is_del=0).exclude(introducer='').values("introducer").distinct()
+    introAry = []
+    for introducer in introducers:
+        if Player.objects.filter(id=int(introducer), is_del=0, club=club).count() != 1:
+            continue
+        orgin = Player.objects.get(id=int(introducer))
+        introDict = {"intorducer": orgin}
+        playerAry = []
+        players = Player.objects.filter(introducer=introducer)
+        for player in players:
+            sc = Score.objects.filter(player=player)
+            if qryDate:
+                sc = sc.filter(create_time__startswith=date)
+            sc = sc.aggregate(Sum('score'))['score__sum']
+            scc = ScoreChange.objects.filter(create_time__startswith=date)
+            pass
+
+
+    return render(request, 'DServerAPP/score_change_group.html', {'club':club})
+
+@check_sys_login
 def score_change_log(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
@@ -786,6 +806,40 @@ def score_change_log(request):
     return render(request, 'DServerAPP/score_change_log.html', {'club':club, 'players':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search, 'day':day, 'today_up':today_up, 'today_down':today_down})
 
 @check_sys_login
+def nick_players(request):
+    nickname = request.POST.get('nick', '')
+    club = Clubs.objects.get(user_name=request.session['club'])
+    players = Player.objects.filter(club=club, nick_name__contains=nickname, is_del=0)
+    ary = []
+    for player in players:
+        curPlayer = {}
+        curPlayer["id"] = player.id
+        curPlayer["wechat_nick_name"] = player.wechat_nick_name
+        curPlayer["nick_name"] = player.nick_name
+        curPlayer["current_score"] = player.current_score
+        ary.append(curPlayer)
+
+    return HttpResponse(json.dumps({"result": 0, "players": ary}), content_type="application/json")
+
+def set_introducer(request):
+    playerId = request.POST.get("playerId", "")
+    introducer = request.POST.get("introducer", "")
+    result = {"result": 0}
+    if playerId == "" or introducer == "":
+        result["result"] = 1
+        result["errmsg"] = "参数不全"
+    else:
+        try:
+            player = Player.objects.get(id=playerId)
+            player.introducer = introducer
+            player.save()
+        except:
+            result["result"] = 2
+            result["errmsg"] = "未找到用户，请刷新后重试"
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+@check_sys_login
 def wrong_image(request):
     club = Clubs.objects.get(user_name=request.session['club'])
 
@@ -808,7 +862,7 @@ def wrong_image(request):
         }
         list_.append(data)
     total = len(list_)
-    return render(request, 'DServerAPP/wrong_image.html', {'club':club, 'list':list_})
+    return render(request, 'DServerAPP/wrong_image.html', {'club':club, 'list':list_, 'total': total})
 
 def delete_wrongimage(request):
     second_password = request.POST.get("second_password")

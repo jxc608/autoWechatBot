@@ -62,7 +62,7 @@ class Player(models.Model):
     current_score = models.IntegerField(default=0, verbose_name="当前分数")
     history_profit = models.IntegerField(default=0, verbose_name="总利润/战绩？")
     history_cost = models.IntegerField(default=0, verbose_name="总管理费")
-    introducer = models.CharField(max_length=200, default='none', verbose_name="介绍人")
+    introducer = models.CharField(max_length=200, default='', verbose_name="介绍人")
     today_hoster_number = models.IntegerField(default=0, verbose_name="今日开房次数")
     score_limit = models.IntegerField(default=0, verbose_name="分数上限")
     score_limit_desc = models.CharField(max_length=500, verbose_name="授信")
