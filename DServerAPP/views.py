@@ -238,6 +238,7 @@ def add_time(request):
             clubInstance.expired_time += time_add 
         clubInstance.save()
         keyInstance.status = 1
+        keyInstance.club = clubInstance
         keyInstance.save()
         return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'add time succeed'))
     except Clubs.DoesNotExist:
@@ -705,29 +706,53 @@ def score_change(request):
 @check_sys_login
 def score_change_group(request):
     club = Clubs.objects.get(user_name=request.session['club'])
-    qryDate = True
-    date = request.POST.get("date", time.strftime("%Y-%m-%d", time.localtime(time.time())))
+    date = request.GET.get("date", None)
+    introAry = getDayGroup(club, date)
+    qryType = "历史" if not date else "当日"
+    return render(request, 'DServerAPP/score_change_group.html', {'club':club, 'introAry': introAry, "date": date, "qryType": qryType})
 
-
-    introducers = Player.objects.filter(club=club, is_del=0).exclude(introducer='').values("introducer").distinct()
+def getDayGroup(club, date):
+    introducers = Captain.objects.first(club=club)
     introAry = []
     for introducer in introducers:
-        if Player.objects.filter(id=int(introducer), is_del=0, club=club).count() != 1:
-            continue
-        orgin = Player.objects.get(id=int(introducer))
-        introDict = {"intorducer": orgin}
+        introDict = {"intorducer": introducer.name}
         playerAry = []
-        players = Player.objects.filter(introducer=introducer)
+        players = Player.objects.filter(introducer=introducer, is_del=0)
+        allScore = 0
+        allRound = 0
+        allCost = 0
         for player in players:
             sc = Score.objects.filter(player=player)
-            if qryDate:
+            scc = ScoreChange.objects.filter(player=player)
+            if date:
                 sc = sc.filter(create_time__startswith=date)
+                scc = scc.filter(create_time__startswith=date)
+            cost = sc.aggregate(Sum('cost'))['cost__sum']
+            cost = 0 if not cost else cost
+            round = sc.count()
             sc = sc.aggregate(Sum('score'))['score__sum']
-            scc = ScoreChange.objects.filter(create_time__startswith=date)
-            pass
-
-
-    return render(request, 'DServerAPP/score_change_group.html', {'club':club})
+            sc = 0 if not sc else sc
+            scc = scc.aggregate(Sum('score'))['score__sum']
+            scc = 0 if not scc else scc
+            score = sc + scc
+            allScore += score
+            allCost += cost
+            allRound += round
+            gameids = GameID.objects.filter(player=player).values("gameid").distinct()
+            playerAry.append({
+                "name": player.nick_name,
+                "gameids": gameids,
+                "score": score,
+                "cost": cost,
+                "round": round,
+            })
+        introDict["players"] = playerAry
+        introDict["allScore"] = allScore
+        introDict["allCost"] = allCost
+        introDict["allRound"] = allRound
+        introDict["count"] = len(playerAry) + 2
+        introAry.append(introDict)
+    return introAry
 
 @check_sys_login
 def score_change_log(request):

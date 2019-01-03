@@ -35,34 +35,17 @@
                     </div>
                   <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
-                        <li class="list-group-item" style="background-color:#f5f5f5;">
-                            <b>总计</b>
-                        </li>
-                        <li class="list-group-item">
-                             <b>玩家数:</b>{{total}}
-                        </li>
-                        <li class="list-group-item" style="background-color:#f5f5f5"><b>添加/查询</b></li>
                         <li class="list-group-item">
                             <form class="form-inline">
                               <div class="form-group">
-                                <label for="nickname">昵称:</label>
-                                <input type="email" class="form-control" id="nickname" placeholder="请输入微信昵称" value="{{nickname}}">
+                                <label for="dateInput">查询日期</label>
+                                <input type="date" class="form-control" id="dateInput" placeholder="请输入查询日期" value="{{date}}">
                               </div>
                               <div class="form-group">
-                                <label for="gameid">gameid:</label>
-                                <input type="email" class="form-control" id="gameid" placeholder="请输入gameid" value="{{gameid}}">
+                                <button type="button" class="btn btn-primary" onclick="search()">按日期查询</button>
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="search()">查询</button>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-info" onclick="add()">添加</button>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-success" onclick="log()">上下分记录</button>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-warning" onclick="stat()">导出全员总账单</button>
+                                <button type="button" class="btn btn-warning" onclick="searchAll()">查询全部日期</button>
                               </div>
                             </form>
                         </li>
@@ -70,49 +53,42 @@
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
-                                    <th>昵称</th>
-                                    <th>id</th>
-                                    <th><a href="javascript:void(0);" onclick="order_by('round')">局数↑</a></th>
-                                    <th><a href="javascript:void(0);" onclick="order_by('score')">分数↑</a></th>
-                                    <th>操作</th>
+                                    <th>队长</th>
+                                    <th>玩家</th>
+                                    <th>gameid</th>
+                                    <th>{{ qryType }}次数</th>
+                                    <th>盈亏</th>
+                                    <th>管理费</th>
                                    <!-- <th>历史总盈亏</th>-->
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    {% for player in players %}
+                                    {% for introDict in introAry %}
                                     <tr>
-                                        <td width="20%">
-                                            {{player.nick_name}}<br/>
-                                            授信:<span id="score_limit_{{player.id}}">{{player.score_limit}}</span><br/>
-                                            <button type="button" class="btn btn-default" limit_desc="{{ player.score_limit_desc }}" onclick="score_limit_modal({{player.id}}, '{{player.score_limit}}')">授信</button>
-                                            <br>
-                                            <button type="button" class="btn btn-default" onclick="show_captain({{player.id}})">设置队长</button>
+                                        <td width="20%" rowspan="{{ introDict.count }}">
+                                            <strong>{{introDict.intorducer}}</strong>
+{#                                            <button type="button" class="btn btn-default" onclick="show_captain({{player.id}})">设置队长</button>#}
                                         </td>
-                                        <td width="20%">
-                                            {% for gameid in player.gameids %}
-                                            {{gameid.gameid}}
-                                            <a href="javascrip:void(0);" onclick="del_gameid({{player.id}},{{gameid.gameid}})"><span style="font-size:20px">×</span></a>
-                                            <br/>
-                                            {% endfor %}
-                                            <button type="button" class="btn btn-default" onclick="show_modal({{player.id}})">添加小号</button>
-                                        </td>
-                                        <td width="20%">
-                                            {{player.total_round}}
-                                        </td>
-                                        <td width="20%">
-                                            <span id="current_score_{{player.id}}">
-                                            {{player.current_score}}
-                                            </span>
-                                            <button type="button" class="btn btn-default" style="color: red;" onclick="del_player({{player.id}})">删除</button>
-                                        </td>
-                                        <td width="20%">
-                                            <button type="button" class="btn btn-default" style="color: green" onclick="add_score({{player.id}})">上分+</button>
-                                            <input type="number" class="form-control" id="score_{{player.id}}" value="">
-                                            <button type="button" class="btn btn-default" style="color: red" onclick="minus_score({{player.id}})">下分-</button>
-                                        </td>
-                                       <!-- <td>
-                                            {{player.history_profit}}
-                                        </td>-->
+                                    </tr>
+                                        {% for player in introDict.players %}
+                                     <tr>
+                                            <td>{{ player.name }}</td>
+                                            <td>
+                                                {% for gameid in player.gameids %}
+                                                    {{ gameid.gameid }} <br>
+                                                {% endfor %}
+                                            </td>
+                                            <td>{{ player.round }}</td>
+                                            <td>{{ player.score }}</td>
+                                            <td>{{ player.cost }}</td>
+                                     </tr>
+                                        {% endfor %}
+                                     <tr>
+                                        <td></td>
+                                        <td><strong>总计</strong></td>
+                                        <td><strong>{{ introDict.allRound }}</strong></td>
+                                        <td><strong>{{ introDict.allScore }}</strong></td>
+                                        <td><strong>{{ introDict.allCost }}</strong></td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -226,6 +202,19 @@
     </div>
 
     <script>
+
+        function search() {
+            if($('#dateInput').val() == "") {
+                alert("请填写日期");
+                return;
+            }
+            window.location.href = "/score_change_group?date="+$('#dateInput').val();
+        }
+
+        function searchAll() {
+            window.location.href = "/score_change_group";
+        }
+
         var player_id;
         function show_modal(id){
             player_id = id;
@@ -278,10 +267,6 @@
                     alert(data.errmsg);
                 }
             });
-        }
-
-        function search(){
-            window.location.href = "/score_change_group?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
         function order_by(order){

@@ -74,10 +74,10 @@ class ClubsAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ["id", "club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "introducer", "today_hoster_number", "score_limit", "score_limit_desc", "is_del", "is_bind"]
+    list_display = ["id", "club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "score_limit", "score_limit_desc", "is_del", "is_bind"]
     search_fields = ["club__user_name", "wechat_uuid", "wechat_nick_name", "nick_name", "score_limit_desc"]
     list_filter = ["is_del", "is_bind"]
-    readonly_fields = ["club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "introducer", "today_hoster_number", "is_del", "is_bind"]
+    readonly_fields = ["club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "is_del", "is_bind"]
 
 # @admin.register(PlayerClearCost)
 # class PlayerClearCost(admin.ModelAdmin):

@@ -217,7 +217,7 @@ class wechatInstance():
             playerData = []
             for d in room_data.playerData:
                 playerData.append(d.dumps())
-            historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, player_data=json.dumps(playerData), create_time=timezone.now(), refresh_time=refresh_time)
+            historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, player_data=json.dumps(playerData), refresh_time=refresh_time)
             historyGame.save()
             pic_msg = "房间ID：%s\n房主：%s\n房主ID：%s\n局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHoster,room_data.roomHosterId, room_data.roundCounter, room_data.startTime)
             pic_msg+= '-----------------------------\n'
