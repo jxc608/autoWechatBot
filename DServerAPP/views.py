@@ -704,6 +704,31 @@ def score_change(request):
     return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
 
 @check_sys_login
+def save_captain(request):
+    code = 0
+    errmsg = ""
+    club = Clubs.objects.get(user_name=request.session['club'])
+    id = request.POST.get("id", "")
+    name = request.POST.get("name", "")
+    if name == "":
+        code = 1
+        errmsg = "名字为空"
+    elif id == "":
+        cp = Captain(club=club, name=name)
+        cp.save()
+    else:
+        try:
+            cp = Captain.objects.get(id=int(id))
+            cp.name = name
+            cp.save()
+        except:
+            code = 2
+            errmsg = "更新失败，请刷新后再试"
+
+    result = {"result": code, "errmsg": errmsg}
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+@check_sys_login
 def score_change_group(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     date = request.GET.get("date", None)
@@ -712,10 +737,10 @@ def score_change_group(request):
     return render(request, 'DServerAPP/score_change_group.html', {'club':club, 'introAry': introAry, "date": date, "qryType": qryType})
 
 def getDayGroup(club, date):
-    introducers = Captain.objects.first(club=club)
+    introducers = Captain.objects.filter(club=club)
     introAry = []
     for introducer in introducers:
-        introDict = {"intorducer": introducer.name}
+        introDict = {"intorducer": introducer}
         playerAry = []
         players = Player.objects.filter(introducer=introducer, is_del=0)
         allScore = 0
@@ -846,22 +871,40 @@ def nick_players(request):
 
     return HttpResponse(json.dumps({"result": 0, "players": ary}), content_type="application/json")
 
-def set_introducer(request):
-    playerId = request.POST.get("playerId", "")
-    introducer = request.POST.get("introducer", "")
-    result = {"result": 0}
-    if playerId == "" or introducer == "":
-        result["result"] = 1
-        result["errmsg"] = "参数不全"
-    else:
-        try:
-            player = Player.objects.get(id=playerId)
-            player.introducer = introducer
-            player.save()
-        except:
-            result["result"] = 2
-            result["errmsg"] = "未找到用户，请刷新后重试"
+def append_member(request):
+    pid = request.POST.get("pid", "")
+    cid = request.POST.get("cid", "")
+    code = 0
+    errmsg = ""
 
+    if pid == "" or cid == "":
+        code = 1
+        errmsg = "参数不全"
+    else:
+        if Player.objects.filter(id=pid, introducer=cid).count() > 0:
+            code = 3
+            errmsg = "该玩家已在本队伍中"
+        elif Player.objects.filter(id=pid).exclude(introducer=cid).exclude(introducer=None).count() > 0:
+            code = 3
+            errmsg = "该玩家已在别的队伍中，请删除后再操作"
+        else:
+            try:
+                player = Player.objects.get(id=pid)
+                captain = Captain.objects.get(id=cid)
+                player.introducer = captain
+                player.save()
+            except Player.DoesNotExist:
+                code = 2
+                errmsg = "玩家查找失败，请稍后重试"
+            except Captain.DoesNotExist:
+                code = 2
+                errmsg = "队长查找失败，请稍后重试"
+            except:
+                code = 2
+                errmsg = "更新失败，请稍后重试"
+
+
+    result = {"result": code, "errmsg": errmsg}
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 @check_sys_login

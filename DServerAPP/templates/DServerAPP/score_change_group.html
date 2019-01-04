@@ -42,10 +42,17 @@
                                 <input type="date" class="form-control" id="dateInput" placeholder="请输入查询日期" value="{{date}}">
                               </div>
                               <div class="form-group">
+                                <label for="dateInput">队长</label>
+                                <input type="text" class="form-control" id="captainInput" placeholder="请输入队长" value="{{captain}}">
+                              </div>
+                              <div class="form-group">
                                 <button type="button" class="btn btn-primary" onclick="search()">按日期查询</button>
                               </div>
                               <div class="form-group">
                                 <button type="button" class="btn btn-warning" onclick="searchAll()">查询全部日期</button>
+                              </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-danger" onclick="addCaptain()">新增队长</button>
                               </div>
                             </form>
                         </li>
@@ -66,16 +73,19 @@
                                     {% for introDict in introAry %}
                                     <tr>
                                         <td width="20%" rowspan="{{ introDict.count }}">
-                                            <strong>{{introDict.intorducer}}</strong>
+                                            <strong>{{introDict.intorducer.name}}</strong>
+                                            <button type="button" class="btn btn-default" cid="{{introDict.intorducer.id}}" cname="{{introDict.intorducer.name}}" onclick="modifyCaptain()">修改名称</button>
+                                            <button type="button" class="btn btn-default"  onclick="addMember({{introDict.intorducer.id}})">追加队员</button>
 {#                                            <button type="button" class="btn btn-default" onclick="show_captain({{player.id}})">设置队长</button>#}
                                         </td>
                                     </tr>
                                         {% for player in introDict.players %}
                                      <tr>
-                                            <td>{{ player.name }}</td>
+                                            <td>{{ player.name }}<a href="javascrip:void(0);" onclick="del_member({{player.id}},{{introDict.intorducer.id}})"><span style="font-size:20px;margin-left: 5px;">×</span></a></td>
                                             <td>
                                                 {% for gameid in player.gameids %}
-                                                    {{ gameid.gameid }} <br>
+                                                    {{ gameid.gameid }}
+                                                    <br>
                                                 {% endfor %}
                                             </td>
                                             <td>{{ player.round }}</td>
@@ -104,7 +114,7 @@
         </div>
     </div>
     <!-- 模态框（Modal） -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal fade" id="captainModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -112,38 +122,15 @@
                         &times;
                     </button>
                     <h4 class="modal-title" id="myModalLabel">
-                        请输入游戏id
+                        请输入队长名称
                     </h4>
                 </div>
                 <div class="modal-body">
-                    <input type="email" class="form-control" id="gameid_add" placeholder="请输入gameid" value="">
+                    <input type="hidden" id="captainId" value="" />
+                    <input type="email" class="form-control" id="captainName" placeholder="请输入队长名称" value="">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="add_gameid()">
-                        添加
-                    </button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal -->
-    </div>
-    <!-- 模态框（Modal） -->
-    <div class="modal fade" id="scoreLimit" tabindex="-1" role="dialog" aria-labelledby="scoreLimitLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                        &times;
-                    </button>
-                    <h4 class="modal-title" id="scoreLimitLabel">
-                        授信
-                    </h4>
-                </div>
-                <div class="modal-body">
-                    <input type="email" class="form-control" id="score_limit" placeholder="请输入授信额" value="">
-                    <textarea class="form-control" id="score_limit_desc" name="score_limit_desc" rows="5" style="min-width: 90%" placeholder="请输入授信超出提示" ></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="add_score_limit()">
+                    <button type="button" class="btn btn-primary" onclick="saveCaptain()">
                         保存
                     </button>
                 </div>
@@ -151,7 +138,7 @@
         </div><!-- /.modal -->
     </div>
     <!-- 模态框（Modal） -->
-    <div class="modal fade" id="introducerModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal fade" id="memberModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -215,15 +202,41 @@
             window.location.href = "/score_change_group";
         }
 
-        var player_id;
-        function show_modal(id){
-            player_id = id;
-            $('#myModal').modal();
+        function addCaptain() {
+            $("#captainId").val("");
+            $("#captainName").val("");
+            $("#captainModal").modal();
         }
-        
-        function show_captain(id) {
-            player_id = id;
-            $("#introducerModal").modal();
+
+        function modifyCaptain() {
+            $("#captainId").val($(event.target).attr("cid"));
+            $("#captainName").val($(event.target).attr("cname"));
+            $("#captainModal").modal();
+        }
+
+        function saveCaptain() {
+            var captainName = $("#captainName").val();
+            if(captainName == "") {
+                alert("请输入队长名称");
+                return;
+            }
+            $.post("/save_captain", {
+                id: $("#captainId").val(),
+                name: captainName,
+            },function (data) {
+                if(data.result == 0) {
+                    alert("保存成功");
+                    window.location.reload();
+                } else {
+                    alert(data.errmsg);
+                }
+            })
+        }
+
+        var captainId = 0;
+        function addMember(cid) {
+            captainId = cid;
+            $("#memberModal").modal();
         }
 
         function qrybyNick() {
@@ -245,7 +258,7 @@
                             tr +=  "<td>" + curPlayer.wechat_nick_name + "</td>";
                             tr += "<td>" + curPlayer.nick_name + "</td>";
                             tr += "<td>" + curPlayer.current_score + "</td>";
-                            tr += "<td><button class='btn btn-primary' type='button' onclick='setIntroducer("+curPlayer.id+")'>设置</td>";
+                            tr += "<td><button class='btn btn-primary' type='button' onclick='appendMember("+curPlayer.id+")'>追加</td>";
                             tr += "</tr>";
                             $("#nick_table").append(tr);
                             $("#nickModal").modal();
@@ -255,207 +268,27 @@
             }
         }
 
-        function setIntroducer(introducer) {
-            $.post("set_introducer", {
-                playerId: player_id,
-                introducer: introducer,
+        function appendMember(pid) {
+            $.post("append_member", {
+                cid: captainId,
+                pid: pid,
             }, function (data) {
                 if(data.result == 0) {
-                    alert("设置成功");
+                    alert("追加成功");
                     window.location.reload();
                 } else {
                     alert(data.errmsg);
+                    $("#captainModal").modal("hide");
+                    {#$("#memberModal").modal("hide");#}
+                    $("#nickModal").modal("hide");
                 }
             });
-        }
-
-        function order_by(order){
-            window.location.href = "/score_change_group?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&order="+order;
-        }
-
-        function log(){
-            window.location.href = "/score_change_log";
         }
 
         function stat(){
             window.location.href = "/stat_xls";
         }
 
-        function add(){
-            if($('#nickname').val()==''){
-                alert("请输入昵称。");
-                return;
-            }
-            if($('#gameid').val()==''){
-                alert("请输入游戏id。");
-                return;
-            }
-            $.post("/add_player",{
-                nickname:$('#nickname').val(),
-                gameid:$('#gameid').val(),
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 1)
-                    alert('昵称已存在！');
-                else if(data.result == 2)
-                    alert('游戏ID已存在！');
-                else if(data.result == 0){
-                    alert('添加成功！')
-                    window.location.reload();
-                }
-            },"json");
-        }
-
-        function add_gameid(){
-            if($('#gameid_add').val()==''){
-                alert("请输入游戏id。");
-                return;
-            }
-            if(confirm('确定要添加吗？')==false)
-                return;
-            $.post("/add_gameid",{
-                id:player_id,
-                gameid:$('#gameid_add').val(),
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    alert('添加成功！')
-                    window.location.reload();
-                } else {
-                    alert(data.errmsg)
-                }
-            },"json");
-        }
-
-        function del_gameid(player_id, gameid){
-            if(confirm('确定要删除吗？')==false)
-                return;
-            var sp = prompt("请输入二级密码");
-            if(sp == "") {
-                alert("二级密码不能为空");
-                return;
-            }
-            $.post("/del_gameid",{
-                id:player_id,
-                gameid:gameid,
-                second_password: sp,
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    alert('删除成功！')
-                    window.location.reload();
-                } else {
-                    alert(data.errmsg);
-                }
-            },"json");
-        }
-
-        function add_score(player_id){
-            if(!confirm("您点击了上分，确定吗？")) {
-                return;
-            }
-            if($('#score_'+player_id).val()==''){
-                alert("请输入上分分数。");
-                return;
-            }
-            if (confirm("要通知玩家吗？通知请先微信扫码登录。") == true)
-                notice = true;
-            else
-                notice = false;
-
-            $.post("/add_score",{
-                id:player_id,
-                score:$('#score_'+player_id).val(),
-                notice:notice
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    $('#current_score_'+player_id).html(data.current_score);
-                    alert('上分成功！')   
-                }
-            },"json");
-        }
-
-        function score_limit_modal(id, score_limit){
-            player_id = id;
-            $('#score_limit').val(score_limit);
-            score_limit_desc = $(event.target).attr("limit_desc");
-            $('#score_limit_desc').val(score_limit_desc);
-            $('#scoreLimit').modal();;
-        }
-
-        function add_score_limit(){
-            if($('#score_limit').val()==''){
-                alert("请输入授信分数。");
-                return;
-            }
-
-            if($('#score_limit_desc').val()==''){
-                alert("请输入授信超出提示。");
-                return;
-            }
-
-            $.post("/add_score_limit",{
-                id:player_id,
-                score:$('#score_limit').val(),
-                score_desc:$('#score_limit_desc').val(),
-
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    $('#score_limit_'+player_id).html(data.score_limit);
-                    alert('授信成功！')   
-                    $('#scoreLimit').modal('hide');
-                }
-            },"json");
-        }
-
-        function minus_score(player_id){
-            if(!confirm("您点击了【下分】，确定吗？")) {
-                return;
-            }
-            if($('#score_'+player_id).val()==''){
-                alert("请输入下分分数。");
-                return;
-            }
-            if (confirm("要通知玩家吗？通知请先微信扫码登录。") == true)
-                notice = true;
-            else
-                notice = false;
-            $.post("/minus_score",{
-                id:player_id,
-                score:$('#score_'+player_id).val(),
-                notice:notice
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    $('#current_score_'+player_id).html(data.current_score);
-                    alert('下分成功！')   
-                }
-            },"json");
-        }
-
-        function del_player(player_id){
-            if(confirm('确定要删除吗？')==false)
-                return;
-            var sp = prompt("请输入二级密码");
-            if(sp == "") {
-                alert("二级密码不能为空");
-                return;
-            }
-            $.post("/del_player",{
-                id:player_id,
-                second_password: sp,
-            },function(data){
-                if(data.result == 0){
-                    alert('删除成功！');
-                    window.location.reload();
-                }
-                else {
-                    alert(data.errmsg);
-                }
-            },"json");
-        }
     </script>
 </body>
 </html>
