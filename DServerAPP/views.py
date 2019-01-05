@@ -732,12 +732,15 @@ def save_captain(request):
 def score_change_group(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     date = request.GET.get("date", None)
-    introAry = getDayGroup(club, date)
+    cp = request.GET.get("cp", "")
+    introAry = getDayGroup(club, date, cp)
     qryType = "历史" if not date else "当日"
-    return render(request, 'DServerAPP/score_change_group.html', {'club':club, 'introAry': introAry, "date": date, "qryType": qryType})
+    return render(request, 'DServerAPP/score_change_group.html', {'club':club, 'introAry': introAry, "date": date, "cp": cp, "qryType": qryType})
 
-def getDayGroup(club, date):
+def getDayGroup(club, date, captainName):
     introducers = Captain.objects.filter(club=club)
+    if captainName:
+        introducers = introducers.filter(name__contains=captainName)
     introAry = []
     for introducer in introducers:
         introDict = {"intorducer": introducer}
@@ -765,6 +768,7 @@ def getDayGroup(club, date):
             allRound += round
             gameids = GameID.objects.filter(player=player).values("gameid").distinct()
             playerAry.append({
+                "id": player.id,
                 "name": player.nick_name,
                 "gameids": gameids,
                 "score": score,
@@ -899,6 +903,31 @@ def append_member(request):
             except Captain.DoesNotExist:
                 code = 2
                 errmsg = "队长查找失败，请稍后重试"
+            except:
+                code = 2
+                errmsg = "更新失败，请稍后重试"
+
+
+    result = {"result": code, "errmsg": errmsg}
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+@check_sys_login
+def del_member(request):
+    pid = request.POST.get("pid", "")
+    code = 0
+    errmsg = ""
+
+    if pid == "":
+        code = 1
+        errmsg = "参数不全"
+    else:
+            try:
+                player = Player.objects.get(id=pid)
+                player.introducer = None
+                player.save()
+            except Player.DoesNotExist:
+                code = 2
+                errmsg = "玩家查找失败，请稍后重试"
             except:
                 code = 2
                 errmsg = "更新失败，请稍后重试"

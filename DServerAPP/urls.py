@@ -44,6 +44,7 @@ urlpatterns = [
     path('score_change_group', views.score_change_group, name='score_change_group'),
     path('save_captain', views.save_captain, name='save_captain'),
     path('append_member', views.append_member, name='append_member'),
+    path('del_member', views.del_member, name='del_member'),
     path('add_gameid', views.add_gameid, name='add_gameid'),
     path('del_gameid', views.del_gameid, name='del_gameid'),
     # wx

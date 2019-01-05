@@ -43,7 +43,7 @@
                               </div>
                               <div class="form-group">
                                 <label for="dateInput">队长</label>
-                                <input type="text" class="form-control" id="captainInput" placeholder="请输入队长" value="{{captain}}">
+                                <input type="text" class="form-control" id="captainInput" placeholder="请输入队长" value="{{cp}}">
                               </div>
                               <div class="form-group">
                                 <button type="button" class="btn btn-primary" onclick="search()">按日期查询</button>
@@ -81,7 +81,7 @@
                                     </tr>
                                         {% for player in introDict.players %}
                                      <tr>
-                                            <td>{{ player.name }}<a href="javascrip:void(0);" onclick="del_member({{player.id}},{{introDict.intorducer.id}})"><span style="font-size:20px;margin-left: 5px;">×</span></a></td>
+                                            <td>{{ player.name }}<a href="javascript:void(0);" onclick="del_member({{player.id}}, '{{ player.name }}','{{introDict.intorducer.name}}')"><span style="font-size:20px;margin-left: 5px;">×</span></a></td>
                                             <td>
                                                 {% for gameid in player.gameids %}
                                                     {{ gameid.gameid }}
@@ -195,11 +195,11 @@
                 alert("请填写日期");
                 return;
             }
-            window.location.href = "/score_change_group?date="+$('#dateInput').val();
+            window.location.href = "/score_change_group?date="+$('#dateInput').val() + "&cp="+$("#captainInput").val();
         }
 
         function searchAll() {
-            window.location.href = "/score_change_group";
+            window.location.href = "/score_change_group?cp="+$("#captainInput").val();
         }
 
         function addCaptain() {
@@ -237,6 +237,22 @@
         function addMember(cid) {
             captainId = cid;
             $("#memberModal").modal();
+        }
+
+        function del_member(pid, pname, cname) {
+            if(!confirm("您确定要删除【" + cname + "】下的【" + pname + "】吗？")) {
+                return;
+            }
+            $.post("del_member", {
+                pid: pid,
+            }, function (data) {
+                if(data.result == 0) {
+                    alert("删除成功");
+                    window.location.reload();
+                } else {
+                    alert(data.errmsg);
+                }
+            });
         }
 
         function qrybyNick() {

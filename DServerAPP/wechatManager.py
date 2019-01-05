@@ -7,6 +7,7 @@ from .models import *
 from . import playerResult
 from django.utils import timezone
 from django.conf import settings
+from django.db.models import F
 from .utils import *
 import _thread
 import base64
@@ -34,27 +35,27 @@ options = {
 def output_info(msg):
     print('[INFO] %s' % msg)
 
-def getCloseAnchor(map, Anchor, height):
-    for key in map:
-        if abs(Anchor - key) <= (height / 2):
-            return key
-    return 0
+def addClubOrcCount(club):
+    if club == None:
+        print("跟同学统计次数，俱乐部为空")
+        return
+    curDate = datetime.datetime.now().date()
+    try:
+        ct = ClubOrcCount.objects.get(club=club, use_date=curDate)
+    except ClubOrcCount.DoesNotExist:
+        print("新建统计记录__%s__%s" % (club.user_name, curDate))
+        ct = ClubOrcCount(club=club, use_date=curDate)
+        ct.save()
+    except:
+        print("更新统计次数失败，错误未知")
+        traceback.print_exc()
+        return
+    ct.count = F("count") + 1
+    ct.save()
 
-def createQuadList(item):
-    quadList = []
-    quadList.append(createCQ(item))
-    return quadList
-
-def createCQ(item):
-    cq = playerResult.contentQuad()
-    cq.words = item['words']
-    cq.chars = item['chars']
-    cq.leftAnchor = item['chars'][0]['location']['left']
-    return cq
 
 def get_aliyun_pic_info(content):
     print(content["sid"])
-    hoster_id = 0
     infoDic = {}
     keyAry = [
         {"word": "房号", "key": "room_id"},
@@ -115,7 +116,7 @@ def get_aliyun_pic_info(content):
     room_data = playerResult.roomData()
     room_data.roomId = infoDic["room_id"]
     room_data.startTime = infoDic["start_time"]
-    room_data.roomHoster = infoDic["hoster"]
+    room_data.roomHoster = infoDic["hoster"].strip()
     room_data.roundCounter = infoDic["round_number"]
     total = 0
     for player in data_list:
@@ -129,10 +130,9 @@ def get_aliyun_pic_info(content):
         p.id = int(player['id'])
         total += abs(p.score)
         room_data.playerData.append(p)
-        if p.name == infoDic["hoster"]:
-            hoster_id = p.id
+        if p.name.strip() == infoDic["hoster"].strip():
+            room_data.roomHosterId = p.id
 
-    room_data.roomHosterId = hoster_id
     score = 0
     for playerData in room_data.playerData:
         if score + abs(playerData.score) > total / 2:
@@ -197,6 +197,7 @@ class wechatInstance():
                 wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
                 self.itchat_instance.send(erro_msg, 'filehelper')
+                print(erro_msg)
                 return
 
             existCount = HistoryGame.objects.filter(club=self.club, room_id=room_data.roomId, start_time=room_data.startTime).count()
@@ -219,8 +220,8 @@ class wechatInstance():
                 playerData.append(d.dumps())
             historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, player_data=json.dumps(playerData), refresh_time=refresh_time)
             historyGame.save()
-            pic_msg = "房间ID：%s\n房主：%s\n房主ID：%s\n局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHoster,room_data.roomHosterId, room_data.roundCounter, room_data.startTime)
-            pic_msg+= '-----------------------------\n'
+            pic_msg = "房间ID：%s  房主ID：%s\n房主：%s  局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHosterId, room_data.roomHoster,room_data.roundCounter, room_data.startTime)
+            # pic_msg += "-----------------------------\n"
 
             rules = []
             if self.club.cost_param != None and self.club.cost_param != 'none' and self.club.cost_param != '':
@@ -263,11 +264,12 @@ class wechatInstance():
                     historyGame.cost += cost
                     historyGame.score += roomPlayData.score - cost
                     clubProfit += cost
-                    costShow1 = "  管理费: %s" % cost
+                    costShow1 = "管理费： %s\n" % cost
                     costShow2 = "  本局房费: %s" % cost
                     if cost == 0:
                         costShow1 = ""
                         costShow2 = "  本局房费: 无"
+                    pic_msg += "%s.-------------------------\n昵称：%s  ID：%s\n分数：%s  总分数：%s\n%s" % (num + 1, player.nick_name, roomPlayData.id, roomPlayData.score, player.current_score, costShow1)
                     pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
                     if wechat_uuid != None:
                         self.itchat_instance.send_image(img_file, wechat_uuid)
@@ -363,7 +365,7 @@ class wechatInstance():
                     if type(eval(params[num])) == int:
                         cost = int(params[num])
                     elif type(eval(params[num])) == float:
-                        cost = int(roomPlayData.score * float(params[num]))
+                        cost = round(roomPlayData.score * float(params[num]))
             elif costMode == 1 and num < int(rules[0]):
                 ranges = rules[1].split('*')
                 costs = rules[2].split('*')
@@ -410,6 +412,8 @@ class wechatInstance():
         response = urllib.request.urlopen(request, context=ctx)
         result = response.read()
         result = json.loads(result)
+
+        addClubOrcCount(self.club)
         return result
 
     def is_login(self):

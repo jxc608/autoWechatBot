@@ -55,14 +55,26 @@ class Clubs(models.Model):
 
 class Captain(models.Model):
     name = models.CharField(max_length=100, verbose_name="队长")
-    club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部", default='')
+    club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
 
     def __str__(self):
         return self.name
 
     class Meta:
         verbose_name = "队长信息"
+        verbose_name_plural = verbose_name
 
+class ClubOrcCount(models.Model):
+    club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
+    use_date = models.DateField(default='', verbose_name='使用日期')
+    count = models.IntegerField(default=0, verbose_name='使用次数')
+
+    def __str__(self):
+        return "%s_%s_%s" % (self.club.user_name, self.use_date, self.count)
+
+    class Meta:
+        verbose_name = "图像识别次数"
+        verbose_name_plural = verbose_name
 
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
