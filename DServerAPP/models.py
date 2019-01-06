@@ -168,6 +168,7 @@ class Cdkey(models.Model):
     key_type = models.IntegerField(default=0, choices=CDKEY_TYPE, verbose_name="密钥类型") #1 -1天，2 - 1周， 3- 1个月
     status = models.IntegerField(default=0, choices=USE_STATUS, verbose_name="使用状态")
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
+    use_time = models.DateTimeField(null=True, verbose_name="使用时间")
 
     class Meta:
         verbose_name = "Cdkey"

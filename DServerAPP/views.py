@@ -238,6 +238,7 @@ def add_time(request):
             clubInstance.expired_time += time_add 
         clubInstance.save()
         keyInstance.status = 1
+        keyInstance.use_time = datetime.datetime.now()
         keyInstance.club = clubInstance
         keyInstance.save()
         return HttpResponse(messageType.createMessage('success', messageType.SUCCESS, 'add time succeed'))

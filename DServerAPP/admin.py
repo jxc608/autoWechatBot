@@ -126,9 +126,9 @@ class HistoryGameAdmin(admin.ModelAdmin):
 
 @admin.register(Cdkey)
 class CdkeyAdmin(admin.ModelAdmin):
-    list_display = ["cdkey", "key_type", "status", "show_create_time"]
-    search_fields = ["cdkey"]
-    list_filter = ["key_type", "status", ("create_time", DateStampRangeFilter)]
+    list_display = ["cdkey", "key_type", "status", "show_create_time", "use_time", "club"]
+    search_fields = ["cdkey", "club__name"]
+    list_filter = ["key_type", "status", ("create_time", DateStampRangeFilter), "use_time"]
     readonly_fields = ["cdkey", "key_type", "status", "create_time"]
 
     ordering = ("-create_time",)
