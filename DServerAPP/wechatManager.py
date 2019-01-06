@@ -127,7 +127,7 @@ def get_aliyun_pic_info(content):
         p = playerResult.playerData()
         p.name = player.get("name", "")
         p.score = int(player.get("score", "1"))
-        p.id = int(player['id'])
+        p.id = abs(int(player['id']))
         total += abs(p.score)
         room_data.playerData.append(p)
         if p.name.strip() == infoDic["hoster"].strip():
