@@ -131,7 +131,7 @@
         timer = setInterval("check_login()", 1000 * 3);
         //刷新二维码
         function get_uuid(){
-            $.post("/get_uuid",{},function(data){
+            $.post("/refresh_uuid",{},function(data){
                 if (data.uuid)
                     qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
             },"json");

@@ -37,7 +37,7 @@ def output_info(msg):
 
 def addClubOrcCount(club):
     if club == None:
-        print("跟同学统计次数，俱乐部为空")
+        print("增加统计次数，俱乐部为空")
         return
     curDate = datetime.datetime.now().date()
     try:
@@ -152,6 +152,7 @@ class wechatInstance():
         # self.qrid = itchat.get_QRuuid()
         self.logined = False
         self.itchat_instance = itchat.new_instance()
+        self.uuid = ""
         self.club_name = clubName
         self.club = None
         try:
@@ -237,7 +238,7 @@ class wechatInstance():
                 gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
                 # 数据库中没有用户，自动增加
                 if gi.count() > 1:
-                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, giCount),'filehelper')
+                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count()),'filehelper')
                     return
                 elif gi.count() == 1:
                     player = gi[0].player
@@ -292,19 +293,6 @@ class wechatInstance():
             pic_msg+= '获得管理费：%s' % clubProfit
             self.itchat_instance.send(pic_msg, 'filehelper') 
             return '@%s@%s' % (typeSymbol, msg.fileName)
-
-    @classmethod
-    def new_instance(cls, club):
-        if not _list.get(club): 
-            _list[club] = wechatInstance(club)
-        return _list[club]
-
-    @classmethod
-    def check_alive(self, club):
-        if _list.get(club) and _list.get(club).itchat_instance.alive:
-            return True
-        else:
-            return False
 
     def scanError(self, room_data):
         total_score = 0
@@ -416,20 +404,39 @@ class wechatInstance():
         addClubOrcCount(self.club)
         return result
 
-    def is_login(self):
-        return self.logined
-        # if self.itchat_instance.alive:
-        #     return True
-        # else:
-        #     return False
+    @classmethod
+    def new_instance(self, club):
+        if not _list.get(club):
+            _list[club] = wechatInstance(club)
+        return _list[club]
+
+    def check_alive(self, club):
+        if _list.get(club) and _list.get(club).itchat_instance.alive:
+            return True
+        else:
+            return False
+
+    def get_login_status(self):
+        status = self.itchat_instance.check_login(self.uuid)
+        logind = status == '200' and self.itchat_instance.alive
+        desc = ""
+        if status == '408':
+            desc = "二维码已失效，请点击刷新"
+        return logind, desc
 
     def get_uuid(self):
-        return self.itchat_instance.get_QRuuid()
+        if self.uuid == "":
+            self.refresh_uuid()
+        return self.uuid
 
-    def check_login(self, uuid):
+    def refresh_uuid(self):
+        self.uuid = self.itchat_instance.get_QRuuid()
+
+    def check_login(self):
         success = False
         while 1:
-            status = self.itchat_instance.check_login(uuid)
+            output_info("login uuid: " % self.uuid)
+            status = self.itchat_instance.check_login(self.uuid)
             if status == '200':
                 success = True
                 break
@@ -444,19 +451,17 @@ class wechatInstance():
         if success:
             # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
             if self.club.expired_time < time.time():
-                self.send('CD KEY 已失效。 请延长后继续使用。', 'filehelper')
+                self.send('CD KEY 已失效。 请延长后继续使用。微信自动退出。', 'filehelper')
                 self.logout()
             else:
                 userInfo = self.itchat_instance.web_init()
                 self.itchat_instance.show_mobile_login()
                 self.itchat_instance.get_contact(update=True)
-                output_info('Login successfully as %s' % userInfo['User']['NickName'])
                 self.itchat_instance.start_receiving()
-                self.logined = True
                 _thread.start_new_thread(self.itchat_instance.run, ())
+                output_info('Login successfully as %s' % userInfo['User']['NickName'])
 
     def logout(self):
-        self.logined = False
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):

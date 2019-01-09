@@ -11,27 +11,30 @@ def bot_check_login(params):
         club_name = params["name"]
 
         bot = wechatManager.wechatInstance.new_instance(club_name)
-        wx_login = bot.is_login()
-        return {'login': wx_login}
+        wx_login, desc = bot.get_login_status()
+        return {'login': wx_login, 'desc': desc}
     except:
         return {'result': 4}
 
-def bot_get_uuid(params):
+def bot_refresh_uuid(params):
+    result = {'wx_login':True, 'uuid': ''}
     try:
+        # 页面轮询机制
         club_name = params["name"]
-
         bot = wechatManager.wechatInstance.new_instance(club_name)
-        wx_login = bot.is_login()
-        uuid = None
+        wx_login, desc = bot.get_login_status()
         if not wx_login:
-            uuid = bot.get_uuid()
-            _thread.start_new_thread(bot.check_login, (uuid,))
-            # bot.check_login(uuid)
-
-        return{'wx_login':wx_login, 'uuid': uuid}
+            bot.refresh_uuid()
+            _thread.start_new_thread(bot.check_login)
+            result["wx_login"] = False
+        return
     except:
         traceback.print_exc()
-        return {'result': 4}
+        result["wx_login"] = False
+        result["result"] = 4
+
+    result["uuid"] = bot.get_uuid()
+    return result
 
 
 def bot_notice(params):

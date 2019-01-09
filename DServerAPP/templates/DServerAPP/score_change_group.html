@@ -146,14 +146,18 @@
                         &times;
                     </button>
                     <h4 class="modal-title" id="myModalLabel">
-                        请输入昵称
+                        请输入队员信息
                     </h4>
                 </div>
                 <div class="modal-body">
+                    <label for="nick_search">游戏昵称</label>
                     <input type="text" class="form-control" id="nick_search" placeholder="请输入游戏昵称" value="">
+                    <br>
+                    <label for="nick_search">GameID</label>
+                    <input type="text" class="form-control" id="gameid_search" placeholder="请输入GameID" value="">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="qrybyNick()">
+                    <button type="button" class="btn btn-primary" onclick="qryTeamMember()">
                         查询
                     </button>
                 </div>
@@ -255,14 +259,16 @@
             });
         }
 
-        function qrybyNick() {
+        function qryTeamMember() {
             var nickName = $("#nick_search").val();
-            if(nickName == "") {
-                alert("请输入昵称");
+            var gameid = $("#gameid_search").val()
+            if(nickName == "" && gameid == "") {
+                alert("请输入昵称或完整的gameid进行查询");
                 return;
             } else {
                 $.post("/nick_players", {
-                    nick: nickName
+                    nick: nickName,
+                    gameid: gameid,
                 }, function (data) {
                     $("#nick_table").html("");
                     if(data.players.length == 0) {

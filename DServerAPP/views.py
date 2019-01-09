@@ -42,9 +42,9 @@ def wx_logout(request):
     bot_info = wechatDeal.bot_logout(params)
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
-def get_uuid(request):
+def refresh_uuid(request):
     params = get_bot_param(request)
-    bot_info = wechatDeal.bot_get_uuid(params)
+    bot_info = wechatDeal.bot_refresh_uuid(params)
     return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
 
 def wechat_friends(request):
@@ -78,20 +78,6 @@ def wechat_bind(request):
 
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
-# def wechat_bind_all(request):
-#     player_ids = request.POST.getlist('player_id')
-#     wechat_nick_names = request.POST.getlist('wechat_nick_name')
-#     nick_names = request.POST.getlist('nick_name')
-#     params = {
-#         'name':request.session['club'],
-#         'player_ids':player_ids,
-#         'wechat_nick_names':wechat_nick_names,
-#         'nick_names':nick_names,
-#     }
-#     bot_info = bot_request(request.session['club'], '/bot_wechat_bind_all', params, 'POST')
-#
-#     return render(request, 'DServerAPP/wechat_bind_all.html', bot_info)
-
 
 def check_sys_login(f):
     wraps(f)
@@ -110,12 +96,12 @@ def index(request):
     if club.expired_time < time.time():
         club.expired_time_desc = '已失效'
         club.expired = True
-        bot_info = {"wx_login": False, "uuid": "0"}
+        bot_info = {"wx_login": False, "uuid": ""}
     else:
         timeArray = time.localtime(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
         params = get_bot_param(request)
-        bot_info = wechatDeal.bot_get_uuid(params)
+        bot_info = wechatDeal.bot_refresh_uuid(params)
 
     is_admin = False
     if club.user_name == '18811333964':
@@ -863,10 +849,15 @@ def score_change_log(request):
 @check_sys_login
 def nick_players(request):
     nickname = request.POST.get('nick', '')
+    gameid = request.POST.get('gameid', '')
     club = Clubs.objects.get(user_name=request.session['club'])
     players = Player.objects.filter(club=club, nick_name__contains=nickname, is_del=0)
+    if gameid:
+        gps = GameID.objects.filter(gameid=gameid, club=club).values("player").distinct()
+        players = players.filter(id__in=gps)
     ary = []
     for player in players:
+
         curPlayer = {}
         curPlayer["id"] = player.id
         curPlayer["wechat_nick_name"] = player.wechat_nick_name
