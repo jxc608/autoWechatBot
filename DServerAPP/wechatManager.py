@@ -150,7 +150,7 @@ class wechatInstance():
 
     def __init__(self, clubName):
         # self.qrid = itchat.get_QRuuid()
-        self.logined = False
+        self.login_status = '0'
         self.itchat_instance = itchat.new_instance()
         self.uuid = ""
         self.club_name = clubName
@@ -410,19 +410,17 @@ class wechatInstance():
             _list[club] = wechatInstance(club)
         return _list[club]
 
-    def check_alive(self, club):
-        if _list.get(club) and _list.get(club).itchat_instance.alive:
-            return True
-        else:
-            return False
+    def check_alive(self):
+        return self.itchat_instance.alive
 
     def get_login_status(self):
-        status = self.itchat_instance.check_login(self.uuid)
-        logind = status == '200' and self.itchat_instance.alive
         desc = ""
-        if status == '408':
-            desc = "二维码已失效，请点击刷新"
-        return logind, desc
+        status = '0'
+        if self.login_status == '200' and not self.check_alive():
+            status = '488'
+            desc = "登录失效，请重新扫码登录"
+            self.logout()
+        return self.login_status, desc
 
     def get_uuid(self):
         if self.uuid == "":
@@ -435,8 +433,9 @@ class wechatInstance():
     def check_login(self):
         success = False
         while 1:
-            output_info("login uuid: " % self.uuid)
+            output_info("login uuid: %s" % self.uuid)
             status = self.itchat_instance.check_login(self.uuid)
+            self.login_status = status
             if status == '200':
                 success = True
                 break
@@ -462,6 +461,7 @@ class wechatInstance():
                 output_info('Login successfully as %s' % userInfo['User']['NickName'])
 
     def logout(self):
+        self.login_status = '0'
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):

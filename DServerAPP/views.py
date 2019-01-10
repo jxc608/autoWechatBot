@@ -35,6 +35,7 @@ def get_bot_param(request):
 def check_wx_login(request):
     params = get_bot_param(request)
     bot_info = wechatDeal.bot_check_login(params)
+    print(bot_info)
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
 def wx_logout(request):
@@ -45,6 +46,7 @@ def wx_logout(request):
 def refresh_uuid(request):
     params = get_bot_param(request)
     bot_info = wechatDeal.bot_refresh_uuid(params)
+    print(bot_info)
     return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
 
 def wechat_friends(request):
@@ -96,17 +98,17 @@ def index(request):
     if club.expired_time < time.time():
         club.expired_time_desc = '已失效'
         club.expired = True
-        bot_info = {"wx_login": False, "uuid": ""}
+        bot_info = {"login": '488', "uuid": ""}
     else:
         timeArray = time.localtime(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
         params = get_bot_param(request)
-        bot_info = wechatDeal.bot_refresh_uuid(params)
+        bot_info = wechatDeal.bot_check_login(params)
 
     is_admin = False
     if club.user_name == '18811333964':
         is_admin = True
-    return render(request, 'DServerAPP/index.html', {'club':club, 'wx_login':bot_info['wx_login'], 'uuid':bot_info['uuid'], 'is_admin':is_admin})
+    return render(request, 'DServerAPP/index.html', {'club':club, 'wx_login':bot_info['login'], 'is_admin':is_admin})
 
 def login(request):
     return render(request, 'DServerAPP/login.html')
