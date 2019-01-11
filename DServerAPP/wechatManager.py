@@ -415,12 +415,13 @@ class wechatInstance():
 
     def get_login_status(self):
         desc = ""
-        status = '0'
-        if self.login_status == '200' and not self.check_alive():
-            status = '488'
-            desc = "登录失效，请重新扫码登录"
+        status = self.login_status
+        if status == '408':
+            desc = "二维码已失效，请刷新后重试"
+        elif status == '488':
+            desc = "已退出，请重新扫码登录"
             self.logout()
-        return self.login_status, desc
+        return status, desc
 
     def get_uuid(self):
         if self.uuid == "":
@@ -428,6 +429,7 @@ class wechatInstance():
         return self.uuid
 
     def refresh_uuid(self):
+        self.login_status = '0'
         self.uuid = self.itchat_instance.get_QRuuid()
 
     def check_login(self):
@@ -461,7 +463,7 @@ class wechatInstance():
                 output_info('Login successfully as %s' % userInfo['User']['NickName'])
 
     def logout(self):
-        self.login_status = '0'
+        self.login_status = '488'
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):

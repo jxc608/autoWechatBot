@@ -111,6 +111,14 @@
     
         {% if club.expired == False and wx_login != '200' %}
 
+        var qrcode = new QRCode('qrcode', {
+          //text: 'https://login.weixin.qq.com/l/' + data.uuid,
+          width: 256,
+          height: 256,
+          colorDark : '#000000',
+          colorLight : '#ffffff',
+          correctLevel : QRCode.CorrectLevel.H
+        });
         refresh_uuid();
         var timer = null;
         //短信验证码重新获取
@@ -130,17 +138,12 @@
         function refresh_uuid(){
             $.post("/refresh_uuid",{},function(data){
                 if (data.uuid) {
-                    var qrcode = new QRCode('qrcode', {
-                      text: 'https://login.weixin.qq.com/l/' + data.uuid,
-                      width: 256,
-                      height: 256,
-                      colorDark : '#000000',
-                      colorLight : '#ffffff',
-                      correctLevel : QRCode.CorrectLevel.H
-                    });
-
-                    //qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
-                    $("#scanDesc").html(data.desc);
+                    /*
+                    */
+                    clearInterval(timer);
+                    //check_login();
+                    qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
+                    $("#scanDesc").html("");
                     timer = setInterval("check_login()", 1000 * 3);
                 }
             },"json");

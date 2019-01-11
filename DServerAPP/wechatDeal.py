@@ -36,8 +36,8 @@ def bot_notice(params):
         club = Clubs.objects.get(user_name=club_name)
 
         bot = wechatManager.wechatInstance.new_instance(club.user_name)
-        wx_login = bot.is_login()
-        if not wx_login:
+        wx_login, desc = bot.get_login_status()
+        if wx_login != '200':
             return json.dumps({'result': 2})
 
         if to_manager:
@@ -76,8 +76,8 @@ def bot_wechat_bind(params):
         club = Clubs.objects.get(user_name=club_name)
 
         bot = wechatManager.wechatInstance.new_instance(club.user_name)
-        wx_login = bot.is_login()
-        if not wx_login:
+        wx_login, desc = bot.get_login_status()
+        if wx_login != '200':
             return {'result': 2}
 
         code, msg = bot.set_alias(user_name, nick_name)
@@ -106,8 +106,8 @@ def bot_wechat_bind_manager(params):
         club = Clubs.objects.get(user_name=club_name)
 
         bot = wechatManager.wechatInstance.new_instance(club.user_name)
-        wx_login = bot.is_login()
-        if not wx_login:
+        wx_login, desc = bot.get_login_status()
+        if wx_login != '200':
             return {'result': 2}
 
         code, msg = bot.set_alias(user_name, nick_name)
@@ -129,8 +129,8 @@ def bot_wechat_friends(params):
         club = Clubs.objects.get(user_name=club_name)
 
         bot = wechatManager.wechatInstance.new_instance(club.user_name)
-        wx_login = bot.is_login()
-        if not wx_login:
+        wx_login, desc = bot.get_login_status()
+        if wx_login != '200':
             return {'result': 2}
 
         list_ = bot.search_friends(wechat_nick_name, nick_name)

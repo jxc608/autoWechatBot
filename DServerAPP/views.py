@@ -35,7 +35,7 @@ def get_bot_param(request):
 def check_wx_login(request):
     params = get_bot_param(request)
     bot_info = wechatDeal.bot_check_login(params)
-    print(bot_info)
+    # print(bot_info)
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
 def wx_logout(request):
@@ -46,19 +46,21 @@ def wx_logout(request):
 def refresh_uuid(request):
     params = get_bot_param(request)
     bot_info = wechatDeal.bot_refresh_uuid(params)
-    print(bot_info)
+    # print(bot_info)
     return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
 
 def wechat_friends(request):
     nick_name = request.POST.get('nick_name')
-    wechat_nick_name = request.POST.get('wechat_nick_name')
+    wechat_nick_name = request.POST.get('wechat_nick_name', '')
+    if wechat_nick_name == '':
+        wechat_nick_name = 'tempUser'
 
     params = {
                 'name':request.session['club'],
                 'nick_name':nick_name,
                 'wechat_nick_name':wechat_nick_name
              }
-    bot_info =  wechatDeal.bot_wechat_friends(params)
+    bot_info = wechatDeal.bot_wechat_friends(params)
 
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
