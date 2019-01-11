@@ -414,6 +414,8 @@ class wechatInstance():
         return self.itchat_instance.alive
 
     def get_login_status(self):
+        if self.check_alive():
+            self.login_status = '200'
         desc = ""
         status = self.login_status
         if status == '408':
