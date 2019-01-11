@@ -10,7 +10,7 @@ def bot_check_login(params):
     club_name = params["name"]
     bot = wechatManager.wechatInstance.new_instance(club_name)
     wx_login, desc = bot.get_login_status()
-    return {'login': wx_login, 'desc': desc, 'uuid': ''}
+    return {'login': wx_login, 'desc': desc, 'uuid': bot.get_uuid()}
 
 def bot_refresh_uuid(params):
     result = {}

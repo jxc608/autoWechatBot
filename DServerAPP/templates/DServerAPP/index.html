@@ -112,14 +112,13 @@
         {% if club.expired == False and wx_login != '200' %}
 
         var qrcode = new QRCode('qrcode', {
-          //text: 'https://login.weixin.qq.com/l/' + data.uuid,
+          text: 'https://login.weixin.qq.com/l/{{ uuid }}',
           width: 256,
           height: 256,
           colorDark : '#000000',
           colorLight : '#ffffff',
           correctLevel : QRCode.CorrectLevel.H
         });
-        refresh_uuid();
         var timer = null;
         //短信验证码重新获取
         function check_login() {
@@ -133,7 +132,7 @@
                 }
             },"json");
         }
-
+        timer = setInterval("check_login()", 1000 * 3);
         //刷新二维码
         function refresh_uuid(){
             $.post("/refresh_uuid",{},function(data){
@@ -149,8 +148,11 @@
             },"json");
         }
 
-
+            {% if wx_login == '408' or wx_login == '488' %}
+            refresh_uuid();
+            {% endif %}
         {% endif %}
+
         //注销
         function wx_logout(){
             $.post("/wx_logout",{},function(data){
