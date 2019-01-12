@@ -165,7 +165,7 @@ class wechatInstance():
                 return
 
             try:
-                self.club = Clubs.objects.get(user_name=clubName)
+                self.club = Clubs.objects.get(user_name=self.club_name)
             except:
                 print("club未找到：" % clubName)
                 self.send('俱乐部未找到： %s' % self.club_name, 'filehelper')
@@ -452,6 +452,12 @@ class wechatInstance():
                 output_info('Please Reloading QR Code')
                 break
         if success:
+            try:
+                self.club = Clubs.objects.get(user_name=self.club_name)
+            except:
+                print("club未找到：" % self.club_name)
+                self.logout()
+                return
             # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
             if self.club.expired_time < time.time():
                 self.send('CD KEY 已失效。 请延长后继续使用。微信自动退出。', 'filehelper')
