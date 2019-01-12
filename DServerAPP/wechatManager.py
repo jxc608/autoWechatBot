@@ -155,10 +155,6 @@ class wechatInstance():
         self.uuid = ""
         self.club_name = clubName
         self.club = None
-        try:
-            self.club = Clubs.objects.get(user_name=clubName)
-        except:
-            print("club未找到：" % clubName)
 
         '''
         接受图片的逻辑处理
@@ -167,10 +163,14 @@ class wechatInstance():
         def download_files_new(msg):
             if msg['ToUserName'] != 'filehelper':
                 return
-            if self.club == None:
+
+            try:
+                self.club = Clubs.objects.get(user_name=clubName)
+            except:
+                print("club未找到：" % clubName)
                 self.send('俱乐部未找到： %s' % self.club_name, 'filehelper')
                 return
-            elif self.club.expired_time < time.time():
+            if self.club.expired_time < time.time():
                 self.send('俱乐部已过期： %s， 请与管理员确认' % self.club_name, 'filehelper')
                 return
 
