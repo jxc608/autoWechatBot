@@ -320,7 +320,7 @@ class wechatInstance():
         return player
 
     def scoreLimit(self, player, wechat_uuid):
-        if player.current_score <= -player.score_limit:
+        if player.is_bind and player.current_score <= -player.score_limit:
             alert_msg = player.nick_name + '\n'
             alert_msg += '上分提醒\n'
             alert_msg += '当前余分: %s\n' % player.current_score
