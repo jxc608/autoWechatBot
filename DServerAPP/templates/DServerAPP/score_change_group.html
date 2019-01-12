@@ -46,10 +46,10 @@
                                 <input type="text" class="form-control" id="captainInput" placeholder="请输入队长" value="{{cp}}">
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="search()">按日期查询</button>
+                                <button type="button" class="btn btn-primary" onclick="search()">查询</button>
                               </div>
                               <div class="form-group">
-                                <button type="button" class="btn btn-warning" onclick="searchAll()">查询全部日期</button>
+                                <button type="button" class="btn btn-warning" onclick="searchAll()">历史账单日期</button>
                               </div>
                               <div class="form-group">
                                 <button type="button" class="btn btn-danger" onclick="addCaptain()">新增队长</button>
@@ -75,7 +75,7 @@
                                         <td width="20%" rowspan="{{ introDict.count }}">
                                             <strong>{{introDict.intorducer.name}}</strong>
                                             <button type="button" class="btn btn-default" cid="{{introDict.intorducer.id}}" cname="{{introDict.intorducer.name}}" onclick="modifyCaptain()">修改名称</button>
-                                            <button type="button" class="btn btn-default"  onclick="addMember({{introDict.intorducer.id}})">追加队员</button>
+                                            <button type="button" class="btn btn-default"  onclick="addMember({{introDict.intorducer.id}})">添加队员</button>
 {#                                            <button type="button" class="btn btn-default" onclick="show_captain({{player.id}})">设置队长</button>#}
                                         </td>
                                     </tr>
@@ -280,7 +280,7 @@
                             tr +=  "<td>" + curPlayer.wechat_nick_name + "</td>";
                             tr += "<td>" + curPlayer.nick_name + "</td>";
                             tr += "<td>" + curPlayer.current_score + "</td>";
-                            tr += "<td><button class='btn btn-primary' type='button' onclick='appendMember("+curPlayer.id+")'>追加</td>";
+                            tr += "<td><button class='btn btn-primary' type='button' onclick='appendMember("+curPlayer.id+")'>添加</td>";
                             tr += "</tr>";
                             $("#nick_table").append(tr);
                             $("#nickModal").modal();
@@ -296,7 +296,7 @@
                 pid: pid,
             }, function (data) {
                 if(data.result == 0) {
-                    alert("追加成功");
+                    alert("添加成功");
                     window.location.reload();
                 } else {
                     alert(data.errmsg);

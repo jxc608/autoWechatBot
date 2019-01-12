@@ -190,7 +190,7 @@ class wechatInstance():
                 result = self.get_aliyun_result(img_file)
                 room_data = get_aliyun_pic_info(result)
             except:
-                erro_msg = '图片无法识别\n请试着上传原图，或者联系管理员'
+                erro_msg = '图片无法识别，请试着保存图片或上传原图重新发送，如有疑问请联系管理员'
             if erro_msg == "":
                 erro_msg = self.scanError(room_data)
             if erro_msg != "":
@@ -472,6 +472,7 @@ class wechatInstance():
 
     def logout(self):
         self.login_status = '488'
+        output_info("用户退出登录: %s" % self.club_name)
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):
