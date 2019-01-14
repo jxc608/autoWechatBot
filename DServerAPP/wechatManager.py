@@ -268,10 +268,10 @@ class wechatInstance():
                     historyGame.score += roomPlayData.score - cost
                     clubProfit += cost
                     costShow1 = "管理费： %s\n" % cost
-                    costShow2 = "  本局房费: %s" % cost
+                    costShow2 = "本局房费: %s" % cost
                     if cost == 0:
                         costShow1 = ""
-                        costShow2 = "  本局房费: 无"
+                        costShow2 = "本局房费: 无"
                     pic_msg += "%s.-------------------------\n昵称：%s  ID：%s\n分数：%s  总分数：%s\n%s" % (num + 1, player.nick_name, roomPlayData.id, roomPlayData.score, player.current_score, costShow1)
                     # pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
                     if wechat_uuid != None:
