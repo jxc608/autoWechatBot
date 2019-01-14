@@ -245,6 +245,8 @@ class wechatInstance():
                 else:
                     self.itchat_instance.send('用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name), 'filehelper')
                     player = self.createTempPlayer(roomPlayData)
+
+                if player.is_bind:
                     playerWechat = self.getWechatUserByRemarkName(player.nick_name)
                     if playerWechat:
                         wechat_uuid = playerWechat['UserName']
@@ -287,8 +289,8 @@ class wechatInstance():
                     continue
             historyGame.save()
           
-            self.club.profit += clubProfit
-            self.club.save()
+            self.club.profit = F("profit") + clubProfit
+            self.club.save(update_fields=["profit"])
             pic_msg+= '-----------------------------\n'
             pic_msg+= '获得管理费：%s' % clubProfit
             self.itchat_instance.send(pic_msg, 'filehelper') 
