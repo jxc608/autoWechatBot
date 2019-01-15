@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'DServer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'auto_accounting_test',
+        'NAME': 'auto_accounting',
         'USER': 'root',
         'PASSWORD': 'autoAccounting1989',
         'HOST': '127.0.0.1',
