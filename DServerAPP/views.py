@@ -274,9 +274,12 @@ def room_data(request):
     total_profit = 0
     for room in rooms:
         total_cost += room.cost
-        total_score += room.score
+        # total_score += room.score
         total_round += room.round_number
-        total_profit += room.score - room.cost
+        # total_profit += room.score - room.cost
+        pd = json.loads(room.player_data)
+        print(pd[0])
+        room.score = int(pd[0]['score'])
 
     if orderby == 'cost':  
         rooms = sorted(rooms, key=lambda rooms : rooms.cost, reverse=True) 

@@ -181,7 +181,8 @@ class wechatInstance():
             club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
-            img_file = club_path + msg.fileName
+            # print(msg)
+            img_file = club_path + msg.get('fileName', msg.get('FileName', int(time.time())))
             msg.download(img_file)
             typeSymbol = {PICTURE: 'img',}.get(msg.type, 'fil')
 
