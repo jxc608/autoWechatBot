@@ -206,6 +206,14 @@ class wechatInstance():
             if existCount > 0:
                 self.itchat_instance.send('数据已入库！', 'filehelper')
                 return
+            
+            for num in range(0, len(room_data.playerData)):
+                roomPlayData = room_data.playerData[num]
+                gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
+                # 数据库中没有用户，自动增加
+                if gi.count() > 1:
+                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count()), 'filehelper')
+                    return
 
             #根据刷新时间设置，设置入库时间
             today_time_start = '%s-%s-%s 0:0:0' % (timezone.now().year, timezone.now().month, timezone.now().day)
@@ -230,14 +238,6 @@ class wechatInstance():
                 rules = self.club.cost_param
                 rules = rules.split('|')
             clubProfit = 0
-
-            for num in range(0, len(room_data.playerData)):
-                roomPlayData = room_data.playerData[num]
-                gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
-                # 数据库中没有用户，自动增加
-                if gi.count() > 1:
-                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count()), 'filehelper')
-                    return
 
             for num in range(0, len(room_data.playerData)):
                 roomPlayData = room_data.playerData[num]
