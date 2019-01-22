@@ -233,15 +233,20 @@ class wechatInstance():
 
             for num in range(0, len(room_data.playerData)):
                 roomPlayData = room_data.playerData[num]
+                gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
+                # 数据库中没有用户，自动增加
+                if gi.count() > 1:
+                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count()), 'filehelper')
+                    return
+
+            for num in range(0, len(room_data.playerData)):
+                roomPlayData = room_data.playerData[num]
                 wechat_uuid = None
 
                 # 获取当前用户的username用来发送消息
                 gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
                 # 数据库中没有用户，自动增加
-                if gi.count() > 1:
-                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count()),'filehelper')
-                    return
-                elif gi.count() == 1:
+                if gi.count() == 1:
                     player = gi[0].player
                 else:
                     self.itchat_instance.send('用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name), 'filehelper')
