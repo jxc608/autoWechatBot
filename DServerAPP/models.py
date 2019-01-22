@@ -6,8 +6,8 @@ from django.utils import timezone
 USE_STATUS = [(0,"未使用"), (1, "已使用")]
 CDKEY_TYPE = [(1, "一天"), (2, "一周"), (3, "一个月")]
 COST_MODE = [(0, '前x名固定或百分比'), (1, '前x名范围'), (2, '所有固定')]
-IS_HOST = [(0, '是'), (1, '不是')]
-YES_NO_GENERATE = [(0, '是'), (1, '否')]
+IS_HOST = [(0, '不是'), (1, '是')]
+YES_NO_GENERATE = [(0, '否'), (1, '是')]
 
 # Create your models here.
 class Question(models.Model):
