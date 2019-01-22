@@ -206,7 +206,7 @@ class wechatInstance():
             if existCount > 0:
                 self.itchat_instance.send('数据已入库！', 'filehelper')
                 return
-            
+
             for num in range(0, len(room_data.playerData)):
                 roomPlayData = room_data.playerData[num]
                 gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
@@ -328,7 +328,7 @@ class wechatInstance():
         return player
 
     def scoreLimit(self, player, wechat_uuid):
-        if player.is_bind and player.current_score <= -player.score_limit:
+        if player.score_limit != 0 and player.is_bind and player.current_score <= -player.score_limit:
             alert_msg = player.nick_name + '\n'
             alert_msg += '上分提醒\n'
             alert_msg += '当前余分: %s\n' % player.current_score
