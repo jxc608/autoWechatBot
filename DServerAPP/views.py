@@ -158,7 +158,7 @@ def register(request):
         return render(request, 'DServerAPP/register.html', {"account": 1, "acct": "账号已注册"})
     else:
         password = request.POST.get('password', '')
-        expired = time.time() + 3600 * 12
+        expired = time.time() + 3600 * 3
 
         club = Clubs(uuid=uuid.uuid1(), user_name=username, password=password, password2=password2,
                      expired_time=expired, cost_mode=0, cost_param='')

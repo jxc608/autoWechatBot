@@ -12,6 +12,10 @@ from .utils import *
 import _thread
 import base64
 
+# 整数或浮点数皆可
+def own_round(foiVal):
+    return int(foiVal + 0.5)
+
 # 定义常量  
 APP_ID = '11756002'
 API_KEY = 'FK5TYgAMCPengGGfqbI5GqGz'
@@ -359,9 +363,9 @@ class wechatInstance():
                 if roomPlayData.score > value:
                     # 超过分数才计算
                     if type(eval(params[num])) == int:
-                        cost = int(params[num])
+                        cost = own_round(float(params[num]))
                     elif type(eval(params[num])) == float:
-                        cost = round(roomPlayData.score * float(params[num]))
+                        cost = own_round(roomPlayData.score * float(params[num]))
             elif costMode == 1 and num < int(rules[0]):
                 ranges = rules[1].split('*')
                 costs = rules[2].split('*')
@@ -370,7 +374,7 @@ class wechatInstance():
                         costs_ = costs[index].split('_')
                         for rindex, rrange_ in enumerate(range_.split('_')):
                             if roomPlayData.score < int(rrange_):
-                                cost = int(costs_[rindex])
+                                cost = own_round(float(costs_[rindex]))
                                 break
                 if cost <= 0:
                     cost = 0
@@ -384,7 +388,7 @@ class wechatInstance():
                         break
                 # 所有固定模式
                 if can_cost:
-                    cost = int(costs[index])
+                    cost = own_round(float(costs[index]))
         return abs(cost)
 
     def get_aliyun_result(self, img_file):
