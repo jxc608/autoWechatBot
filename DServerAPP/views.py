@@ -51,14 +51,9 @@ def refresh_uuid(request):
 
 def wechat_friends(request):
     nick_name = request.POST.get('nick_name')
-    wechat_nick_name = request.POST.get('wechat_nick_name', '')
-    if wechat_nick_name == '':
-        wechat_nick_name = 'tempUser'
-
     params = {
                 'name':request.session['club'],
                 'nick_name':nick_name,
-                'wechat_nick_name':wechat_nick_name
              }
     bot_info = wechatDeal.bot_wechat_friends(params)
 
@@ -67,7 +62,7 @@ def wechat_friends(request):
 def wechat_bind(request):
     player_id = int(request.POST.get('id'))
     user_name = request.POST.get('user_name')
-    nick_name = request.POST.get('nick_name')
+    nick_name = request.POST.get('remark_name')
     wechat_nick_name = request.POST.get('wechat_nick_name')
 
     params = {
@@ -1086,7 +1081,11 @@ def del_data(request):
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 def stat_xls(request):
-    club = Clubs.objects.get(user_name=request.session['club'])
+    cid = request.GET.get('cid', None)
+    if not cid:
+        return HttpResponse("参数无效，请返回重试")
+
+    club = Clubs.objects.get(user_name=cid)
     players = Player.objects.filter(club=club, is_del=0).order_by('-current_score')
     wb = xlwt.Workbook()
     wb.encoding = 'utf-8'

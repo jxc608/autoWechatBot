@@ -70,7 +70,7 @@ def bot_wechat_bind(params):
         club_name = params["name"]
         player_id = int(params["id"])
         user_name = params['user_name']
-        nick_name = params['nick_name']
+        remark_name = params['nick_name']
         wechat_nick_name = params['wechat_nick_name']
 
         club = Clubs.objects.get(user_name=club_name)
@@ -80,12 +80,12 @@ def bot_wechat_bind(params):
         if wx_login != '200':
             return {'result': 2}
 
-        code, msg = bot.set_alias(user_name, nick_name)
+        code, msg = bot.set_alias(user_name, remark_name)
         if code == 0:
             player = Player.objects.get(id=player_id)
             if player.club_id != club.uuid:
                 return {'result': 1}
-            player.nick_name = nick_name
+            player.nick_name = remark_name
             player.wechat_nick_name = wechat_nick_name
             player.is_bind = 1
             player.save()
@@ -125,7 +125,7 @@ def bot_wechat_friends(params):
     try:
         club_name = params["name"]
         nick_name = params['nick_name']
-        wechat_nick_name = params['wechat_nick_name']
+        # wechat_nick_name = params['wechat_nick_name']
         club = Clubs.objects.get(user_name=club_name)
 
         bot = wechatManager.wechatInstance.new_instance(club.user_name)
@@ -133,7 +133,7 @@ def bot_wechat_friends(params):
         if wx_login != '200':
             return {'result': 2}
 
-        list_ = bot.search_friends(wechat_nick_name, nick_name)
+        list_ = bot.search_friends(nick_name)
 
         return {'result': 0, 'list':list_}
     except:

@@ -343,7 +343,7 @@ class wechatInstance():
             # 管理员
             manager_wechat_uuids = []
             for manager in Manager.objects.filter(club=self.club):
-                f = self.itchat_instance.search_friends(remarkName=manager.nick_name)
+                f = self.itchat_instance.search_friends(name=manager.nick_name)
                 if f:
                     if isinstance(f, list):
                         manager_wechat_uuids.append(f[0]['UserName'])
@@ -497,7 +497,7 @@ class wechatInstance():
 
     def getWechatUserByRemarkName(self, remarkName):
         user = None
-        f = self.itchat_instance.search_friends(remarkName=remarkName)
+        f = self.itchat_instance.search_friends(name=remarkName)
         if f:
             if isinstance(f, list):
                 user = f[0]
@@ -505,52 +505,29 @@ class wechatInstance():
                 user = f
         return user
 
-    def search_friends(self, wechat_nick_name, remarkName):
+    def search_friends(self, name):
         list_ = []
-        has_nickname = []
-        f = self.itchat_instance.search_friends(nickName=wechat_nick_name)
+        f = self.itchat_instance.search_friends(name=name)
 
         if isinstance(f,list):
             for ff in f:
                 data = {
                     "NickName":ff["NickName"],
                     "UserName":ff["UserName"],
+                    "RemarkName": ff["RemarkName"],
                     "Signature":ff["Signature"],
                     "HeadImgUrl":ff["HeadImgUrl"],
                 }
-                has_nickname.append(ff["NickName"])
                 list_.append(data)
         elif isinstance(f,dict):
             data = {
                 "NickName":f["NickName"],
                 "UserName":f["UserName"],
+                "RemarkName": f["RemarkName"],
                 "Signature":f["Signature"],
                 "HeadImgUrl":f["HeadImgUrl"],
             }
-            has_nickname.append(f["NickName"])
             list_.append(data)
-
-        f = self.itchat_instance.search_friends(remarkName=remarkName)
-        if isinstance(f,list):
-            for ff in f:
-                if ff["NickName"] not in has_nickname:
-                    data = {
-                        "NickName":ff["NickName"],
-                        "UserName":ff["UserName"],
-                        "Signature":ff["Signature"],
-                        "HeadImgUrl":ff["HeadImgUrl"],
-                    }
-                    list_.append(data)
-        elif isinstance(f,dict):
-            if f["NickName"] not in has_nickname:
-                data = {
-                    "NickName":f["NickName"],
-                    "UserName":f["UserName"],
-                    "Signature":f["Signature"],
-                    "HeadImgUrl":f["HeadImgUrl"],
-                }
-                has_nickname.append(f["NickName"])
-                list_.append(data)
 
         return list_
 

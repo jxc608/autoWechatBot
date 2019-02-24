@@ -77,8 +77,7 @@
                                     <thead>
                                     <tr>
                                         <th>id</th>
-                                        <th>微信昵称</th>
-                                        <th>备注昵称</th>
+                                        <th>微信/备注昵称</th>
                                         <th>操作</th>
                                        <!-- <th>历史总盈亏</th>-->
                                     </tr>
@@ -88,18 +87,15 @@
                                         <input type="hidden" class="form-control" name="player_id" value="{{player.id}}">
 
                                         <tr>
-                                            <td width="25%">
+                                            <td width="30%">
                                                 {% for gameid in player.gameids %}
                                                 {{gameid.gameid}}({{gameid.game_nick_name}})<br/>
                                                 {% endfor %}
                                             </td>
-                                            <td width="25%">
-                                                <input type="email" class="form-control" id="wechat_nick_name_{{player.id}}" name="wechat_nick_name" value="{{player.wechat_nick_name}}">
-                                            </td>
-                                            <td width="25%">
+                                            <td width="40%">
                                                 <input type="email" class="form-control" id="nick_name_{{player.id}}" name="nick_name" value="{{player.nick_name}}">
                                             </td>
-                                            <td width="25%" align="center" id="is_bind">
+                                            <td width="30%" align="center" id="is_bind_{{ player.id }}">
                                                 {% if player.is_bind == 0%}
                                                     <!--
                                                     <span style="color:red">未绑定</span>
@@ -167,7 +163,7 @@
             }
             */
             if($('#nick_name_'+player_id).val()==''){
-                alert("请输入备注昵称。");
+                alert("请输入昵称。");
                 return;
             }
             /*if($('#profit_'+player_id).val()==''){
@@ -177,7 +173,7 @@
             $.post("/wechat_friends",{
                 id:player_id,
                 nick_name:$('#nick_name_'+player_id).val(),
-                wechat_nick_name:$('#wechat_nick_name_'+player_id).val(),
+                //wechat_nick_name:$('#wechat_nick_name_'+player_id).val(),
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
                 if(data.result == 0){
@@ -214,17 +210,18 @@
         }
 
         function wechat_bind(player_id, user_name, nick_name){
+            var remarkName =  $('#nick_name_'+player_id).val();
             $.post("/wechat_bind",{
                 id:player_id,
                 user_name:user_name,
-                nick_name:$('#nick_name_'+player_id).val(),
-                wechat_nick_name:nick_name,
+                remark_name:remarkName,
+                wechat_nick_name: nick_name,
 
             },function(data){
                 if(data.result == 0){
                     alert('绑定成功！');
-                    $('#is_bind').html('<span style="color:green">已绑定</span>');
-                    $('#wechat_nick_name_'+player_id).val(nick_name)
+                    $('#is_bind_' + player_id).html('<span style="color:green">已绑定</span>');
+                    $('#nick_name_'+player_id).val(remarkName);
                     $('#myModal').modal('hide');;
                 }
                 else if (data.result == 2)
