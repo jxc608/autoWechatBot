@@ -3,8 +3,16 @@ from . import wechatManager
 import json
 import traceback
 from .models import Clubs, Manager, Player
+
+import threading
 import time
-import _thread
+import inspect
+import ctypes
+import logging
+
+logger = logging.getLogger(__name__)
+
+_list = {}
 
 def bot_check_login(params):
     wid = params["wid"]
@@ -13,6 +21,24 @@ def bot_check_login(params):
     wx_login, desc = bot.get_login_status()
     return {'login': wx_login, 'desc': desc, 'uuid': bot.get_uuid()}
 
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
+
+
 def bot_refresh_uuid(params):
     result = {}
 
@@ -20,12 +46,19 @@ def bot_refresh_uuid(params):
     bot = wechatManager.wechatInstance.new_instance(wid)
     wx_login, desc = bot.get_login_status()
     if not wx_login == '200':
+        if _list.get(wid, None):
+            stop_thread(_list[wid])
+            bot = wechatManager.wechatInstance.new_instance(wid)
+            logger.info("recreate bot: %s" % wid)
+
         bot.refresh_uuid()
-        _thread.start_new_thread(bot.check_login, ())
+
+        t1 = threading.Thread(target=bot.check_login, args=())
+        _list[wid] = t1
+        t1.start()
 
     result["uuid"] = bot.get_uuid()
     return result
-
 
 def bot_notice(params):
     try:

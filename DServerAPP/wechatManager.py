@@ -463,6 +463,7 @@ class wechatInstance():
             self.login_status = status
             logger.info("Login: wid: %s, uuid: %s, status: %s" % (self.wid, self.uuid, self.login_status))
             if status == '200':
+                logger.info("Login Wechat success: %s" % self.wid)
                 success = True
                 break
             elif status == '201':
