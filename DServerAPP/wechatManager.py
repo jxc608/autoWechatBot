@@ -435,12 +435,16 @@ class wechatInstance():
         desc = ""
         status = self.login_status
         if status == '0':
-            desc = "获取"
+            desc = ""
         if status == '408':
             desc = "二维码已失效，请刷新后重试"
         elif status == '488':
             desc = "已退出，请重新扫码登录"
             self.logout()
+        elif status == '400':
+            desc = "暂时不能登录web微信"
+            self.logout()
+
         return status, desc
 
     def get_uuid(self):
@@ -468,8 +472,11 @@ class wechatInstance():
                 # 二维码失效
                 logger.info('Please Reloading QR Code')
                 break
+            elif status == '400':
+                logger.error("Wechat Limit: wid: %s")
+                break
             time.sleep(1)
-            
+
         if success:
             try:
                 self.club = Clubs.objects.get(user_name=self.club_name)
