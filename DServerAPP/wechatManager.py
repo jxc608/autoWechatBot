@@ -473,7 +473,7 @@ class wechatInstance():
                 logger.info('Please Reloading QR Code')
                 break
             elif status == '400':
-                logger.error("Wechat Limit: wid: %s")
+                logger.error("Wechat Limit: wid: %s" % self.wid)
                 break
             time.sleep(1)
 
