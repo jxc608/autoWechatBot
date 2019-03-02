@@ -87,7 +87,7 @@
                                 CD KEY 已失效。 请延长后继续使用。
                             {% elif wx_login != '200' %}
                             <div align="center" >
-                              <a href="javascript:void(0)" onclick="refresh_uuid()">刷新二维码</a>
+                              <a href="javascript:void(0)" onclick="window.location.reload();">刷新二维码</a>
                                 <p id="scanDesc"></p>
                             </div>
                             <div align="center" id="qrcode"></div>
@@ -112,7 +112,7 @@
         {% if club.expired == False and wx_login != '200' %}
 
         var qrcode = new QRCode('qrcode', {
-          text: 'https://login.weixin.qq.com/l/{{ uuid }}',
+          //text: 'https://login.weixin.qq.com/l/{{ uuid }}',
           width: 256,
           height: 256,
           colorDark : '#000000',
@@ -135,7 +135,7 @@
         timer = setInterval("check_login()", 1000 * 3);
         //刷新二维码
         function refresh_uuid(){
-            $.post("/refresh_uuid",{},function(data){
+            $.get("/refresh_uuid",{},function(data){
                 if (data.uuid) {
                     /*
                     */

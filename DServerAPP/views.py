@@ -15,45 +15,38 @@ import xlwt
 import io
 from . import wechatDeal
 from functools import wraps
+import logging
 
-
+logger = logging.getLogger(__name__)
 
 def timestamp2string(timeStamp): 
   try: 
     timeArray = time.localtime(timeStamp)
     return time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
   except Exception as e: 
-    print(e)
+    logger.error(e)
     return ''
 
 def get_bot_param(request):
     params = {}
     params["name"] = request.session['club']
-    params["key"] = request.GET.get("key")
+    params["key"] = request.GET.get("key"),
+    params['wid'] = request.session['wid']
+
     return params
 
-def check_wx_login(request):
-    params = get_bot_param(request)
-    bot_info = wechatDeal.bot_check_login(params)
-    # print(bot_info)
-    return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
 def wx_logout(request):
     params = get_bot_param(request)
     bot_info = wechatDeal.bot_logout(params)
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
-def refresh_uuid(request):
-    params = get_bot_param(request)
-    bot_info = wechatDeal.bot_refresh_uuid(params)
-    # print(bot_info)
-    return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
-
 def wechat_friends(request):
     nick_name = request.POST.get('nick_name')
     params = {
                 'name':request.session['club'],
                 'nick_name':nick_name,
+                'wid': request.session['wid'],
              }
     bot_info = wechatDeal.bot_wechat_friends(params)
 
@@ -70,7 +63,8 @@ def wechat_bind(request):
                 'id':player_id,
                 'nick_name':nick_name,
                 'wechat_nick_name':wechat_nick_name,
-                'user_name':user_name
+                'user_name':user_name,
+                'wid': request.session['wid'],
              }
     bot_info = wechatDeal.bot_wechat_bind(params)
 
@@ -82,11 +76,25 @@ def check_sys_login(f):
     wraps(f)
 
     def inner(request, *arg, **kwargs):
-        if not request.session.get('login') or request.session.get('login') == False:
+        if not request.session.get('login'):
             return HttpResponseRedirect('/login')
         else:
             return f(request, *arg, **kwargs)
     return inner
+
+@check_sys_login
+def check_wx_login(request):
+    params = get_bot_param(request)
+    bot_info = wechatDeal.bot_check_login(params)
+    # logger.info(bot_info)
+    return HttpResponse(json.dumps(bot_info), content_type="application/json")
+
+@check_sys_login
+def refresh_uuid(request):
+    params = get_bot_param(request)
+    bot_info = wechatDeal.bot_refresh_uuid(params)
+    # logger.info(bot_info)
+    return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
 
 @check_sys_login
 def index(request):
@@ -113,6 +121,7 @@ def login(request):
 def logout(request):
     del request.session['login']
     del request.session['club']
+    del request.session['wid']
     return HttpResponseRedirect('/login')
 
 def registerPage(request):
@@ -187,6 +196,13 @@ def login_password(request):
             else:
                 request.session['login'] = True
                 request.session['club'] = username
+
+                if request.META.get('HTTP_X_FORWARDED_FOR'):
+                    ip = request.META['HTTP_X_FORWARDED_FOR']
+                else:
+                    ip = request.META['REMOTE_ADDR']
+
+                request.session['wid'] = "%s__,__%s" % (username, ip)
                 #登录成功之后，渲染页面
                 return HttpResponseRedirect('/')
         except Clubs.DoesNotExist:
@@ -273,7 +289,7 @@ def room_data(request):
         total_round += room.round_number
         # total_profit += room.score - room.cost
         pd = json.loads(room.player_data)
-        print(pd[0])
+        logger.info(pd[0])
         room.score = int(pd[0]['score'])
 
     if orderby == 'cost':  
@@ -462,7 +478,8 @@ def add_manager(request):
         'name': request.session['club'],
         'nick_name': nick_name,
         'wechat_nick_name': wechat_nick_name,
-        'user_name': user_name
+        'user_name': user_name,
+        'wid': request.session['wid'],
     }
     bot_info = wechatDeal.bot_wechat_bind_manager(params)
 
@@ -603,6 +620,7 @@ def add_score(request):
         'name':club.user_name,
         'player_id':player_id,
         'msg':msg,
+        'wid': request.session['wid'],
     }
     if notice:
         wechatDeal.bot_notice(params)
@@ -642,6 +660,7 @@ def minus_score(request):
         'name': club.user_name,
         'player_id': player_id,
         'msg': msg,
+        'wid': request.session['wid'],
     }
     if notice:
         wechatDeal.bot_notice(params)
@@ -1006,7 +1025,7 @@ def update_cost_mode(request):
     elif mode == 1:
         list1_ = param2.split('*')
         list2_ = param3.split('*')
-        print(str(len(list1_)) +'----' + str(len(list2_)))
+        logger.info(str(len(list1_)) +'----' + str(len(list2_)))
 
         if len(list1_) != len(list2_):
             return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
@@ -1014,8 +1033,8 @@ def update_cost_mode(request):
         for index, p in enumerate(list1_):
             range_ = p.split('_')
             cost_ = list2_[index].split('_')
-            print(str(len(range_)) +'----' + str(len(cost_)))
-            print(list2_[index])
+            logger.info(str(len(range_)) +'----' + str(len(cost_)))
+            logger.info(list2_[index])
             if len(range_) != len(cost_):
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
     elif mode == 2:
@@ -1023,7 +1042,7 @@ def update_cost_mode(request):
         for index, x in enumerate(list1_):
             x = x.strip()
             list1_[index] = x
-            print('x-'+str(x))
+            logger.info('x-'+str(x))
             if not x.isdigit():
                 return HttpResponse(json.dumps({'result': 1}), content_type="application/json")
         param1 = '_'.join(list1_)

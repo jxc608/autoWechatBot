@@ -7,16 +7,17 @@ import time
 import _thread
 
 def bot_check_login(params):
-    club_name = params["name"]
-    bot = wechatManager.wechatInstance.new_instance(club_name)
+    wid = params["wid"]
+    bot = wechatManager.wechatInstance.new_instance(wid)
+
     wx_login, desc = bot.get_login_status()
     return {'login': wx_login, 'desc': desc, 'uuid': bot.get_uuid()}
 
 def bot_refresh_uuid(params):
     result = {}
 
-    club_name = params["name"]
-    bot = wechatManager.wechatInstance.new_instance(club_name)
+    wid = params["wid"]
+    bot = wechatManager.wechatInstance.new_instance(wid)
     wx_login, desc = bot.get_login_status()
     if not wx_login == '200':
         bot.refresh_uuid()
@@ -34,8 +35,8 @@ def bot_notice(params):
         player_id = int(params["player_id"])
 
         club = Clubs.objects.get(user_name=club_name)
-
-        bot = wechatManager.wechatInstance.new_instance(club.user_name)
+        wid = params['wid']
+        bot = wechatManager.wechatInstance.new_instance(wid)
         wx_login, desc = bot.get_login_status()
         if wx_login != '200':
             return json.dumps({'result': 2})
@@ -56,9 +57,9 @@ def bot_notice(params):
 
 def bot_logout(params):
     try:
-        club_name = params["name"]
+        wid = params["wid"]
 
-        bot = wechatManager.wechatInstance.new_instance(club_name)
+        bot = wechatManager.wechatInstance.new_instance(wid)
         bot.logout()
         return {'result': True}
     except:
@@ -74,11 +75,11 @@ def bot_wechat_bind(params):
         wechat_nick_name = params['wechat_nick_name']
 
         club = Clubs.objects.get(user_name=club_name)
-
-        bot = wechatManager.wechatInstance.new_instance(club.user_name)
+        wid = params['wid']
+        bot = wechatManager.wechatInstance.new_instance(wid)
         wx_login, desc = bot.get_login_status()
         if wx_login != '200':
-            return {'result': 2}
+            return {'result': 2, 'msg': desc}
 
         code, msg = bot.set_alias(user_name, remark_name)
         if code == 0:
@@ -104,8 +105,8 @@ def bot_wechat_bind_manager(params):
         wechat_nick_name = params['wechat_nick_name']
 
         club = Clubs.objects.get(user_name=club_name)
-
-        bot = wechatManager.wechatInstance.new_instance(club.user_name)
+        wid = params['wid']
+        bot = wechatManager.wechatInstance.new_instance(wid)
         wx_login, desc = bot.get_login_status()
         if wx_login != '200':
             return {'result': 2}
@@ -123,12 +124,11 @@ def bot_wechat_bind_manager(params):
 
 def bot_wechat_friends(params):
     try:
-        club_name = params["name"]
+        wid = params["wid"]
         nick_name = params['nick_name']
         # wechat_nick_name = params['wechat_nick_name']
-        club = Clubs.objects.get(user_name=club_name)
 
-        bot = wechatManager.wechatInstance.new_instance(club.user_name)
+        bot = wechatManager.wechatInstance.new_instance(wid)
         wx_login, desc = bot.get_login_status()
         if wx_login != '200':
             return {'result': 2}

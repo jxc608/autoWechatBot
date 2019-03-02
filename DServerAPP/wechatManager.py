@@ -12,6 +12,10 @@ from .utils import *
 import _thread
 import base64
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # 整数或浮点数皆可
 def own_round(foiVal):
     return int(foiVal + 0.5)
@@ -36,30 +40,27 @@ options = {
     'language_type': 'CHN_ENG',
 }
 
-def output_info(msg):
-    print('[INFO] %s' % msg)
-
 def addClubOrcCount(club):
     if club == None:
-        print("增加统计次数，俱乐部为空")
+        logger.error("增加统计次数，俱乐部为空")
         return
     curDate = datetime.datetime.now().date()
     try:
         ct = ClubOrcCount.objects.get(club=club, use_date=curDate)
     except ClubOrcCount.DoesNotExist:
-        print("新建统计记录__%s__%s" % (club.user_name, curDate))
+        logger.info("新建统计记录__%s__%s" % (club.user_name, curDate))
         ct = ClubOrcCount(club=club, use_date=curDate)
         ct.save()
     except:
-        print("更新统计次数失败，错误未知")
-        traceback.print_exc()
+        logger.error("更新统计次数失败，错误未知")
+        traceback.logger.info_exc()
         return
     ct.count = F("count") + 1
     ct.save()
 
 
 def get_aliyun_pic_info(content):
-    print(content["sid"])
+    logger.info(content["sid"])
     infoDic = {}
     keyAry = [
         {"word": "房号", "key": "room_id"},
@@ -124,7 +125,7 @@ def get_aliyun_pic_info(content):
     room_data.roundCounter = infoDic["round_number"]
     total = 0
     for player in data_list:
-        print("内容:\n%s" % player)
+        logger.info("内容:\n%s" % player)
         if not "id" in player:
             continue
 
@@ -152,12 +153,14 @@ _list = {}
 
 class wechatInstance():
 
-    def __init__(self, clubName):
+    def __init__(self, wid):
         # self.qrid = itchat.get_QRuuid()
         self.login_status = '0'
         self.itchat_instance = itchat.new_instance()
         self.uuid = ""
-        self.club_name = clubName
+        self.wid = wid
+
+        self.club_name = wid.split("__,__")[0]
         self.club = None
 
         '''
@@ -171,21 +174,21 @@ class wechatInstance():
             try:
                 self.club = Clubs.objects.get(user_name=self.club_name)
             except:
-                print("club未找到：" % clubName)
-                self.send('俱乐部未找到： %s' % self.club_name, 'filehelper')
+                logger.error("club未找到：" % wid)
+                self.send('俱乐部未找到： %s' % self.wid, 'filehelper')
                 return
             if self.club.expired_time < time.time():
-                self.send('俱乐部已过期： %s， 请与管理员确认' % self.club_name, 'filehelper')
+                self.send('俱乐部已过期： %s， 请与管理员确认' % self.wid, 'filehelper')
                 return
 
-            beginStr = "俱乐部：%s，开始识别..." %  self.club.user_name
-            output_info(beginStr)
+            beginStr = "俱乐部：%s，开始识别..." %  self.wid
+            logger.info(beginStr)
             self.send("正在识别...", 'filehelper')
 
             club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
-            # print(msg)
+            # logger.info(msg)
             img_file = club_path + msg.get('fileName', msg.get('FileName', int(time.time())))
             msg.download(img_file)
             typeSymbol = {PICTURE: 'img',}.get(msg.type, 'fil')
@@ -203,7 +206,7 @@ class wechatInstance():
                 wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
                 self.itchat_instance.send(erro_msg, 'filehelper')
-                print(erro_msg)
+                logger.error(erro_msg)
                 return
 
             existCount = HistoryGame.objects.filter(club=self.club, room_id=room_data.roomId, start_time=room_data.startTime).count()
@@ -292,9 +295,9 @@ class wechatInstance():
                         #授信检测
                         self.scoreLimit(player, wechat_uuid)
                 except:
-                    traceback.print_exc()
+                    traceback.logger.info_exc()
                     errmsg = "发生异常：\n姓名: %s\nid: %s\n分数: %s" % (roomPlayData.name, roomPlayData.id, roomPlayData.score)
-                    print(errmsg)
+                    logger.error(errmsg)
                     self.itchat_instance.send(errmsg, 'filehelper')
                     continue
             historyGame.save()
@@ -417,19 +420,22 @@ class wechatInstance():
         return result
 
     @classmethod
-    def new_instance(self, club):
-        if not _list.get(club):
-            _list[club] = wechatInstance(club)
-        return _list[club]
+    def new_instance(self, wid):
+        if not _list.get(wid):
+            _list[wid] = wechatInstance(wid)
+        return _list[wid]
 
     def check_alive(self):
         return self.itchat_instance.alive
 
     def get_login_status(self):
-        if self.check_alive():
-            self.login_status = '200'
+        # status = self.itchat_instance.check_login(self.uuid)
+        # if self.check_alive():
+        #     self.login_status = '200'
         desc = ""
         status = self.login_status
+        if status == '0':
+            desc = "获取"
         if status == '408':
             desc = "二维码已失效，请刷新后重试"
         elif status == '488':
@@ -449,25 +455,25 @@ class wechatInstance():
     def check_login(self):
         success = False
         while 1:
-            output_info("login uuid: %s" % self.uuid)
             status = self.itchat_instance.check_login(self.uuid)
             self.login_status = status
+            logger.info("Login: wid: %s, uuid: %s, status: %s" % (self.wid, self.uuid, self.login_status))
             if status == '200':
                 success = True
                 break
             elif status == '201':
                 # 等待确认
                 time.sleep(1)
-                output_info("wait for confirm: wechat login")
+                logger.info("wait for confirm: wechat login")
             elif status == '408':
                 # 二维码失效
-                output_info('Please Reloading QR Code')
+                logger.info('Please Reloading QR Code')
                 break
         if success:
             try:
                 self.club = Clubs.objects.get(user_name=self.club_name)
             except:
-                print("club未找到：" % self.club_name)
+                logger.error("club未找到：" % self.wid)
                 self.logout()
                 return
             # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
@@ -480,11 +486,13 @@ class wechatInstance():
                 self.itchat_instance.get_contact(update=True)
                 self.itchat_instance.start_receiving()
                 _thread.start_new_thread(self.itchat_instance.run, ())
-                output_info('Login successfully as %s' % userInfo['User']['NickName'])
+                logger.info('Login successfully as %s' % userInfo['User']['NickName'])
 
     def logout(self):
         self.login_status = '488'
-        output_info("用户退出登录: %s" % self.club_name)
+        logger.info("用户退出登录: %s" % self.wid)
+        if _list.get(self.wid, None):
+            del _list[self.wid]
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):
