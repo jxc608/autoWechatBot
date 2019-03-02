@@ -463,12 +463,13 @@ class wechatInstance():
                 break
             elif status == '201':
                 # 等待确认
-                time.sleep(1)
                 logger.info("wait for confirm: wechat login")
             elif status == '408':
                 # 二维码失效
                 logger.info('Please Reloading QR Code')
                 break
+            time.sleep(1)
+            
         if success:
             try:
                 self.club = Clubs.objects.get(user_name=self.club_name)
