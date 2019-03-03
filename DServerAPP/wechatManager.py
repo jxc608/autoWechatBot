@@ -491,6 +491,7 @@ class wechatInstance():
             # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
             if self.club.expired_time < time.time():
                 self.send('CD KEY 已失效。 请延长后继续使用。微信自动退出。', 'filehelper')
+                logger.error("wid: %s, CD KEY 已失效: %s" % (self.wid, time.strftime("%Y-%m-%d %H:%M:%S", self.club.expired_time)))
                 self.logout()
             else:
                 userInfo = self.itchat_instance.web_init()
