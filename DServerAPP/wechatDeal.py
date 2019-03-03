@@ -47,7 +47,11 @@ def bot_refresh_uuid(params):
     wx_login, desc = bot.get_login_status()
     if not wx_login == '200':
         if _list.get(wid, None):
-            stop_thread(_list[wid])
+            try:
+                stop_thread(_list[wid])
+            except:
+                pass
+
             bot = wechatManager.wechatInstance.new_instance(wid)
             logger.info("recreate bot: %s" % wid)
 
