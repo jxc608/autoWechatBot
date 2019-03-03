@@ -288,7 +288,7 @@ class wechatInstance():
                     if not cost:
                         cost = 0
                     # pic_msg += "%s.-------------------------\n昵称：%s  ID：%s\n分数：%s  总分数：%s\n%s" % (num + 1, player.nick_name, roomPlayData.id, roomPlayData.score, player.current_score, costShow1)
-                    pic_msg += "%s.-------------------------\n昵称: %s\nID: %s\n上次积分: %s 本局积分: %s\n当前余分: %s 管理费: %s\n" % (num + 1, player.nick_name, roomPlayData.id, last_current_score, roomPlayData.score, player.current_score, cost)
+                    pic_msg += "%s.-------------------------\n昵称: %s\nID: %s\n上次积分: %s 本局积分: %s\n管理费: %s 当前余分: %s\n" % (num + 1, player.nick_name, roomPlayData.id, last_current_score, roomPlayData.score, cost, player.current_score)
                     # pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
                     if wechat_uuid != None:
                         self.itchat_instance.send_image(img_file, wechat_uuid)
