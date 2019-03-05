@@ -119,9 +119,12 @@ def login(request):
     return render(request, 'DServerAPP/login.html')
 
 def logout(request):
-    del request.session['login']
-    del request.session['club']
-    del request.session['wid']
+    try:
+        del request.session['login']
+        del request.session['club']
+        del request.session['wid']
+    except:
+        pass
     return HttpResponseRedirect('/login')
 
 def registerPage(request):
@@ -759,18 +762,18 @@ def getDayGroup(club, date, captainName):
         allCost = 0
         for player in players:
             sc = Score.objects.filter(player=player)
-            scc = ScoreChange.objects.filter(player=player)
+            # scc = ScoreChange.objects.filter(player=player)
             if date:
                 sc = sc.filter(create_time__startswith=date)
-                scc = scc.filter(create_time__startswith=date)
+                # scc = scc.filter(create_time__startswith=date)
             cost = sc.aggregate(Sum('cost'))['cost__sum']
             cost = 0 if not cost else cost
             round = sc.count()
             sc = sc.aggregate(Sum('score'))['score__sum']
             sc = 0 if not sc else sc
-            scc = scc.aggregate(Sum('score'))['score__sum']
-            scc = 0 if not scc else scc
-            score = sc + scc
+            # scc = scc.aggregate(Sum('score'))['score__sum']
+            # scc = 0 if not scc else scc
+            score = sc# + scc
             allScore += score
             allCost += cost
             allRound += round

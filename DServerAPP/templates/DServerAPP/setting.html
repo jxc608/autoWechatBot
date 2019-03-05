@@ -114,7 +114,7 @@
                         </li>
                         <li class="list-group-item">
                             <form class="form-inline">
-                              <div class="form-group">
+                              <div class="form-group hidden">
                                 <label for="wechat_nick_name">微信昵称:</label>
                                 <input type="email" class="form-control" id="wechat_nick_name" placeholder="请输入微信昵称" value="">
                               </div>
@@ -311,10 +311,12 @@
 
         function wechat_friends(){
             var player_id = 0;
+            /*
             if($('#wechat_nick_name').val()==''){
                 alert("请输入微信昵称。");
                 return;
             }
+            */
             if($('#nick_name').val()==''){
                 alert("请输入备注昵称。");
                 return;
@@ -326,7 +328,7 @@
             $.post("/wechat_friends",{
                 id:player_id,
                 nick_name:$('#nick_name').val(),
-                wechat_nick_name:$('#wechat_nick_name').val(),
+                //wechat_nick_name:$('#wechat_nick_name').val(),
                 //profit:$('#profit_'+player_id).val(),
             },function(data){
                 if(data.result == 0){

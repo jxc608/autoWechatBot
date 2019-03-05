@@ -211,6 +211,7 @@ class wechatInstance():
 
             existCount = HistoryGame.objects.filter(club=self.club, room_id=room_data.roomId, start_time=room_data.startTime).count()
             if existCount > 0:
+                logger.error("数据已入库: %s, room_id: %s, start_time: %s" % (self.wid, room_data.roomId, room_data.startTime))
                 self.itchat_instance.send('数据已入库！', 'filehelper')
                 return
 
@@ -295,10 +296,10 @@ class wechatInstance():
                         alert_msg = '%s\n上次积分: %s\n本局积分: %s\n%s\n当前余分: %s\n' % (player.nick_name, last_current_score, roomPlayData.score, costShow2, player.current_score)
                         self.itchat_instance.send(alert_msg, wechat_uuid)
 
-                        #授信检测
-                        self.scoreLimit(player, wechat_uuid)
+                    #授信检测
+                    self.scoreLimit(player, wechat_uuid)
                 except:
-                    traceback.logger.info_exc()
+                    # traceback.logger.info_exc()
                     errmsg = "发生异常：\n姓名: %s\nid: %s\n分数: %s" % (roomPlayData.name, roomPlayData.id, roomPlayData.score)
                     logger.error(errmsg)
                     self.itchat_instance.send(errmsg, 'filehelper')
@@ -338,13 +339,15 @@ class wechatInstance():
         return player
 
     def scoreLimit(self, player, wechat_uuid):
-        if player.score_limit != 0 and player.is_bind and player.current_score <= -player.score_limit:
+        if player.score_limit != 0 and player.current_score <= -player.score_limit:
             alert_msg = player.nick_name + '\n'
             alert_msg += '上分提醒\n'
             alert_msg += '当前余分: %s\n' % player.current_score
             alert_msg += player.score_limit_desc + '\n'
             alert_msg += '本条消息来自傻瓜机器人自动回复\n'
-            self.itchat_instance.send(alert_msg, wechat_uuid)
+
+            if player.is_bind and wechat_uuid:
+                self.itchat_instance.send(alert_msg, wechat_uuid)
 
             # 管理员
             manager_wechat_uuids = []
