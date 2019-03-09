@@ -383,6 +383,7 @@ def player_data(request):
     else:
         players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
+    players = players[:50]
     for player in players:
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
@@ -702,6 +703,7 @@ def score_change(request):
         gamePlayers = GameID.objects.filter(gameid=gameid_search, club=club).values("player").distinct()
         players = players.filter(id__in=gamePlayers)
 
+    players = players[:50]
     for player in players:
         player.gameids = GameID.objects.filter(player_id=player.id)
         player.gameids_count = len(player.gameids)

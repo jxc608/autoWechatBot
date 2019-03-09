@@ -100,11 +100,10 @@ DATABASES = {
 }
 
 # session 设置
-# SESSION_ENGINE =  'django.contrib.sessions.backends.db'
-# SESSION_COOKIE_AGE = 60 * 60 * 5 # 30分钟
-# # SESSION_COOKIE_AGE = 20 # 测试 20秒
-# SESSION_SAVE_EVERY_REQUEST = True
-# SESSION_EXPIRE_AT_BROWSER_CLOSE = True # 关闭浏览器，则COOKIE失效
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # 引擎（默认）
+SESSION_COOKIE_AGE = 1209600  # Session的cookie失效日期（2周）（默认）
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 是否关闭浏览器使得Session过期（默认）
+SESSION_SAVE_EVERY_REQUEST = True  # 是否每次请求都保存Session，默认修改之后才保存（默认）
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
