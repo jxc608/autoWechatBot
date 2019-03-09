@@ -52,7 +52,7 @@
                               </div>
                               <div class="form-group">
                                 <label for="num">个数</label>
-                                <input type="email" class="form-control" id="num" placeholder="10" value="10">
+                                <input type="email" class="form-control" id="num" placeholder="10" value="1">
                               </div>
                               <div class="form-group">
                                 <button type="button" class="btn btn-primary" onclick="create_cdkey()">生成</button>
@@ -108,7 +108,7 @@
 		</div>
 	</div>
     <script>
-    
+
         {% if club.expired == False and wx_login != '200' %}
 
         var qrcode = new QRCode('qrcode', {
@@ -164,6 +164,10 @@
             $.post("/create_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
                 if(data.result == true){
                      alert("生成成功！");
+                     var keys = '';
+                    for(var i=0;i<data.content.length;i++)
+                        keys += data.content[i]+'<br/>';
+                    $('#keys').html(keys);
                 }
             },"json");
         }

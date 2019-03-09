@@ -19,11 +19,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def timestamp2string(timeStamp): 
-  try: 
+def timestamp2string(timeStamp):
+  try:
     timeArray = time.localtime(timeStamp)
     return time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
-  except Exception as e: 
+  except Exception as e:
     logger.error(e)
     return ''
 
@@ -210,8 +210,8 @@ def login_password(request):
                 return HttpResponseRedirect('/')
         except Clubs.DoesNotExist:
             return render(request, 'DServerAPP/login.html', {"pwd": 1, "pwct": "账号不存在"})
-    
-   
+
+
 # def login_smscode(request):
 #     username=request.POST.get('username','')
 #     smscode=request.POST.get('smscode','')
@@ -239,7 +239,7 @@ def add_time(request):
         if clubInstance.expired_time < time.time():
             clubInstance.expired_time = time.time() + time_add
         else:
-            clubInstance.expired_time += time_add 
+            clubInstance.expired_time += time_add
         clubInstance.save()
         keyInstance.status = 1
         keyInstance.use_time = datetime.datetime.now()
@@ -255,6 +255,7 @@ def create_cdkey(request):
 
     key_type = int(request.POST.get('key_type'))
     num = int(request.POST.get('num'))
+    content = []
     for x in range(0, num):
         key = Cdkey()
         key.cdkey = str(uuid.uuid1())[:8]
@@ -262,7 +263,8 @@ def create_cdkey(request):
         key.status = 0
         key.create_time = int(time.time())
         key.save()
-    return HttpResponse(json.dumps({'result': True}), content_type="application/json")
+        content.append(key.cdkey)
+    return HttpResponse(json.dumps({'result': True, 'content': content}), content_type="application/json")
 
 def get_cdkey(request):
     key_type = int(request.POST.get('key_type'))
@@ -295,11 +297,11 @@ def room_data(request):
         logger.info(pd[0])
         room.score = int(pd[0]['score'])
 
-    if orderby == 'cost':  
-        rooms = sorted(rooms, key=lambda rooms : rooms.cost, reverse=True) 
-    elif orderby == 'score':  
-        rooms = sorted(rooms, key=lambda rooms : rooms.score, reverse=True) 
-    elif orderby == 'round':  
+    if orderby == 'cost':
+        rooms = sorted(rooms, key=lambda rooms : rooms.cost, reverse=True)
+    elif orderby == 'score':
+        rooms = sorted(rooms, key=lambda rooms : rooms.score, reverse=True)
+    elif orderby == 'round':
         rooms = sorted(rooms, key=lambda rooms : rooms.round_number, reverse=True)
     total = len(rooms)
 
@@ -349,18 +351,18 @@ def player_room_data(request):
             player.total_cost = 0
         player.total_score = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('score'))['score__sum']
         if player.total_score == None:
-            player.total_score = 0    
+            player.total_score = 0
         player.total_host = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
         if player.total_host == None:
             player.total_host = 0
         list_.append(player)
-    if orderby == 'round':  
-        list_ = sorted(list_, key=lambda list_ : list_.total_round, reverse=True) 
-    elif orderby == 'host':  
+    if orderby == 'round':
+        list_ = sorted(list_, key=lambda list_ : list_.total_round, reverse=True)
+    elif orderby == 'host':
         list_ = sorted(list_, key=lambda list_ : list_.total_host, reverse=True)
-    elif orderby == 'score':  
+    elif orderby == 'score':
         list_ = sorted(list_, key=lambda list_ : list_.total_score, reverse=True)
-    elif orderby == 'cost':  
+    elif orderby == 'cost':
         list_ = sorted(list_, key=lambda list_ : list_.total_cost, reverse=True)
     return render(request, 'DServerAPP/player_room_data.html', {'players':list_,'day':day})
 
@@ -374,7 +376,7 @@ def player_data(request):
         if gameids.count() == 0:
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
     if gameid_search:
-        for gameid in gameids:        
+        for gameid in gameids:
             players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
             if players:
                 break
@@ -402,7 +404,7 @@ def player_stat(request):
         if search_gameids.count() == 0:
             return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
     if gameid_search:
-        for gameid in search_gameids:        
+        for gameid in search_gameids:
             players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
             if players_cost:
                 break
@@ -416,7 +418,7 @@ def player_stat(request):
         player.gameids = gameids
 
     if gameid_search:
-        for gameid in search_gameids:        
+        for gameid in search_gameids:
             players_profit = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_profit')
             if players_profit:
                 break
@@ -709,9 +711,9 @@ def score_change(request):
         player.gameids_count = len(player.gameids)
         player.total_round = Score.objects.filter(player_id=player.id).count()
     if orderby == 'round':
-        players = sorted(players, key=lambda players : players.total_round, reverse=True) 
+        players = sorted(players, key=lambda players : players.total_round, reverse=True)
     else:
-        players = sorted(players, key=lambda players : players.current_score, reverse=True) 
+        players = sorted(players, key=lambda players : players.current_score, reverse=True)
 
     total = len(players)
     return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
@@ -1011,9 +1013,9 @@ def update_cost_mode(request):
     if param1:
         param1 = param1.strip()
     if param2:
-        param2 = param2.strip()       
+        param2 = param2.strip()
     if param3:
-        param3 = param3.strip()  
+        param3 = param3.strip()
 
     if mode == 0:
         if not is_number(param1) or not is_number(param3):
@@ -1173,9 +1175,9 @@ def stat_xls(request):
 def stat_xls_style(bg_color, name, height, color, bold=False):
     style = xlwt.XFStyle()  # 初始化样式
 
-    pattern = xlwt.Pattern()   # 创建一个模式     
-    pattern.pattern = xlwt.Pattern.SOLID_PATTERN # 设置其模式为实型  
-    pattern.pattern_fore_colour = bg_color  
+    pattern = xlwt.Pattern()   # 创建一个模式
+    pattern.pattern = xlwt.Pattern.SOLID_PATTERN # 设置其模式为实型
+    pattern.pattern_fore_colour = bg_color
 
     font = xlwt.Font()  # 为样式创建字体
     # 字体类型：比如宋体、仿宋也可以是汉仪瘦金书繁
