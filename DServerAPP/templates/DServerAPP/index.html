@@ -126,20 +126,22 @@
                 if(data.login == '200'){
                     clearInterval(timer);
                     window.location.reload()
-                } else if(data.login == '408' || data.login == '400' || data.login == '0') {
+                } else if(data.login == '408' || data.login == '400' || data.login == '-1') {
                     $("#scanDesc").html(data.desc);
                     clearInterval(timer);
                 }
             },"json");
         }
-        timer = setInterval("check_login()", 1000 * 3);
+        var timer = null;
         //刷新二维码
         function refresh_uuid(){
             $.get("/refresh_uuid",{},function(data){
                 if (data.uuid) {
                     /*
                     */
-                    clearInterval(timer);
+                    if(timer != null) {
+                        clearInterval(timer);
+                    }
                     //check_login();
                     qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
                     $("#scanDesc").html("");

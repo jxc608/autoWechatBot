@@ -37,7 +37,7 @@ def bot_check_login(params):
     try:
         result = wechat_request('/bot_check_login', params)
     except:
-        result = {'login': '0', 'desc': '请稍后再试'}
+        result = {'login': '-1', 'desc': '请稍后再试'}
     return result
 
 def bot_refresh_uuid(params):

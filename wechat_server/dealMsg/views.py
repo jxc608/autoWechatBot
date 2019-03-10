@@ -20,9 +20,7 @@ def bot_refresh_uuid(request):
     wid = request.GET.get('wid')
     result = {}
     bot = wechatManager.wechatInstance.new_instance(wid)
-    wx_login, desc = bot.check_login_status()
-    if not wx_login == '200':
-        bot.refresh_uuid()
+    bot.refresh_uuid()
 
     result["uuid"] = bot.get_uuid()
     return JsonResponse(result)

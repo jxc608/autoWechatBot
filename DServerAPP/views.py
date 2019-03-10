@@ -109,10 +109,12 @@ def index(request):
         timeArray = time.localtime(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
         params = get_bot_param(request)
-        try:
-            bot_info = wechatDeal.bot_check_login(params)
-        except:
-            bot_info = {"login": '0', "uuid": ""}
+        # 第一次不用设置二维码，页面统一刷新uuid来获取
+        bot_info = {"login": '0', "uuid": ""}
+        # try:
+        #     bot_info = wechatDeal.bot_check_login(params)
+        # except:
+        #     bot_info = {"login": '0', "uuid": ""}
 
     is_admin = False
     if club.user_name == '18811333964':

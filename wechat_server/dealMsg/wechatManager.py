@@ -429,35 +429,47 @@ class wechatInstance():
     def new_instance(wid):
         if not _list.get(wid):
             _list[wid] = wechatInstance(wid)
-            t = threading.Thread(target=_list[wid].check_login, args=())
-            t.start()
         return _list[wid]
 
     def get_uuid(self):
-        if self.uuid == "":
-            self.refresh_uuid()
         return self.uuid
 
     def refresh_uuid(self):
-        self.uuid = self.itchat_instance.get_QRuuid()
+        wx_login, desc = self.check_login_status()
+        if wx_login == '201':
+            # 等待确认中，检测线程仍在
+            self.login_status = '0'
+            self.uuid = self.itchat_instance.get_QRuuid()
+        elif wx_login != '200':
+            # 任何非等待状态，不是线程没有或已经结束
+            self.login_status = '0'
+            self.uuid = self.itchat_instance.get_QRuuid()
+            t = threading.Thread(target=_list[self.wid].check_login, args=())
+            t.start()
+
 
     def check_login(self):
         success = False
+        while self.uuid == "":
+            time.sleep(1)
+
         while 1:
             status = self.itchat_instance.check_login(self.uuid)
+            self.login_status = status
             if status == '200':
+                logger.info("uuid: %s, club：%s, uuid 登录成功" % (self.uuid, self.wid))
                 success = True
                 break
             elif status == '201':
                 self.login_status = '201'
             elif status == '408':
-                self.login_status = '408'
+                logger.error("uuid: %s, club：%s, uuid 已超时" % (self.uuid, self.wid))
                 break
             elif status == '400':
-                self.login_status = '400'
+                logger.error("uuid: %s, club：%s, 该环境暂时不能登录web微信" % (self.uuid, self.wid))
                 break
             time.sleep(1)
-
+        logger.info("11111111111")
         if success:
             try:
                 self.club = Clubs.objects.get(user_name=self.club_name)
@@ -472,13 +484,15 @@ class wechatInstance():
                     "wid: %s, CD KEY 已失效: %s" % (self.wid, time.strftime("%Y-%m-%d %H:%M:%S", self.club.expired_time)))
                 self.logout()
             else:
-                self.login_status = '200'
                 userInfo = self.itchat_instance.web_init()
                 self.itchat_instance.show_mobile_login()
                 self.itchat_instance.get_contact(update=True)
                 self.itchat_instance.start_receiving()
-                threading.Thread(target=self.itchat_instance.run, args=())
+                t = threading.Thread(target=self.itchat_instance.run, args=())
+                t.start()
                 logger.info('Login successfully as %s' % userInfo['User']['NickName'])
+        else:
+            logger.info("22222222222222")
 
     def check_login_status(self):
         status = self.login_status
@@ -489,7 +503,6 @@ class wechatInstance():
             desc = "二维码已失效，请刷新后重试"
         elif status == '400':
             desc = "该环境暂时不能登录web微信"
-            logger.error("uuid: %s, club：%s, 该环境暂时不能登录web微信" % (self.uuid, self.wid))
 
         return status, desc
 
