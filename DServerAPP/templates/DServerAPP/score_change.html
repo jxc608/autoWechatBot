@@ -24,6 +24,8 @@
     <title>用户数据</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
+    <script src="{% static "bootstrap-paginator.js" %}"></script>
+    <link href="{% static "bootstrap-paginator.css" %}" rel="stylesheet">
 </head>
 <body>
     <div class="container-fluid nospace">
@@ -67,14 +69,17 @@
                             </form>
                         </li>
                         <li class="list-group-item">
-                            <table class="table table-hover">
+
+                        </li>
+                    </ul>
+                      <table class="table table-hover">
                                 <thead>
                                 <tr>
-                                    <th>昵称</th>
-                                    <th>id</th>
-                                    <th><a href="javascript:void(0);" onclick="order_by('round')">局数↑</a></th>
-                                    <th><a href="javascript:void(0);" onclick="order_by('score')">分数↑</a></th>
-                                    <th>操作</th>
+                                    <th width="20%">昵称</th>
+                                    <th width="20%">id</th>
+                                    <th width="20%"><a href="javascript:void(0);" onclick="order_by('round')">局数↑</a></th>
+                                    <th width="20%"><a href="javascript:void(0);" onclick="order_by('score')">分数↑</a></th>
+                                    <th width="20%">操作</th>
                                    <!-- <th>历史总盈亏</th>-->
                                 </tr>
                                 </thead>
@@ -104,9 +109,9 @@
                                             <button type="button" class="btn btn-default" style="color: red;" onclick="del_player({{player.id}})">删除</button>
                                         </td>
                                         <td width="20%">
-                                            <button type="button" class="btn btn-default" style="color: green" onclick="add_score({{player.id}})">上分+</button>
+                                            <button type="button" class="btn btn-default" style="color: green;margin-bottom: 5px;" onclick="add_score({{player.id}})">上分+</button>
                                             <input type="number" class="form-control" id="score_{{player.id}}" value="">
-                                            <button type="button" class="btn btn-default" style="color: red" onclick="minus_score({{player.id}})">下分-</button>
+                                            <button type="button" class="btn btn-default" style="color: red;margin-top: -5px;" onclick="minus_score({{player.id}})">下分-</button>
                                         </td>
                                        <!-- <td>
                                             {{player.history_profit}}
@@ -115,8 +120,7 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
-                        </li>
-                    </ul>
+                  <div id="pagintor" style="margin-left: auto;margin-right: auto;display: block;"></div>
                   </div>
                   <div class="panel-footer text-right">
                     <a class="btn btn-link" href="/">返回</a>
@@ -180,8 +184,22 @@
         }
 
         function search(){
-            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
         }
+
+        var options = {
+            alignment:"center",//居中显示
+            currentPage: {{ pageIndex }},//当前页数
+            totalPages: {{ totalPage }},//总页数 注意不是总条数
+            pageUrl: function(type, page, current){
+                    if (page==current) {
+                        return "javascript:void(0)";
+                    } else {
+                        return "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+                    }
+                }
+        }
+        $("#pagintor").bootstrapPaginator(options);
 
         function order_by(order){
             window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&order="+order;

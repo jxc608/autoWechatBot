@@ -9,6 +9,8 @@
     <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
     <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="{% static "bootstrap-paginator.js" %}"></script>
+    <link href="{% static "bootstrap-paginator.css" %}" rel="stylesheet">
     <style>
         .top_panel {
             margin-top: 100px;
@@ -115,7 +117,9 @@
                             </form>
                         </li>
                     </ul>
+                    <div id="pagintor" style="margin-left: auto;margin-right: auto;display: block;"></div>
                   </div>
+
                   <div class="panel-footer text-right">
                     <a class="btn btn-link" href="/">返回</a>
                   </div>
@@ -152,8 +156,22 @@
 
     <script>
         function search(){
-            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
         }
+
+        var options = {
+            alignment:"center",//居中显示
+            currentPage: {{ pageIndex }},//当前页数
+            totalPages: {{ totalPage }},//总页数 注意不是总条数
+            pageUrl: function(type, page, current){
+                    if (page==current) {
+                        return "javascript:void(0)";
+                    } else {
+                        return "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+                    }
+                }
+        }
+        $("#pagintor").bootstrapPaginator(options);
 
         function wechat_friends(player_id){
             /*

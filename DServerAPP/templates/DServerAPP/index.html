@@ -126,7 +126,7 @@
                 if(data.login == '200'){
                     clearInterval(timer);
                     window.location.reload()
-                } else if(data.login == '408' || data.login == '488' || data.login == '400') {
+                } else if(data.login == '408' || data.login == '400' || data.login == '0') {
                     $("#scanDesc").html(data.desc);
                     clearInterval(timer);
                 }

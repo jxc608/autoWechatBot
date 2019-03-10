@@ -3,8 +3,6 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import *
 import uuid
-from django.utils import timezone
-from django.core import serializers
 from . import messageType
 from .utils import is_number
 import time,datetime,json
@@ -12,7 +10,7 @@ from django.db import connection
 from django.conf import settings
 from django.db.models import Sum
 import xlwt
-import io
+import io, math
 from . import wechatDeal
 from functools import wraps
 import logging
@@ -92,7 +90,10 @@ def check_wx_login(request):
 @check_sys_login
 def refresh_uuid(request):
     params = get_bot_param(request)
-    bot_info = wechatDeal.bot_refresh_uuid(params)
+    try:
+        bot_info = wechatDeal.bot_refresh_uuid(params)
+    except:
+        bot_info = {'uuid': ''}
     # logger.info(bot_info)
     return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
 
@@ -108,7 +109,10 @@ def index(request):
         timeArray = time.localtime(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
         params = get_bot_param(request)
-        bot_info = wechatDeal.bot_check_login(params)
+        try:
+            bot_info = wechatDeal.bot_check_login(params)
+        except:
+            bot_info = {"login": '0', "uuid": ""}
 
     is_admin = False
     if club.user_name == '18811333964':
@@ -370,6 +374,9 @@ def player_room_data(request):
 def player_data(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
+    pageSize = int(request.GET.get('pageSize', 50))
+    pageIndex = int(request.GET.get('pageIndex', 1))
+
     club = Clubs.objects.get(user_name=request.session['club'])
     if gameid_search:
         gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
@@ -385,13 +392,16 @@ def player_data(request):
     else:
         players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
-    players = players[:50]
+    total = players.count()
+    start = (pageIndex - 1) * pageSize
+    end = pageIndex * pageSize
+    totalPage = math.ceil(float(total) / pageSize)
+    players = players[start:end]
     for player in players:
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
 
-    total = len(players)
-    return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+    return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':players, 'total':total, 'totalPage': totalPage, 'pageSize': pageSize, 'pageIndex': pageIndex, 'nickname':nickname_search, 'gameid':gameid_search})
 
 @check_sys_login
 def player_stat(request):
@@ -695,6 +705,10 @@ def add_score_limit(request):
 def score_change(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
+
+    pageSize = int(request.GET.get('pageSize', 50))
+    pageIndex = int(request.GET.get('pageIndex', 1))
+
     orderby = request.GET.get('order', 'round')
     club = Clubs.objects.get(user_name=request.session['club'])
 
@@ -705,7 +719,11 @@ def score_change(request):
         gamePlayers = GameID.objects.filter(gameid=gameid_search, club=club).values("player").distinct()
         players = players.filter(id__in=gamePlayers)
 
-    players = players[:50]
+    total = players.count()
+    start = (pageIndex - 1) * pageSize
+    end = pageIndex * pageSize
+    totalPage = math.ceil(float(total) / pageSize)
+
     for player in players:
         player.gameids = GameID.objects.filter(player_id=player.id)
         player.gameids_count = len(player.gameids)
@@ -715,8 +733,9 @@ def score_change(request):
     else:
         players = sorted(players, key=lambda players : players.current_score, reverse=True)
 
-    total = len(players)
-    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+    players = players[start:end]
+
+    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'pageSize': pageSize, 'pageIndex': pageIndex, 'totalPage': totalPage, 'gameid':gameid_search})
 
 @check_sys_login
 def save_captain(request):
