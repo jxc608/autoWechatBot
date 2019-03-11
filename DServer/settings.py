@@ -96,7 +96,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'auto_accounting',
         'USER': 'root',
-        'PASSWORD': '12345',
+        'PASSWORD': '38211108',
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {'charset':'utf8mb4'},
@@ -238,7 +238,10 @@ CRONJOBS = [
 GRAPPELLI_ADMIN_TITLE = "机器人后台管理系统"
 
 #机器人进程
-# BOT_SERVERS = ['http://127.0.0.1:8081','http://127.0.0.1:8082']
-BOT_SERVERS = ['http://127.0.0.1:8081']
+if DEBUG:
+    BOT_SERVERS = ['http://127.0.0.1:8081']
+else:
+    BOT_SERVERS = ['http://127.0.0.1:8081','http://127.0.0.1:8082']
+
 BOT_RING = HashRing(BOT_SERVERS)
 BOT_KEY = 'We1kskbot2018'

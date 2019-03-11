@@ -3,14 +3,13 @@ import itchat
 from itchat.content import *
 import time, json, os, datetime, traceback, urllib, urllib.request, ssl
 from aip import AipOcr
-from .models import *
+from DServerAPP.models import *
 from . import playerResult
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import F
-from .utils import *
 import threading
-import base64
+import base64, re
 
 import logging
 
@@ -20,15 +19,15 @@ logger = logging.getLogger(__name__)
 def own_round(foiVal):
     return int(foiVal + 0.5)
 
-# 定义常量  
+# 定义常量
 APP_ID = '11756002'
 API_KEY = 'FK5TYgAMCPengGGfqbI5GqGz'
 SECRET_KEY = 'tGoNHGV0ZuhEVFob1EubxgghoT9B9FPz'
 
 # 初始化文字识别分类器
 aipOcr=AipOcr(APP_ID, API_KEY, SECRET_KEY)
-    
-# 读取图片  
+
+# 读取图片
 def get_file_content(filePath):
     with open(filePath, 'rb') as fp:
         return fp.read()
@@ -305,12 +304,12 @@ class wechatInstance():
                     self.itchat_instance.send(errmsg, 'filehelper')
                     continue
             historyGame.save()
-          
+
             self.club.profit = F("profit") + clubProfit
             self.club.save(update_fields=["profit"])
             pic_msg+= '-----------------------------\n'
             # pic_msg+= '获得管理费：%s' % clubProfit
-            self.itchat_instance.send(pic_msg, 'filehelper') 
+            self.itchat_instance.send(pic_msg, 'filehelper')
             return '@%s@%s' % (typeSymbol, msg.fileName)
 
     def scanError(self, room_data):

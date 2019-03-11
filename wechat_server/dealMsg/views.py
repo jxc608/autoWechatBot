@@ -1,7 +1,7 @@
 #coding=utf-8
 from . import wechatManager
 import traceback
-from .models import Clubs, Manager, Player
+from DServerAPP.models import Clubs, Manager, Player
 from django.http import JsonResponse
 
 import time

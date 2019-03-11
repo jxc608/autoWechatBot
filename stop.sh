@@ -1,3 +1,3 @@
 uwsgi --stop uwsgi.pid
-#uwsgi --stop uwsgi8081.pid
-#uwsgi --stop uwsgi8082.pid
+uwsgi --stop wechat_server/uwsgi8081.pid
+uwsgi --stop wechat_server/uwsgi8082.pid
