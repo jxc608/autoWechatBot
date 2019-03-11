@@ -156,7 +156,7 @@
 
     <script>
         function search(){
-            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+            window.location.href = "/player_data?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex={{ pageIndex }}";
         }
 
         var options = {

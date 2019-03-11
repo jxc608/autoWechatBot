@@ -195,7 +195,7 @@
                     if (page==current) {
                         return "javascript:void(0)";
                     } else {
-                        return "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+                        return "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex={{ pageIndex }}";
                     }
                 }
         }
