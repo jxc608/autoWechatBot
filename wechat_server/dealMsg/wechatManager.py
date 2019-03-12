@@ -242,7 +242,7 @@ class wechatInstance():
             if self.club.msg_type == 0:
                 pic_msg = "房间ID：%s  房主ID：%s\n房主：%s  局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHosterId, room_data.roomHoster,room_data.roundCounter, room_data.startTime)
             else:
-                pic_msg = "房主ID: %s\n房主: %s\n" % (room_data.roomHosterId, room_data.roomHoster)
+                pic_msg = "房间ID：%s  房主ID：%s\n房主：%s  局数：%s\n" % (room_data.roomId, room_data.roomHosterId, room_data.roomHoster,room_data.roundCounter)
 
             rules = []
             if self.club.cost_param != None and self.club.cost_param != 'none' and self.club.cost_param != '':
