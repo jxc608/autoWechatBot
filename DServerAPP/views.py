@@ -90,12 +90,9 @@ def check_wx_login(request):
 @check_sys_login
 def refresh_uuid(request):
     params = get_bot_param(request)
-    try:
-        bot_info = wechatDeal.bot_refresh_uuid(params)
-    except:
-        bot_info = {'uuid': ''}
+    bot_info = wechatDeal.bot_refresh_uuid(params)
     # logger.info(bot_info)
-    return HttpResponse(json.dumps({'uuid': bot_info['uuid']}), content_type="application/json")
+    return HttpResponse(json.dumps({'uuid': bot_info['uuid'], 'desc': bot_info['desc']}), content_type="application/json")
 
 @check_sys_login
 def index(request):
@@ -109,12 +106,11 @@ def index(request):
         timeArray = time.localtime(club.expired_time)
         club.expired_time_desc = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
         params = get_bot_param(request)
-        # 第一次不用设置二维码，页面统一刷新uuid来获取
-        bot_info = {"login": '0', "uuid": ""}
-        # try:
-        #     bot_info = wechatDeal.bot_check_login(params)
-        # except:
-        #     bot_info = {"login": '0', "uuid": ""}
+        # 第一次不用设置二维码，页面统一刷新uuid来获取，但是需要登录检测状态
+        try:
+            bot_info = wechatDeal.bot_check_login(params)
+        except:
+            bot_info = {"login": '0', "uuid": ""}
 
     is_admin = False
     if club.user_name == '18811333964':
@@ -409,6 +405,9 @@ def player_data(request):
 def player_stat(request):
     nickname_search = request.GET.get('nickname','')
     gameid_search = request.GET.get('gameid', '')
+    pageSize = int(request.GET.get('pageSize', 50))
+    pageIndex = int(request.GET.get('pageIndex', 1))
+
     club = Clubs.objects.get(user_name=request.session['club'])
 
     if gameid_search:
@@ -444,6 +443,7 @@ def player_stat(request):
         player.gameids = gameids
     total = len(players_profit)
 
+
     list_ = []
     for index, player in enumerate(players_cost):
         list_.append(
@@ -452,7 +452,14 @@ def player_stat(request):
                 'profit':players_profit[index]
             }
         )
-    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'nickname':nickname_search, 'gameid':gameid_search})
+
+    start = (pageIndex - 1) * pageSize
+    end = pageIndex * pageSize
+    totalPage = math.ceil(float(total) / pageSize)
+
+    list_ = list_[start:end]
+
+    return render(request, 'DServerAPP/player_stat.html', {'club':club, 'list':list_, 'total':total, 'totalPage': totalPage, 'pageSize': pageSize, 'pageIndex': pageIndex, 'nickname':nickname_search, 'gameid':gameid_search})
 
 def clear_player_stat(request):
     second_password = request.POST.get("second_password", '')

@@ -37,24 +37,42 @@ def bot_check_login(params):
     try:
         result = wechat_request('/bot_check_login', params)
     except:
-        result = {'login': '-1', 'desc': '请稍后再试'}
+        result = {'login': '-1', 'desc': '请联系管理员，启动微信服务'}
+        logger.error("wechat server is not running")
     return result
 
 def bot_refresh_uuid(params):
-    result = wechat_request('/bot_refresh_uuid', params)
+    try:
+        result = wechat_request('/bot_refresh_uuid', params)
+        result['desc'] = ''
+    except:
+        result = {'uuid': '', 'desc': '请联系管理员，启动微信服务'}
+        logger.error("wechat server is not running")
     return result
 
 def bot_notice(params):
-    result = wechat_request('/bot_notice', params)
+    try:
+        result = wechat_request('/bot_notice', params)
+    except:
+        result = {'result': 3, 'msg': '请联系管理员，启动微信服务'}
+        logger.error("wechat server is not running")
     return result
 
 
 def bot_logout(params):
-    result = wechat_request('/bot_logout', params)
+    try:
+        result = wechat_request('/bot_logout', params)
+    except:
+        result = {'result': 3, 'msg': '请联系管理员，启动微信服务'}
+        logger.error("wechat server is not running")
     return result
 
 def bot_wechat_bind(params):
-    result = wechat_request('/bot_wechat_bind', params)
+    try:
+        result = wechat_request('/bot_wechat_bind', params)
+    except:
+        result = {'result': 3, 'msg': '请联系管理员，启动微信服务'}
+        logger.error("wechat server is not running")
     return result
 
 def bot_wechat_bind_manager(params):
@@ -62,6 +80,10 @@ def bot_wechat_bind_manager(params):
     return result
 
 def bot_wechat_friends(params):
-    result = wechat_request('/bot_wechat_friends', params)
+    try:
+        result = wechat_request('/bot_wechat_friends', params)
+    except:
+        result = {'result': 3, 'msg': '请联系管理员，启动微信服务'}
+        logger.error("wechat server is not running")
     return result
 

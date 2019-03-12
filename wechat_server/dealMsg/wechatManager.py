@@ -468,7 +468,7 @@ class wechatInstance():
                 logger.error("uuid: %s, club：%s, 该环境暂时不能登录web微信" % (self.uuid, self.wid))
                 break
             time.sleep(1)
-        logger.info("11111111111")
+
         if success:
             try:
                 self.club = Clubs.objects.get(user_name=self.club_name)
@@ -490,8 +490,6 @@ class wechatInstance():
                 t = threading.Thread(target=self.itchat_instance.run, args=())
                 t.start()
                 logger.info('Login successfully as %s' % userInfo['User']['NickName'])
-        else:
-            logger.info("22222222222222")
 
     def check_login_status(self):
         status = self.login_status

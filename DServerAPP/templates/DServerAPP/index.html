@@ -146,6 +146,8 @@
                     qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
                     $("#scanDesc").html("");
                     timer = setInterval("check_login()", 1000 * 3);
+                } else {
+                    $("#scanDesc").html(data.desc);
                 }
             },"json");
         }

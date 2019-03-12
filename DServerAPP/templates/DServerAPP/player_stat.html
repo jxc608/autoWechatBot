@@ -24,6 +24,8 @@
     <title>历史数据</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
+    <script src="{% static "bootstrap-paginator.js" %}"></script>
+    <link href="{% static "bootstrap-paginator.css" %}" rel="stylesheet">
 </head>
 <body>
     <div class="container-fluid nospace">
@@ -98,6 +100,7 @@
                         </li>
                     </ul>
                   </div>
+                <div id="pagintor" style="margin-left: auto;margin-right: auto;display: block;"></div>
                   <div class="panel-footer text-right">
                     <a class="btn btn-link" href="/">返回</a>
                   </div>
@@ -107,8 +110,23 @@
     </div>
     <script>
         function search(){
-            window.location.href = "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
+            window.location.href = "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
         }
+
+        var options = {
+            alignment:"center",//居中显示
+            currentPage: {{ pageIndex }},//当前页数
+            totalPages: {{ totalPage }},//总页数 注意不是总条数
+            pageUrl: function(type, page, current){
+                    if (page==current) {
+                        return "javascript:void(0)";
+                    } else {
+                        return "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+                    }
+                }
+        }
+
+		$("#pagintor").bootstrapPaginator(options);
 
         function clearData() {
             if(confirm('清除管理费后不可恢复，是否确认清除？') == false) {
