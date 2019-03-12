@@ -45,7 +45,7 @@ def bot_notice(request):
         else:
             player = Player.objects.get(id=player_id)
             if not player.is_bind:
-                return {'result': 3}
+                return JsonResponse({'result': 3})
             bot.sendByRemarkName(msg=msg, remarkName=player.nick_name)
             return JsonResponse({'result': 0})
     except:

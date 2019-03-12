@@ -10,14 +10,16 @@
     <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <style>
-    	.top_panel {
-    		margin-top: 100px;
-    	}
-    	.btn {
-    		width: 100%;
-    	}
-        .nospace{
-            margin:0px;
+        .top_panel {
+            margin-top: 100px;
+        }
+
+        .btn {
+            width: 100%;
+        }
+
+        .nospace {
+            margin: 0px;
             padding: 0px;
         }
     </style>
@@ -26,59 +28,67 @@
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-	<div class="container-fluid nospace">
-		<div class="row nospace">
-			<div class="col-xs-12 nospace">
-				<div class="panel panel-primary">
-					<div class="panel-heading">
-						<h3 class="panel-title text-center">欢迎，{{ club.user_name }}</h3>
-					</div>
-				  <div class="panel-body" style="padding:0px;margin:0px">
+<div class="container-fluid nospace">
+    <div class="row nospace">
+        <div class="col-xs-12 nospace">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title text-center">欢迎，{{ club.user_name }}</h3>
+                </div>
+                <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item" style="background-color:#f5f5f5;text-align:center">
-                            <a href="/setting" class="button">设置</a>&nbsp;|&nbsp;<a href="/player_data" class="button">微信绑定</a>&nbsp;|&nbsp;<a href="/score_change" class="button">用户数据</a>&nbsp;|&nbsp;<a href="/score_change_group" class="button">用户数据【分组】</a>&nbsp;|&nbsp;<a href="/player_stat" class="button">历史数据</a>&nbsp;|&nbsp;<a href="/room_data" class="button">今日对局</a>&nbsp;|&nbsp;<a href="/player_room_data" class="button">今日用户对局</a>&nbsp;|&nbsp;<a href="/wrong_image" class="button">错误图片</a>
+                            <a href="/setting" class="button">设置</a>&nbsp;|&nbsp;<a href="/player_data" class="button">微信绑定</a>&nbsp;|&nbsp;<a
+                                href="/score_change" class="button">用户数据</a>&nbsp;|&nbsp;<a href="/score_change_group"
+                                                                                            class="button">用户数据【分组】</a>&nbsp;|&nbsp;<a
+                                href="/player_stat" class="button">历史数据</a>&nbsp;|&nbsp;<a href="/room_data"
+                                                                                           class="button">今日对局</a>&nbsp;|&nbsp;<a
+                                href="/player_room_data" class="button">今日用户对局</a>&nbsp;|&nbsp;<a href="/wrong_image"
+                                                                                                  class="button">错误图片</a>
                         </li>
                         {% if is_admin == True %}
-                        <li class="list-group-item" style="background-color:#f5f5f5"><b>生成CD KEY</b></li>
-                        <li class="list-group-item">
-                            <form class="form-inline">
-                              <div class="form-group">
-                                <label for="key_type">类型</label>
-                                <select class="form-control" id="key_type">
-                                    <option value="1" seleced>有效期1天</option>
-                                    <option value="2" seleced>有效期1周</option>
-                                    <option value="3" seleced>有效期1个月</option>
-                                </select>
-                              </div>
-                              <div class="form-group">
-                                <label for="num">个数</label>
-                                <input type="email" class="form-control" id="num" placeholder="10" value="1">
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="create_cdkey()">生成</button>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-info" onclick="get_cdkey()">获取</button>
-                              </div>
-                            </form>
-                            <div id="keys">
-                            </div>
-                        </li>
+                            <li class="list-group-item" style="background-color:#f5f5f5"><b>生成CD KEY</b></li>
+                            <li class="list-group-item">
+                                <form class="form-inline">
+                                    <div class="form-group">
+                                        <label for="key_type">类型</label>
+                                        <select class="form-control" id="key_type">
+                                            <option value="1" seleced>有效期1天</option>
+                                            <option value="2" seleced>有效期1周</option>
+                                            <option value="3" seleced>有效期1个月</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="num">个数</label>
+                                        <input type="email" class="form-control" id="num" placeholder="10" value="1">
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="create_cdkey()">生成
+                                        </button>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-info" onclick="get_cdkey()">获取</button>
+                                    </div>
+                                </form>
+                                <div id="keys">
+                                </div>
+                                <button type="button" class="btn btn-success" onclick="cp('keys')">复制</button>
+                            </li>
                         {% endif %}
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>CD KEY</b></li>
                         <li class="list-group-item">
                             <form class="form-inline">
-                              <div class="form-group">
-                                <label for="key_type">有效期:</label>
-                                <span>{{club.expired_time_desc}}</span>
-                              </div>
-                              <div class="form-group">
-                                <label for="num">CD KEY</label>
-                                <input type="email" class="form-control" id="cdkey" placeholder="请输入CD KEY">
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="add_time()">延长</button>
-                              </div>
+                                <div class="form-group">
+                                    <label for="key_type">有效期:</label>
+                                    <span>{{ club.expired_time_desc }}</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="num">CD KEY</label>
+                                    <input type="email" class="form-control" id="cdkey" placeholder="请输入CD KEY">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" onclick="add_time()">延长</button>
+                                </div>
                             </form>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>机器人状态</b></li>
@@ -86,125 +96,147 @@
                             {% if club.expired == True %}
                                 CD KEY 已失效。 请延长后继续使用。
                             {% elif wx_login != '200' %}
-                            <div align="center" >
-                              <a href="javascript:void(0)" onclick="window.location.reload();">刷新二维码</a>
-                                <p id="scanDesc"></p>
-                            </div>
-                            <div align="center" id="qrcode"></div>
-                            <div align="center" >
-                              请微信扫码登录
-                            </div>
+                                <div align="center">
+                                    <a href="javascript:void(0)" onclick="window.location.reload();">刷新二维码</a>
+                                    <p id="scanDesc"></p>
+                                </div>
+                                <div align="center" id="qrcode"></div>
+                                <div align="center">
+                                    请微信扫码登录
+                                </div>
                             {% else %}
-                             已登录&nbsp;&nbsp;<a href="javascript:void(0)" onclick="wx_logout()">注销</a>
+                                已登录&nbsp;&nbsp;<a href="javascript:void(0)" onclick="wx_logout()">注销</a>
                             {% endif %}
                         </li>
                     </ul>
-				  </div>
-				  <div class="panel-footer text-right">
+                </div>
+                <div class="panel-footer text-right">
                     <a class="btn btn-link" href="/logout">注销账号</a>
-				  </div>
-				</div>
-			</div>
-		</div>
-	</div>
-    <script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
 
-        {% if club.expired == False and wx_login != '200' %}
+    {% if club.expired == False and wx_login != '200' %}
 
         var qrcode = new QRCode('qrcode', {
-          //text: 'https://login.weixin.qq.com/l/{{ uuid }}',
-          width: 256,
-          height: 256,
-          colorDark : '#000000',
-          colorLight : '#ffffff',
-          correctLevel : QRCode.CorrectLevel.H
+            //text: 'https://login.weixin.qq.com/l/{{ uuid }}',
+            width: 256,
+            height: 256,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
         });
         var timer = null;
         //短信验证码重新获取
         function check_login() {
-            $.post("/check_wx_login",{},function(data){
-                if(data.login == '200'){
+            $.post("/check_wx_login", {}, function (data) {
+                if (data.login == '200') {
                     clearInterval(timer);
                     window.location.reload()
-                } else if(data.login == '408' || data.login == '400' || data.login == '-1') {
+                } else if (data.login == '408' || data.login == '400' || data.login == '-1') {
                     $("#scanDesc").html(data.desc);
                     clearInterval(timer);
                 }
-            },"json");
+            }, "json");
         }
         var timer = null;
         //刷新二维码
-        function refresh_uuid(){
-            $.get("/refresh_uuid",{},function(data){
+        function refresh_uuid() {
+            $.get("/refresh_uuid", {}, function (data) {
                 if (data.uuid) {
                     /*
                     */
-                    if(timer != null) {
+                    if (timer != null) {
                         clearInterval(timer);
                     }
                     //check_login();
-                    qrcode.makeCode('https://login.weixin.qq.com/l/'+data.uuid);
+                    qrcode.makeCode('https://login.weixin.qq.com/l/' + data.uuid);
                     $("#scanDesc").html("");
                     timer = setInterval("check_login()", 1000 * 3);
                 } else {
                     $("#scanDesc").html(data.desc);
                 }
-            },"json");
+            }, "json");
         }
         refresh_uuid();
-        {% endif %}
+    {% endif %}
 
-        //注销
-        function wx_logout(){
-            $.post("/wx_logout",{},function(data){
-               window.location.reload()
-            },"json");
-        }
-        function create_cdkey(){
-            if($('#num').val()==''){
-                alert("请输入数量。");
-                return;
-            }
-            $.post("/create_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
-                if(data.result == true){
-                     alert("生成成功！");
-                     var keys = '';
-                    for(var i=0;i<data.content.length;i++)
-                        keys += data.content[i]+'<br/>';
-                    $('#keys').html(keys);
-                }
-            },"json");
-        }
+    //注销
+    function wx_logout() {
+        $.post("/wx_logout", {}, function (data) {
+            window.location.reload()
+        }, "json");
+    }
 
-        function get_cdkey(){
-            if($('#num').val()==''){
-                alert("请输入数量。");
-                return;
-            }
-            $.post("/get_cdkey",{key_type:$('#key_type').val(),num:$('#num').val()},function(data){
+    function create_cdkey() {
+        if ($('#num').val() == '') {
+            alert("请输入数量。");
+            return;
+        }
+        $.post("/create_cdkey", {key_type: $('#key_type').val(), num: $('#num').val()}, function (data) {
+            if (data.result == true) {
+                alert("生成成功！");
                 var keys = '';
-                for(var i=0;i<data.result.length;i++)
-                    keys += data.result[i]+'<br/>';
+                for (var i = 0; i < data.content.length; i++)
+                    keys += data.content[i] + '<br/>';
                 $('#keys').html(keys);
-            },"json");
-        }
-
-        function add_time(){
-            if($('#cdkey').val()==''){
-                alert("请输入CD KEY。");
-                return;
             }
-            $.post("/add_time",{cdkey:$('#cdkey').val()},function(data){
-                if(data.messageCode == 10005){
-                     alert("CD KEY 已使用！");
-                }else if(data.messageCode == 10004){
-                     alert("CD KEY 不存在！");
-                }else if(data.messageCode == 0){
-                    alert("CD KEY 使用成功！");
-                    window.location.reload();
-                }
-            },"json");
+        }, "json");
+    }
+
+    function selectText(x) {
+
+    }
+
+    function cp(id) {
+        var x = document.getElementById(id);
+        if (document.selection) {
+            var range = document.body.createTextRange();
+            range.moveToElementText(x);
+            range.select();
+        } else if (window.getSelection) {
+            var selection = window.getSelection();
+            var range = document.createRange();
+            selection.removeAllRanges();
+            range.selectNodeContents(x);
+            selection.addRange(range);
         }
-    </script>
+        document.execCommand("copy");
+        alert("复制成功,快去分享好友吧");
+    }
+
+    function get_cdkey() {
+        if ($('#num').val() == '') {
+            alert("请输入数量。");
+            return;
+        }
+        $.post("/get_cdkey", {key_type: $('#key_type').val(), num: $('#num').val()}, function (data) {
+            var keys = '';
+            for (var i = 0; i < data.result.length; i++)
+                keys += data.result[i] + '<br/>';
+            $('#keys').html(keys);
+        }, "json");
+    }
+
+    function add_time() {
+        if ($('#cdkey').val() == '') {
+            alert("请输入CD KEY。");
+            return;
+        }
+        $.post("/add_time", {cdkey: $('#cdkey').val()}, function (data) {
+            if (data.messageCode == 10005) {
+                alert("CD KEY 已使用！");
+            } else if (data.messageCode == 10004) {
+                alert("CD KEY 不存在！");
+            } else if (data.messageCode == 0) {
+                alert("CD KEY 使用成功！");
+                window.location.reload();
+            }
+        }, "json");
+    }
+</script>
 </body>
 </html>

@@ -8,6 +8,7 @@ CDKEY_TYPE = [(1, "一天"), (2, "一周"), (3, "一个月")]
 COST_MODE = [(0, '前x名固定或百分比'), (1, '前x名范围'), (2, '所有固定')]
 IS_HOST = [(0, '不是'), (1, '是')]
 YES_NO_GENERATE = [(0, '否'), (1, '是')]
+MSG_TYPE = [(0, '微信'), (1, '默往')]
 
 # Create your models here.
 class Question(models.Model):
@@ -43,6 +44,7 @@ class Clubs(models.Model):
     cost_mode = models.IntegerField(default=0, choices=COST_MODE, verbose_name='管理模式')#管理费模式 固定 还是 百分比
     cost_param = models.CharField(max_length=1000, default='none', verbose_name='管理费参数')
     profit = models.IntegerField(default=0, verbose_name='利润')
+    msg_type = models.SmallIntegerField(default=0, choices=MSG_TYPE, verbose_name="消息格式", null=False)
     # 该字段暂时没用？
     refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据，暂时无用')
 

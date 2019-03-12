@@ -13,11 +13,13 @@
         .top_panel {
             margin-top: 100px;
         }
+
         .btn {
             width: 100%;
         }
-        .nospace{
-            margin:0px;
+
+        .nospace {
+            margin: 0px;
             padding: 0px;
         }
     </style>
@@ -26,68 +28,87 @@
     <script src="{% static "qrcode.min.js" %}"></script>
 </head>
 <body>
-    <div class="container-fluid nospace">
-        <div class="row nospace">
-            <div class="col-xs-12 nospace">
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <h3 class="panel-title text-center">设置</h3>
-                    </div>
-                  <div class="panel-body" style="padding:0px;margin:0px">
+<div class="container-fluid nospace">
+    <div class="row nospace">
+        <div class="col-xs-12 nospace">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title text-center">设置</h3>
+                </div>
+                <div class="panel-body" style="padding:0px;margin:0px">
                     <ul class="list-group">
                         <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>管理费设置</b>
                         </li>
                         <li class="list-group-item">
                             <form class="form-inline">
-                              <div class="form-group">
-                                <label for="key_type">模式:</label>
-                                <select class="form-control" id="mode" onchange="change_mode()">
-                                    <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>前x名固定或百分比</option>
-                                    <option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名范围</option>
-                                    <option value="2" {% if club.cost_mode == 2 %}selected{% endif %}>所有固定</option>
-                                </select>
-                              </div>
-                              <div class="form-group" id="mode_0" style="display:">
-                                  <div class="form-group">
-                                    <b>参数:</b>
-                                    前
-                                    <input type="text" class="form-control" id="param1_0" value="{%if club.cost_mode == 0 %}{{params.0}}{%endif%}">
-                                    名&nbsp;
-                                    固定值或百分比
-                                    <input type="text" class="form-control" id="param2_0" value="{%if club.cost_mode == 0 %}{{params.1}}{%endif%}">
-                                    (例如前3名：20_15_10 或 0.03_30_0.01 小于1按百分比，大于1按固定)，最低
-                                    <input type="text" class="form-control" id="param3_0" value="{%if club.cost_mode == 0 %}{{params.2}}{%endif%}">（至少达到此分数才会收取）
-                                  </div>
-                              </div>
-                              <div class="form-group" id="mode_1" style="display:none">
-                                  <div class="form-group">
-                                    <b>参数:</b>
-                                    前
-                                    <input type="text" class="form-control" id="param1_1" value="{%if club.cost_mode == 1 %}{{params.0}}{%endif%}">
-                                    名&nbsp;
-                                    范围
-                                    <textarea class="form-control" id="param2_1" name="param2_1" rows="5" style="min-width: 90%">{%if club.cost_mode == 1 %}{{params.1}}{%endif%}</textarea>
-                                    (例如前2名：0-399_400-1999*0-199_200-1999)<br/>
-                                    管理费
-                                    <textarea class="form-control" id="param3_1" name="param3_1" rows="5" style="min-width: 90%">{%if club.cost_mode == 1 %}{{params.2}}{%endif%}</textarea>
-                                    （例如前两名：40_20*80_40）
-                                  </div>
-                              </div>
-                              <div class="form-group" id="mode_2" style="display:none">
-                                  <div class="form-group">
-                                    <b>参数:</b>
-                                    分数达到
-                                    <input type="text" class="form-control" id="param1_2" value="{%if club.cost_mode == 2 %}{{params.0}}{%endif%}">
-                                    （例如:5000_2000_1000） ，&nbsp;
-                                    固定值
-                                    <input type="text" class="form-control" id="param2_2" value="{%if club.cost_mode == 2 %}{{params.1}}{%endif%}">
-                                    (例如:20_15_10)
-                                  </div>
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="update_cost()">保存</button>
-                              </div>
+                                <div class="form-group">
+                                    <label for="key_type">模式:</label>
+                                    <select class="form-control" id="mode" onchange="change_mode()">
+                                        <option value="0" {% if club.cost_mode == 0 %}selected{% endif %}>前x名固定或百分比
+                                        </option>
+                                        <option value="1" {% if club.cost_mode == 1 %}selected{% endif %}>前x名范围</option>
+                                        <option value="2" {% if club.cost_mode == 2 %}selected{% endif %}>所有固定</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="mode_0" style="display:">
+                                    <div class="form-group">
+                                        <b>参数:</b>
+                                        前
+                                        <input type="text" class="form-control" id="param1_0"
+                                               value="{% if club.cost_mode == 0 %}{{ params.0 }}{% endif %}">
+                                        名&nbsp;
+                                        固定值或百分比
+                                        <input type="text" class="form-control" id="param2_0"
+                                               value="{% if club.cost_mode == 0 %}{{ params.1 }}{% endif %}">
+                                        (例如前3名：20_15_10 或 0.03_30_0.01 小于1按百分比，大于1按固定)，最低
+                                        <input type="text" class="form-control" id="param3_0"
+                                               value="{% if club.cost_mode == 0 %}{{ params.2 }}{% endif %}">（至少达到此分数才会收取）
+                                    </div>
+                                </div>
+                                <div class="form-group" id="mode_1" style="display:none">
+                                    <div class="form-group">
+                                        <b>参数:</b>
+                                        前
+                                        <input type="text" class="form-control" id="param1_1"
+                                               value="{% if club.cost_mode == 1 %}{{ params.0 }}{% endif %}">
+                                        名&nbsp;
+                                        范围
+                                        <textarea class="form-control" id="param2_1" name="param2_1" rows="5"
+                                                  style="min-width: 90%">{% if club.cost_mode == 1 %}
+                                            {{ params.1 }}{% endif %}</textarea>
+                                        (例如前2名：0-399_400-1999*0-199_200-1999)<br/>
+                                        管理费
+                                        <textarea class="form-control" id="param3_1" name="param3_1" rows="5"
+                                                  style="min-width: 90%">{% if club.cost_mode == 1 %}
+                                            {{ params.2 }}{% endif %}</textarea>
+                                        （例如前两名：40_20*80_40）
+                                    </div>
+                                </div>
+                                <div class="form-group" id="mode_2" style="display:none">
+                                    <div class="form-group">
+                                        <b>参数:</b>
+                                        分数达到
+                                        <input type="text" class="form-control" id="param1_2"
+                                               value="{% if club.cost_mode == 2 %}{{ params.0 }}{% endif %}">
+                                        （例如:5000_2000_1000） ，&nbsp;
+                                        固定值
+                                        <input type="text" class="form-control" id="param2_2"
+                                               value="{% if club.cost_mode == 2 %}{{ params.1 }}{% endif %}">
+                                        (例如:20_15_10)
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="key_type">消息格式:</label>
+                                    <select class="form-control" id="msg_type">
+                                        <option value="0" {% if club.msg_type == 0 %}selected{% endif %}>微信</option>
+                                        <option value="1" {% if club.msg_type == 1 %}selected{% endif %}>默往</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" onclick="update_cost()">保存</button>
+                                </div>
                             </form>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
@@ -95,36 +116,42 @@
                         </li>
                         <li class="list-group-item">
                             <form class="form-inline">
-                              <div class="form-group">
-                                <label for="refresh_time">每天:</label>
-                                <input type="email" class="form-control" id="refresh_time" placeholder="请输入刷新时间" value="{{club.refresh_time}}">点
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="update_refresh_time()">保存</button>
-                              </div>
+                                <div class="form-group">
+                                    <label for="refresh_time">每天:</label>
+                                    <input type="email" class="form-control" id="refresh_time" placeholder="请输入刷新时间"
+                                           value="{{ club.refresh_time }}">点
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" onclick="update_refresh_time()">保存
+                                    </button>
+                                </div>
                             </form>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
                             <b>管理员设置</b>
                         </li>
                         <li class="list-group-item">
-                            {% for m in manager%}
-                                {{m.wechat_nick_name}}({{m.nick_name}})<a style="margin-left: 20px;color: red" href="javascript:void(0)" onclick="del_manager({{m.id}})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                            {% for m in manager %}
+                                {{ m.wechat_nick_name }}({{ m.nick_name }})
+                                <a style="margin-left: 20px;color: red" href="javascript:void(0)"
+                                   onclick="del_manager({{ m.id }})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
                             {% endfor %}
                         </li>
                         <li class="list-group-item">
                             <form class="form-inline">
-                              <div class="form-group hidden">
-                                <label for="wechat_nick_name">微信昵称:</label>
-                                <input type="email" class="form-control" id="wechat_nick_name" placeholder="请输入微信昵称" value="">
-                              </div>
-                              <div class="form-group">
-                                <label for="gameid">备注昵称:</label>
-                                <input type="email" class="form-control" id="nick_name" placeholder="请输入备注昵称" value="">
-                              </div>
-                              <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="wechat_friends()">添加</button>
-                              </div>
+                                <div class="form-group hidden">
+                                    <label for="wechat_nick_name">微信昵称:</label>
+                                    <input type="email" class="form-control" id="wechat_nick_name" placeholder="请输入微信昵称"
+                                           value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="gameid">备注昵称:</label>
+                                    <input type="email" class="form-control" id="nick_name" placeholder="请输入备注昵称"
+                                           value="">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" onclick="wechat_friends()">添加</button>
+                                </div>
                             </form>
                         </li>
                         <li class="list-group-item" style="background-color:#f5f5f5;">
@@ -134,15 +161,18 @@
                             <form>
                                 <div class="form-group">
                                     <label for="account">原密码：</label>
-                                    <input type="password" class="form-control" id="old_passwd" name="old_passwd" placeholder="">
+                                    <input type="password" class="form-control" id="old_passwd" name="old_passwd"
+                                           placeholder="">
                                 </div>
                                 <div class="form-group">
                                     <label for="account">新密码：</label>
-                                    <input type="password" class="form-control" id="new_passwd" name="new_passwd" placeholder="">
+                                    <input type="password" class="form-control" id="new_passwd" name="new_passwd"
+                                           placeholder="">
                                 </div>
                                 <div class="form-group">
                                     <label for="account">确认密码：</label>
-                                    <input type="password" class="form-control" id="re_passwd" name="re_passwd" placeholder="">
+                                    <input type="password" class="form-control" id="re_passwd" name="re_passwd"
+                                           placeholder="">
                                 </div>
                             </form>
                             <button type="button" class="btn btn-warning" onclick="change_passwd()">修改密码</button>
@@ -154,262 +184,258 @@
                             <button type="button" class="btn btn-danger" onclick="del_data()">数据清空</button>
                         </li>
                     </ul>
-                  </div>
-                  <div class="panel-footer text-right">
+                </div>
+                <div class="panel-footer text-right">
                     <a class="btn btn-link" href="/">返回</a>
-                  </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- 模态框（Modal） -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                        &times;
-                    </button>
-                    <h4 class="modal-title" id="myModalLabel">
-                        请选择绑定的微信
-                    </h4>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-hover">
-                        <tbody id="friends_div">
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <!--<button type="button" class="btn btn-primary" onclick="add_gameid()">
-                        添加
-                    </button>-->
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal -->
-    </div>
-    <script>
-        change_mode();
-        function change_mode(){
-            if ($('#mode').val() == '0'){
-                $('#mode_0').show()
-                $('#mode_1').hide()
-                $('#mode_2').hide()
+</div>
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    请选择绑定的微信
+                </h4>
+            </div>
+            <div class="modal-body">
+                <table class="table table-hover">
+                    <tbody id="friends_div">
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <!--<button type="button" class="btn btn-primary" onclick="add_gameid()">
+                    添加
+                </button>-->
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<script>
+    change_mode();
+
+    function change_mode() {
+        if ($('#mode').val() == '0') {
+            $('#mode_0').show()
+            $('#mode_1').hide()
+            $('#mode_2').hide()
+        } else if ($('#mode').val() == '1') {
+            $('#mode_0').hide()
+            $('#mode_1').show()
+            $('#mode_2').hide()
+        } else if ($('#mode').val() == '2') {
+            $('#mode_0').hide()
+            $('#mode_1').hide()
+            $('#mode_2').show()
+        }
+    }
+
+    function update_cost() {
+        var mode = $('#mode').val();
+        if (mode == '2') {
+            if ($('#param1_' + mode).val() == '') {
+                alert("请输入参数。");
+                return;
             }
-            else if ($('#mode').val() == '1'){
-                $('#mode_0').hide()
-                $('#mode_1').show()
-                $('#mode_2').hide()
+            if ($('#param2_' + mode).val() == '') {
+                alert("请输入参数。");
+                return;
             }
-            else if ($('#mode').val() == '2'){
-                $('#mode_0').hide()
-                $('#mode_1').hide()
-                $('#mode_2').show()
+            if ($('#param3_' + mode).val() == '') {
+                alert("请输入参数。");
+                return;
+            }
+        } else {
+            if ($('#param1_' + mode).val() == '') {
+                alert("请输入参数。");
+                return;
+            }
+            if ($('#param2_' + mode).val() == '') {
+                alert("请输入参数。");
+                return;
             }
         }
 
-        function update_cost(){
-            var mode = $('#mode').val();
-            if (mode == '2'){
-                if($('#param1_'+mode).val()==''){
-                    alert("请输入参数。");
+        /*if($('#profit_'+player_id).val()==''){
+            alert("请输入盈利状况。");
+            return;
+        }*/
+        $.post("/update_cost_mode", {
+            mode: $('#mode').val(),
+            param1: $('#param1_' + mode).val(),
+            param2: $('#param2_' + mode).val(),
+            param3: $('#param3_' + mode).val(),
+            msg_type: $('#msg_type').val(),
+        }, function (data) {
+            if (data.result == 0) {
+                alert('保存成功！');
+                window.location.reload();
+            } else
+                alert('参数格式错误！')
+        }, "json");
+    }
+
+    function change_passwd() {
+        if ($('#old_passwd').val() == '') {
+            alert("请输入原密码。");
+            return;
+        }
+        if ($('#new_passwd').val() == '') {
+            alert("请输入新密码。");
+            return;
+        }
+        if ($('#re_passwd').val() != $('#new_passwd').val()) {
+            alert("新密码与确认密码不相同！");
+            return;
+        }
+
+        /*if($('#profit_'+player_id).val()==''){
+            alert("请输入盈利状况。");
+            return;
+        }*/
+        $.post("/change_passwd", {
+            old_passwd: $('#old_passwd').val(),
+            new_passwd: $('#new_passwd').val(),
+            re_passwd: $('#re_passwd').val(),
+
+        }, function (data) {
+            if (data.result == 0) {
+                alert('修改成功！');
+                window.location.reload();
+            } else if (data.result == 1) {
+                alert('源密码不正确！');
+            } else if (data.result == 2) {
+                alert('新密码与确认密码不相同！');
+            }
+        }, "json");
+    }
+
+
+    function del_data() {
+        if (confirm("确定要清空吗？") == false)
+            return;
+        var sp = prompt("请输入二级密码");
+        if (sp == "") {
+            alert("二级密码不能为空");
+            return;
+        }
+        $.post("/del_data", {
+            second_password: sp,
+        }, function (data) {
+            if (data.result == 0) {
+                alert('清空成功！');
+            } else {
+                alert(data.errmsg);
+            }
+        }, "json");
+    }
+
+    function wechat_friends() {
+        var player_id = 0;
+        /*
+        if($('#wechat_nick_name').val()==''){
+            alert("请输入微信昵称。");
+            return;
+        }
+        */
+        if ($('#nick_name').val() == '') {
+            alert("请输入备注昵称。");
+            return;
+        }
+        /*if($('#profit_'+player_id).val()==''){
+            alert("请输入盈利状况。");
+            return;
+        }*/
+        $.post("/wechat_friends", {
+            id: player_id,
+            nick_name: $('#nick_name').val(),
+            //wechat_nick_name:$('#wechat_nick_name').val(),
+            //profit:$('#profit_'+player_id).val(),
+        }, function (data) {
+            if (data.result == 0) {
+                if (data.list.length == 0) {
+                    alert("没有找到好友");
                     return;
                 }
-                if($('#param2_'+mode).val()==''){
-                    alert("请输入参数。");
-                    return;
+                html = '';
+                for (var i = 0; i < data.list.length; i++) {
+                    html += '<tr>';
+                    //html+='    <td width="30%">';
+                    //html+='        <img src="data:image/png;base64,'+data.list[i].HeadImgUrl+'"/>';
+                    //html+='    </td>';
+                    html += '    <td width="60%">';
+                    html += data.list[i].NickName + '<br/>' + data.list[i].Signature;
+                    html += '    </td>';
+                    html += '    <td width="10%">';
+                    btn = "add_manager('" + data.list[i].UserName + "','" + data.list[i].NickName + "')";
+                    html += '        <button type="button" class="btn btn-default" onclick="' + btn + '">绑定</button>';
+                    html += '    </td>';
+                    html += '</tr>';
                 }
-                if($('#param3_'+mode).val()==''){
-                    alert("请输入参数。");
-                    return;
-                }
-            }else{
-                if($('#param1_'+mode).val()==''){
-                    alert("请输入参数。");
-                    return;
-                }
-                if($('#param2_'+mode).val()==''){
-                    alert("请输入参数。");
-                    return;
-                }
+                $('#friends_div').html(html);
+                $('#myModal').modal();
+                ;
+
+            } else if (data.result == 2) {
+                alert('请先微信扫码登录');
+                window.location.href = "/";
+            } else if (data.result == 3)
+                alert(data.msg);
+        }, "json");
+    }
+
+    function add_manager(user_name, nick_name) {
+        $.post("/add_manager", {
+            user_name: user_name,
+            nick_name: $('#nick_name').val(),
+            wechat_nick_name: nick_name,
+
+        }, function (data) {
+            if (data.result == 0) {
+                alert('添加成功！');
+                $('#myModal').modal('hide');
+                window.location.reload();
+            } else if (data.result == 2)
+                alert('请先微信扫码登录');
+            else if (data.result == 3)
+                alert(data.msg);
+        }, "json");
+    }
+
+    function del_manager(id) {
+        if (confirm("确定要删除吗？") == false)
+            return;
+        $.post("/del_manager", {
+            id: id
+        }, function (data) {
+            if (data.result == 0) {
+                alert('删除成功！');
+                window.location.reload();
             }
+        }, "json");
+    }
 
-            /*if($('#profit_'+player_id).val()==''){
-                alert("请输入盈利状况。");
-                return;
-            }*/
-            $.post("/update_cost_mode",{
-                mode:$('#mode').val(),
-                param1:$('#param1_'+mode).val(),
-                param2:$('#param2_'+mode).val(),
-                param3:$('#param3_'+mode).val(),
-
-            },function(data){
-                if(data.result == 0){
-                    alert('保存成功！');
-                    window.location.reload();
-                }
-                else
-                    alert('参数格式错误！')
-            },"json");
+    function update_refresh_time(id) {
+        if ($('#refresh_time').val() == '') {
+            alert("请输入刷新时间。");
+            return;
         }
-
-        function change_passwd(){
-            if($('#old_passwd').val()==''){
-                alert("请输入原密码。");
-                return;
+        $.post("/update_refresh_time", {
+            refresh_time: $('#refresh_time').val()
+        }, function (data) {
+            if (data.result == 0) {
+                alert('保存成功！');
+                window.location.reload();
             }
-            if($('#new_passwd').val()==''){
-                alert("请输入新密码。");
-                return;
-            }
-            if($('#re_passwd').val()!=$('#new_passwd').val()){
-                alert("新密码与确认密码不相同！");
-                return;
-            }
-
-            /*if($('#profit_'+player_id).val()==''){
-                alert("请输入盈利状况。");
-                return;
-            }*/
-            $.post("/change_passwd",{
-                old_passwd:$('#old_passwd').val(),
-                new_passwd:$('#new_passwd').val(),
-                re_passwd:$('#re_passwd').val(),
-
-            },function(data){
-                if(data.result == 0){
-                    alert('修改成功！');
-                    window.location.reload();
-                } else if(data.result == 1){
-                    alert('源密码不正确！');
-                } else if(data.result == 2){
-                    alert('新密码与确认密码不相同！');
-                }
-            },"json");
-        }
-
-
-        function del_data(){
-            if(confirm("确定要清空吗？") == false)
-                return;
-            var sp = prompt("请输入二级密码");
-            if(sp == "") {
-                alert("二级密码不能为空");
-                return;
-            }
-            $.post("/del_data",{
-                second_password: sp,
-            },function(data){
-                if(data.result == 0){
-                    alert('清空成功！');
-                } else {
-                    alert(data.errmsg);
-                }
-            },"json");
-        }
-
-        function wechat_friends(){
-            var player_id = 0;
-            /*
-            if($('#wechat_nick_name').val()==''){
-                alert("请输入微信昵称。");
-                return;
-            }
-            */
-            if($('#nick_name').val()==''){
-                alert("请输入备注昵称。");
-                return;
-            }
-            /*if($('#profit_'+player_id).val()==''){
-                alert("请输入盈利状况。");
-                return;
-            }*/
-            $.post("/wechat_friends",{
-                id:player_id,
-                nick_name:$('#nick_name').val(),
-                //wechat_nick_name:$('#wechat_nick_name').val(),
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    if (data.list.length==0){
-                        alert("没有找到好友");
-                        return;
-                    }
-                    html = '';
-                    for(var i=0;i<data.list.length;i++){
-                        html+='<tr>';
-                        //html+='    <td width="30%">';
-                        //html+='        <img src="data:image/png;base64,'+data.list[i].HeadImgUrl+'"/>';
-                        //html+='    </td>';
-                        html+='    <td width="60%">';
-                        html+=  data.list[i].NickName+'<br/>'+data.list[i].Signature;
-                        html+='    </td>';
-                        html+='    <td width="10%">';
-                        btn = "add_manager('" + data.list[i].UserName+"','"+ data.list[i].NickName+"')";
-                        html+='        <button type="button" class="btn btn-default" onclick="'+btn+'">绑定</button>';
-                        html+='    </td>';
-                        html+='</tr>';
-                    }
-                    $('#friends_div').html(html);
-                    $('#myModal').modal();;
-
-                }
-                else if (data.result == 2){
-                    alert('请先微信扫码登录');
-                    window.location.href = "/";
-                }
-                else if (data.result == 3)
-                    alert(data.msg);
-            },"json");
-        }
-
-        function add_manager(user_name, nick_name){
-            $.post("/add_manager",{
-                user_name:user_name,
-                nick_name:$('#nick_name').val(),
-                wechat_nick_name:nick_name,
-
-            },function(data){
-                if(data.result == 0){
-                    alert('添加成功！');
-                    $('#myModal').modal('hide');
-                    window.location.reload();
-                }
-                else if (data.result == 2)
-                    alert('请先微信扫码登录');
-                else if (data.result == 3)
-                    alert(data.msg);
-            },"json");
-        }
-
-        function del_manager(id){
-            if(confirm("确定要删除吗？") == false)
-                return;
-            $.post("/del_manager",{
-                id:id
-            },function(data){
-                if(data.result == 0){
-                    alert('删除成功！');
-                    window.location.reload();
-                }
-            },"json");
-        }
-
-        function update_refresh_time(id){
-            if($('#refresh_time').val()==''){
-                alert("请输入刷新时间。");
-                return;
-            }
-            $.post("/update_refresh_time",{
-                refresh_time:$('#refresh_time').val()
-            },function(data){
-                if(data.result == 0){
-                    alert('保存成功！');
-                    window.location.reload();
-                }
-            },"json");
-        }
-    </script>
+        }, "json");
+    }
+</script>
 </body>
 </html>

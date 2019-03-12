@@ -1039,6 +1039,7 @@ def setting(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     params = club.cost_param.split("|")
     manager = Manager.objects.filter(club=club)
+    msg_type = club.msg_type
     return render(request, 'DServerAPP/setting.html', {'club':club, 'params':params, 'manager':manager})
 
 def update_cost_mode(request):
@@ -1046,6 +1047,7 @@ def update_cost_mode(request):
     param1 = request.POST.get('param1')
     param2 = request.POST.get('param2')
     param3 = request.POST.get('param3')
+    msg_type = request.POST.get('msg_type')
     if param1:
         param1 = param1.strip()
     if param2:
@@ -1109,6 +1111,7 @@ def update_cost_mode(request):
     else:
         club.cost_param = '%s|%s' % (param1, param2)
 
+    club.msg_type = msg_type
     club.save()
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 

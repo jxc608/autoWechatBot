@@ -110,7 +110,7 @@
     </div>
     <script>
         function search(){
-            window.location.href = "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+            window.location.href = "/player_stat?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex={{ pageIndex }}";
         }
 
         var options = {

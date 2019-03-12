@@ -219,7 +219,9 @@ class wechatInstance():
                 gi = GameID.objects.filter(club=self.club, gameid=roomPlayData.id, player__is_del=0)
                 # 数据库中没有用户，自动增加
                 if gi.count() > 1:
-                    self.itchat_instance.send('用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count()), 'filehelper')
+                    errmsg = '用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count())
+                    logger.error(errmsg)
+                    self.itchat_instance.send(errmsg, 'filehelper')
                     return
 
             #根据刷新时间设置，设置入库时间
@@ -237,8 +239,10 @@ class wechatInstance():
                 playerData.append(d.dumps())
             historyGame = HistoryGame(club=self.club, room_id=room_data.roomId, hoster_name=room_data.roomHoster,hoster_id=room_data.roomHosterId, round_number=room_data.roundCounter, start_time=room_data.startTime, player_data=json.dumps(playerData), refresh_time=refresh_time)
             historyGame.save()
-            pic_msg = "房间ID：%s  房主ID：%s\n房主：%s  局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHosterId, room_data.roomHoster,room_data.roundCounter, room_data.startTime)
-            # pic_msg += "-----------------------------\n"
+            if self.club.msg_type == 0:
+                pic_msg = "房间ID：%s  房主ID：%s\n房主：%s  局数：%s\n开始时间：%s\n" % (room_data.roomId, room_data.roomHosterId, room_data.roomHoster,room_data.roundCounter, room_data.startTime)
+            else:
+                pic_msg = "房主ID: %s\n房主: %s\n" % (room_data.roomHosterId, room_data.roomHoster)
 
             rules = []
             if self.club.cost_param != None and self.club.cost_param != 'none' and self.club.cost_param != '':
@@ -287,8 +291,11 @@ class wechatInstance():
                         costShow2 = "本局房费: 无"
                     if not cost:
                         cost = 0
-                    # pic_msg += "%s.-------------------------\n昵称：%s  ID：%s\n分数：%s  总分数：%s\n%s" % (num + 1, player.nick_name, roomPlayData.id, roomPlayData.score, player.current_score, costShow1)
-                    pic_msg += "%s.-------------------------\n昵称: %s\nID: %s\n上次积分: %s 本局积分: %s\n管理费: %s 当前余分: %s\n" % (num + 1, player.nick_name, roomPlayData.id, last_current_score, roomPlayData.score, cost, player.current_score)
+
+                    if self.club.msg_type == 0:
+                        pic_msg += "%s.-------------------------\n昵称: %s\nID: %s\n上次积分: %s 本局积分: %s\n管理费: %s 当前余分: %s\n" % (num + 1, player.nick_name, roomPlayData.id, last_current_score, roomPlayData.score, cost, player.current_score)
+                    else:
+                        pic_msg += "%s.\n昵称: %s\nID: %s\n上次积分: %s 本局积分: %s\n管理费: %s 当前余分: %s\n" % (num + 1, player.nick_name, roomPlayData.id, last_current_score, roomPlayData.score, cost, player.current_score)
                     # pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
                     if wechat_uuid != None:
                         self.itchat_instance.send_image(img_file, wechat_uuid)
@@ -307,7 +314,8 @@ class wechatInstance():
 
             self.club.profit = F("profit") + clubProfit
             self.club.save(update_fields=["profit"])
-            pic_msg+= '-----------------------------\n'
+            if self.club.msg_type == 0:
+                pic_msg+= '-----------------------------\n'
             # pic_msg+= '获得管理费：%s' % clubProfit
             self.itchat_instance.send(pic_msg, 'filehelper')
             return '@%s@%s' % (typeSymbol, msg.fileName)
@@ -500,7 +508,9 @@ class wechatInstance():
             desc = "二维码已失效，请刷新后重试"
         elif status == '400':
             desc = "该环境暂时不能登录web微信"
-
+        elif status == '200':
+            if not self.itchat_instance.alive:
+                status = '0'
         return status, desc
 
 
