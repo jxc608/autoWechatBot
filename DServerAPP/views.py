@@ -769,14 +769,22 @@ def score_change_group(request):
     club = Clubs.objects.get(user_name=request.session['club'])
     date = request.GET.get("date", None)
     cp = request.GET.get("cp", "")
-    introAry = getDayGroup(club, date, cp)
+    pageSize = int(request.GET.get('pageSize', 3))
+    pageIndex = int(request.GET.get('pageIndex', 1))
+    introAry, total, totalPage = getDayGroup(club, date, cp, pageSize, pageIndex)
     qryType = "历史" if not date else "当日"
-    return render(request, 'DServerAPP/score_change_group.html', {'club':club, 'introAry': introAry, "date": date, "cp": cp, "qryType": qryType})
+    return render(request, 'DServerAPP/score_change_group.html', {'club':club, 'introAry': introAry, 'totalPage': totalPage, 'pageSize': pageSize, 'pageIndex': pageIndex, 'total': total,"date": date, "cp": cp, "qryType": qryType})
 
-def getDayGroup(club, date, captainName):
+def getDayGroup(club, date, captainName, pageSize, pageIndex):
     introducers = Captain.objects.filter(club=club)
     if captainName:
         introducers = introducers.filter(name__contains=captainName)
+
+    total = introducers.count()
+    start = (pageIndex - 1) * pageSize
+    end = pageIndex * pageSize
+    totalPage = math.ceil(float(total) / pageSize)
+    introducers = introducers[start:end]
     introAry = []
     for introducer in introducers:
         introDict = {"intorducer": introducer}
@@ -817,7 +825,7 @@ def getDayGroup(club, date, captainName):
         introDict["allRound"] = allRound
         introDict["count"] = len(playerAry) + 2
         introAry.append(introDict)
-    return introAry
+    return introAry, total, totalPage
 
 @check_sys_login
 def score_change_log(request):

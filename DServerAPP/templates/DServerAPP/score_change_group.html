@@ -24,6 +24,8 @@
     <title>用户数据【分组】</title>
     <script src="{% static "common.js" %}"></script>
     <script src="{% static "qrcode.min.js" %}"></script>
+    <script src="{% static "bootstrap-paginator.js" %}"></script>
+    <link href="{% static "bootstrap-paginator.css" %}" rel="stylesheet">
 </head>
 <body>
     <div class="container-fluid nospace">
@@ -57,6 +59,8 @@
                             </form>
                         </li>
                         <li class="list-group-item">
+                            <p>队长数：{{ total }}</p>
+                            <div id="pagintor" style="margin-left: auto;margin-right: auto;display: block;"></div>
                             <table class="table table-hover">
                                 <thead>
                                 <tr>
@@ -105,6 +109,7 @@
                             </table>
                         </li>
                     </ul>
+
                   </div>
                   <div class="panel-footer text-right">
                     <a class="btn btn-link" href="/">返回</a>
@@ -205,6 +210,21 @@
         function searchAll() {
             window.location.href = "/score_change_group?cp="+$("#captainInput").val();
         }
+
+        var options = {
+            alignment:"center",//居中显示
+            currentPage: {{ pageIndex }},//当前页数
+            totalPages: {{ totalPage }},//总页数 注意不是总条数
+            pageUrl: function(type, page, current){
+                    if (page==current) {
+                        return "javascript:void(0)";
+                    } else {
+                        return "/score_change_group?date="+$('#dateInput').val() + "&cp="+$("#captainInput").val() + "&pageSize={{ pageSize }}&pageIndex="+page;
+                    }
+                }
+        }
+
+		$("#pagintor").bootstrapPaginator(options);
 
         function addCaptain() {
             $("#captainId").val("");

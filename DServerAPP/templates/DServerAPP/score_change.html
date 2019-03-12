@@ -109,9 +109,9 @@
                                             <button type="button" class="btn btn-default" style="color: red;" onclick="del_player({{player.id}})">删除</button>
                                         </td>
                                         <td width="20%">
-                                            <button type="button" class="btn btn-default" style="color: green;margin-bottom: 5px;" onclick="add_score({{player.id}})">上分+</button>
+                                            <button type="button" class="btn btn-default" style="color: green;" onclick="add_score({{player.id}})">上分+</button>
                                             <input type="number" class="form-control" id="score_{{player.id}}" value="">
-                                            <button type="button" class="btn btn-default" style="color: red;margin-top: -5px;" onclick="minus_score({{player.id}})">下分-</button>
+                                            <button type="button" class="btn btn-default" style="color: red;" onclick="minus_score({{player.id}})">下分-</button>
                                         </td>
                                        <!-- <td>
                                             {{player.history_profit}}
