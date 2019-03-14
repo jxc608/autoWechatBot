@@ -14,15 +14,14 @@ def bot_check_login(request):
     bot = wechatManager.wechatInstance.new_instance(wid)
     wx_login, desc = bot.check_login_status()
 
-    return JsonResponse({'login': wx_login, 'desc': desc, 'uuid': bot.get_uuid()})
+    return JsonResponse({'login': wx_login, 'desc': desc})
 
 def bot_refresh_uuid(request):
     wid = request.GET.get('wid')
     result = {}
     bot = wechatManager.wechatInstance.new_instance(wid)
-    bot.refresh_uuid()
+    result["uuid"] = bot.refresh_uuid()
 
-    result["uuid"] = bot.get_uuid()
     return JsonResponse(result)
 
 def bot_notice(request):
@@ -42,6 +41,7 @@ def bot_notice(request):
         if to_manager:
             for manager in Manager.objects.filter(club=club):
                 bot.sendByRemarkName(msg=msg, remarkName=manager.nick_name)
+            return JsonResponse({'result': 0})
         else:
             player = Player.objects.get(id=player_id)
             if not player.is_bind:

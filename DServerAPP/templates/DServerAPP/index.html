@@ -155,7 +155,7 @@
                     //check_login();
                     qrcode.makeCode('https://login.weixin.qq.com/l/' + data.uuid);
                     $("#scanDesc").html("");
-                    timer = setInterval("check_login()", 1000 * 3);
+                    timer = setInterval("check_login()", 1000 * 6);
                 } else {
                     $("#scanDesc").html(data.desc);
                 }

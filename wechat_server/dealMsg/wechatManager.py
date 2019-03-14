@@ -156,7 +156,6 @@ class wechatInstance():
         # self.qrid = itchat.get_QRuuid()
         self.login_status = '0'
         self.itchat_instance = itchat.new_instance()
-        self.uuid = ""
         self.wid = wid
 
         self.club_name = wid.split("__,__")[0]
@@ -184,7 +183,8 @@ class wechatInstance():
             logger.info(beginStr)
             self.send("正在识别...", 'filehelper')
 
-            club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
+            # club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
+            club_path = settings.STATIC_ROOT + '\\upload\\' + self.club.user_name + '\\'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
             # logger.info(msg)
@@ -438,87 +438,67 @@ class wechatInstance():
             _list[wid] = wechatInstance(wid)
         return _list[wid]
 
-    def get_uuid(self):
-        return self.uuid
-
     def refresh_uuid(self):
-        wx_login, desc = self.check_login_status()
-        if wx_login == '201':
-            # 等待确认中，检测线程仍在
-            self.login_status = '0'
-            self.uuid = self.itchat_instance.get_QRuuid()
-        elif wx_login != '200':
-            # 任何非等待状态，不是线程没有或已经结束
-            self.login_status = '0'
-            self.uuid = self.itchat_instance.get_QRuuid()
-            t = threading.Thread(target=_list[self.wid].check_login, args=())
-            t.start()
+        status, _ = self.check_login_status()
+        uuid = ''
+        if status != '200':
+            uuid = self.itchat_instance.get_QRuuid()
+            self.check_login(uuid)
+        return uuid
 
 
-    def check_login(self):
-        success = False
-        while self.uuid == "":
-            time.sleep(1)
+    def check_login(self, uuid):
+        def check():
+            success = False
+            while 1:
+                status = self.itchat_instance.check_login(uuid)
+                if status == '200':
+                    logger.info("uuid: %s, club：%s, uuid 登录成功" % (uuid, self.wid))
+                    success = True
+                    break
+                elif status == '201':
+                    pass
+                elif status == '408':
+                    logger.error("uuid: %s, club：%s, uuid 已超时" % (uuid, self.wid))
+                    break
+                elif status == '400':
+                    logger.error("uuid: %s, club：%s, 该环境暂时不能登录web微信" % (uuid, self.wid))
+                    break
+                time.sleep(1)
 
-        while 1:
-            status = self.itchat_instance.check_login(self.uuid)
-            self.login_status = status
-            if status == '200':
-                logger.info("uuid: %s, club：%s, uuid 登录成功" % (self.uuid, self.wid))
-                success = True
-                break
-            elif status == '201':
-                self.login_status = '201'
-            elif status == '408':
-                logger.error("uuid: %s, club：%s, uuid 已超时" % (self.uuid, self.wid))
-                break
-            elif status == '400':
-                logger.error("uuid: %s, club：%s, 该环境暂时不能登录web微信" % (self.uuid, self.wid))
-                break
-            time.sleep(1)
-
-        if success:
-            try:
-                self.club = Clubs.objects.get(user_name=self.club_name)
-            except:
-                logger.error("club未找到：" % self.wid)
-                self.logout()
-                return
-            # 失效判断，应该在登录的一瞬间自动判断，然后失效则发送消息后，自动注销
-            if self.club.expired_time < time.time():
-                self.send('CD KEY 已失效。 请延长后继续使用。微信自动退出。', 'filehelper')
-                logger.error(
-                    "wid: %s, CD KEY 已失效: %s" % (self.wid, time.strftime("%Y-%m-%d %H:%M:%S", self.club.expired_time)))
-                self.logout()
-            else:
+            if success:
                 userInfo = self.itchat_instance.web_init()
                 self.itchat_instance.show_mobile_login()
                 self.itchat_instance.get_contact(update=True)
                 self.itchat_instance.start_receiving()
-                t = threading.Thread(target=self.itchat_instance.run, args=())
-                t.start()
+                self.itchat_instance.run(debug=False, blockThread=False)
                 logger.info('Login successfully as %s' % userInfo['User']['NickName'])
 
+        t = threading.Thread(target=check)
+        t.start()
+
+
     def check_login_status(self):
-        status = self.login_status
-        desc = ""
-        if status == '201':
-            desc = "等待扫码确认"
-        if status == '408':
-            desc = "二维码已失效，请刷新后重试"
-        elif status == '400':
-            desc = "该环境暂时不能登录web微信"
-        elif status == '200':
-            if not self.itchat_instance.alive:
-                status = '0'
+        status = '200' if self.itchat_instance.alive else '0'
+        desc = ''
         return status, desc
+        # return self.itchat_instance.alive
+        # status = self.login_status
+        # desc = ""
+        # if status == '201':
+        #     desc = "等待扫码确认"
+        # if status == '408':
+        #     desc = "二维码已失效，请刷新后重试"
+        # elif status == '400':
+        #     desc = "该环境暂时不能登录web微信"
+        # elif status == '200':
+        #     if not self.itchat_instance.alive:
+        #         status = '0'
+        # return status, desc
 
 
     def logout(self):
         logger.info("用户退出登录: %s" % self.wid)
-        self.login_status = '0'
-        if _list.get(self.wid, None):
-            del _list[self.wid]
         self.itchat_instance.logout()
 
     def sendByRemarkName(self, msg, remarkName):
