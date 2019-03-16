@@ -168,7 +168,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件，自动切
             'filename': os.path.join(BASE_LOG_DIR, "%s_info.log" % (time.strftime("%F", time.localtime()))),  # 日志文件
-            'maxBytes': 1024 * 1024 * 50,  # 日志大小 50M
+            'maxBytes': 1024 * 1024 * 1000,  # 日志大小 50M
             'backupCount': 3,  # 最多备份几个
             'formatter': 'standard',
             'encoding': 'utf-8',
@@ -178,7 +178,7 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件，自动切
             'filename': os.path.join(BASE_LOG_DIR, "%s_err.log" % (time.strftime("%F", time.localtime()))),  # 日志文件
-            'maxBytes': 1024 * 1024 * 50,  # 日志大小 50M
+            'maxBytes': 1024 * 1024 * 1000,  # 日志大小 50M
             'backupCount': 5,
             'formatter': 'standard',
             'encoding': 'utf-8',
@@ -188,7 +188,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件，自动切
             'filename': os.path.join(BASE_LOG_DIR, "%s_collect.log" % (time.strftime("%F", time.localtime()))),
-            'maxBytes': 1024 * 1024 * 50,  # 日志大小 50M
+            'maxBytes': 1024 * 1024 * 1000,  # 日志大小 50M
             'backupCount': 5,
             'formatter': 'collect',
             'encoding': "utf-8"
