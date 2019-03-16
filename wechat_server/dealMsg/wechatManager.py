@@ -11,6 +11,8 @@ from django.db.models import F
 import threading
 import base64, re
 
+from .statistics import addClubOrcCount, addClubOrcFailCount, addClubOrcRepeatCount
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,24 +40,6 @@ options = {
     'detect_direction': 'true',
     'language_type': 'CHN_ENG',
 }
-
-def addClubOrcCount(club):
-    if club == None:
-        logger.error("增加统计次数，俱乐部为空")
-        return
-    curDate = datetime.datetime.now().date()
-    try:
-        ct = ClubOrcCount.objects.get(club=club, use_date=curDate)
-    except ClubOrcCount.DoesNotExist:
-        logger.info("新建统计记录__%s__%s" % (club.user_name, curDate))
-        ct = ClubOrcCount(club=club, use_date=curDate)
-        ct.save()
-    except:
-        logger.error("更新统计次数失败，错误未知")
-        traceback.logger.info_exc()
-        return
-    ct.count = F("count") + 1
-    ct.save()
 
 
 def get_aliyun_pic_info(content):
@@ -183,8 +167,10 @@ class wechatInstance():
             logger.info(beginStr)
             self.send("正在识别...", 'filehelper')
 
-            # club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
-            club_path = settings.STATIC_ROOT + '\\upload\\' + self.club.user_name + '\\'
+            if settings.DEBUG:
+                club_path = settings.STATIC_ROOT + '\\upload\\' + self.club.user_name + '\\'
+            else:
+                club_path = settings.STATIC_ROOT + '/upload/' + self.club.user_name + '/'
             if not os.path.exists(club_path):
                 os.mkdir(club_path)
             # logger.info(msg)
@@ -197,6 +183,7 @@ class wechatInstance():
                 result = self.get_aliyun_result(img_file)
                 room_data = get_aliyun_pic_info(result)
             except:
+                addClubOrcFailCount(self.club)
                 erro_msg = '图片无法识别，请试着保存图片或上传原图重新发送，如有疑问请联系管理员'
             if erro_msg == "":
                 erro_msg = self.scanError(room_data)
@@ -205,11 +192,12 @@ class wechatInstance():
                 wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
                 wrong_image.save()
                 self.itchat_instance.send(erro_msg, 'filehelper')
-                logger.error(erro_msg)
+                logger.error("club: %s, %s" % (self.wid, "图片识别失败"))
                 return
 
             existCount = HistoryGame.objects.filter(club=self.club, room_id=room_data.roomId, start_time=room_data.startTime).count()
             if existCount > 0:
+                addClubOrcRepeatCount(self.club)
                 logger.error("数据已入库: %s, room_id: %s, start_time: %s" % (self.wid, room_data.roomId, room_data.startTime))
                 self.itchat_instance.send('数据已入库！', 'filehelper')
                 return
@@ -453,13 +441,11 @@ class wechatInstance():
             while 1:
                 status = self.itchat_instance.check_login(uuid)
                 if status == '200':
-                    logger.info("uuid: %s, club：%s, uuid 登录成功" % (uuid, self.wid))
                     success = True
                     break
                 elif status == '201':
                     pass
                 elif status == '408':
-                    logger.error("uuid: %s, club：%s, uuid 已超时" % (uuid, self.wid))
                     break
                 elif status == '400':
                     logger.error("uuid: %s, club：%s, 该环境暂时不能登录web微信" % (uuid, self.wid))
@@ -472,7 +458,7 @@ class wechatInstance():
                 self.itchat_instance.get_contact(update=True)
                 self.itchat_instance.start_receiving()
                 self.itchat_instance.run(debug=False, blockThread=False)
-                logger.info('Login successfully as %s' % userInfo['User']['NickName'])
+                logger.info('uuid: %s, club：%s, Login successfully as %s' % (uuid, self.wid, userInfo['User']['NickName']))
 
         t = threading.Thread(target=check)
         t.start()

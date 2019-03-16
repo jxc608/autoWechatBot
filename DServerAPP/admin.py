@@ -74,7 +74,7 @@ class ClubsAdmin(admin.ModelAdmin):
 
 @admin.register(ClubOrcCount)
 class ClubOrcCountAdmin(admin.ModelAdmin):
-    list_display = ["id", "club", "use_date", "count"]
+    list_display = ["id", "club", "use_date", "count", "fail_count", "repeat_count"]
     search_fields = ["club__user_name"]
     list_filter = ["use_date", ("use_date", DateStampRangeFilter)]
     readonly_fields = ["club", "use_date", "count"]
@@ -95,9 +95,11 @@ class CaptainAdmin(admin.ModelAdmin):
     search_fields = ["name", "club__user_name"]
     readonly_fields = ["club"]
 
-# @admin.register(PlayerClearCost)
-# class PlayerClearCost(admin.ModelAdmin):
-#     list_display = ["id", "player_id", "history_cost", "create_time"]
+@admin.register(PlayerClearCost)
+class PlayerClearCost(admin.ModelAdmin):
+    list_display = ["id", "player_id", "history_cost", "create_time"]
+    # search_fields = ["player__nick_name"]
+    list_filter = ["create_time"]
 
 @admin.register(GameID)
 class GameIdAdmin(admin.ModelAdmin):
@@ -108,7 +110,7 @@ class GameIdAdmin(admin.ModelAdmin):
 @admin.register(Score)
 class ScoreAdmin(admin.ModelAdmin):
     list_display = ["id", "player", "score", "cost", "is_host", "create_time", "room_id", "refresh_time"]
-    search_fields = ["player__nick_name"]
+    search_fields = ["player__nick_name", "room_id"]
     list_filter = ["is_host"]
     readonly_fields = ["player", "score", "cost", "is_host", "create_time", "room_id", "refresh_time"]
     ordering = ["refresh_time"]
@@ -120,9 +122,11 @@ class HistoryGameAdmin(admin.ModelAdmin):
     readonly_fields = ["club", "room_id", "hoster_name", "hoster_id", "round_number", "start_time", "player_data", "create_time", "cost", "score", "refresh_time"]
     ordering = ["-refresh_time"]
 
-# @admin.register(HistoryGameClearCost)
-# class HistoryGameClearCostAdmin(admin.ModelAdmin):
-#     list_display = ["id", "history_id", "cost", "create_time"]
+@admin.register(HistoryGameClearCost)
+class HistoryGameClearCostAdmin(admin.ModelAdmin):
+    list_display = ["id", "history_id", "cost", "create_time"]
+    # search_fields = ["history__room_id"]
+    list_filter = ["create_time"]
 
 @admin.register(Cdkey)
 class CdkeyAdmin(admin.ModelAdmin):

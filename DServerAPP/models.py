@@ -70,6 +70,8 @@ class ClubOrcCount(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     use_date = models.DateField(default='', verbose_name='使用日期')
     count = models.IntegerField(default=0, verbose_name='使用次数')
+    repeat_count = models.IntegerField(default=0, verbose_name='重复次数')
+    fail_count = models.IntegerField(default=0, verbose_name='失败次数')
 
     def __str__(self):
         return "%s_%s_%s" % (self.club.user_name, self.use_date, self.count)
@@ -104,8 +106,9 @@ class Player(models.Model):
 
 class PlayerClearCost(models.Model):
     player_id = models.IntegerField(default=0)
-    history_cost = models.IntegerField(default=0)
-    create_time = models.DateTimeField(auto_now_add=True)
+    # player = models.ForeignKey(Player, verbose_name="玩家",on_delete=models.CASCADE, null=True)
+    history_cost = models.IntegerField(default=0, verbose_name="管理费")
+    create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
     class Meta:
         verbose_name = "玩家管理费清理记录"
@@ -149,7 +152,7 @@ class HistoryGame(models.Model):
     refresh_time = models.DateTimeField(verbose_name="最近刷新时间", default=timezone.now)
 
     def __str__(self):
-        return "%s_%s" % (self.room_id, self.hoster_name)
+        return "%s_%s" % (self.room_id, self.start_time)
 
     class Meta:
         verbose_name = "游戏历史记录"
@@ -157,8 +160,9 @@ class HistoryGame(models.Model):
 
 class HistoryGameClearCost(models.Model):
     history_id = models.IntegerField(default=0)
-    cost = models.IntegerField(default=0)
-    create_time = models.DateTimeField(auto_now_add=True)
+    # history = models.ForeignKey(HistoryGame, verbose_name="历史记录", on_delete=models.CASCADE, null=True)
+    cost = models.IntegerField(default=0, verbose_name="管理费")
+    create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
     class Meta:
         verbose_name = "游戏记录管理费清理"
