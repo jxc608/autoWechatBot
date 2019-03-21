@@ -9,7 +9,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+able_dict = [True]
+
+def logout_all(request):
+    able_dict[0] = False
+    wechatManager.wechatInstance.logoutAll()
+    logger.info("command: logout_all")
+    return JsonResponse({ 'result': 'ok' })
+
 def bot_check_login(request):
+    if not able_dict[0]:
+        return JsonResponse({'login': '0', 'desc': ''})
+
     wid = request.GET.get('wid')
     bot = wechatManager.wechatInstance.new_instance(wid)
     wx_login, desc = bot.check_login_status()
@@ -17,14 +28,19 @@ def bot_check_login(request):
     return JsonResponse({'login': wx_login, 'desc': desc})
 
 def bot_refresh_uuid(request):
-    wid = request.GET.get('wid')
+    if not able_dict[0]:
+        return JsonResponse({ 'uuid': '' })
+
     result = {}
+    wid = request.GET.get('wid')
     bot = wechatManager.wechatInstance.new_instance(wid)
     result["uuid"] = bot.refresh_uuid()
 
     return JsonResponse(result)
 
 def bot_notice(request):
+    if not able_dict[0]:
+        return JsonResponse({'result': 2})
     try:
         club_name = request.GET.get('name')
         to_manager = request.GET.get("manager", False)
@@ -54,6 +70,8 @@ def bot_notice(request):
 
 
 def bot_logout(request):
+    if not able_dict[0]:
+        return JsonResponse({'result': True})
     try:
         wid = request.GET.get('wid')
 
@@ -65,6 +83,8 @@ def bot_logout(request):
         return JsonResponse({'result': 4})
 
 def bot_wechat_bind(request):
+    if not able_dict[0]:
+        return JsonResponse({'result': 2})
     try:
         club_name = request.GET.get('name')
         player_id = int(request.GET.get('id'))
@@ -96,6 +116,8 @@ def bot_wechat_bind(request):
         return JsonResponse({'result': 4})
 
 def bot_wechat_bind_manager(request):
+    if not able_dict[0]:
+        return JsonResponse({'result': 2})
     try:
         club_name = request.GET.get('name')
         user_name = request.GET.get('user_name')
@@ -121,6 +143,8 @@ def bot_wechat_bind_manager(request):
         return JsonResponse({'result': 4})
 
 def bot_wechat_friends(request):
+    if not able_dict[0]:
+        return JsonResponse({'result': 2})
     try:
         wid = request.GET.get('wid')
         nick_name = request.GET.get('nick_name')

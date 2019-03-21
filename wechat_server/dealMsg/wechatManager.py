@@ -426,6 +426,11 @@ class wechatInstance():
             _list[wid] = wechatInstance(wid)
         return _list[wid]
 
+    @staticmethod
+    def logoutAll():
+        for key in _list:
+            _list[key].logout()
+
     def refresh_uuid(self):
         status, _ = self.check_login_status()
         uuid = ''

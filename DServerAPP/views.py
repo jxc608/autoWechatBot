@@ -326,7 +326,7 @@ def clear_room_data(request):
         for room in rooms:
             if room.cost == 0:
                 continue
-            hc = HistoryGameClearCost(history_id=room.id,cost=room.cost)
+            hc = HistoryGameClearCost(history=room,cost=room.cost)
             hc.save()
             room.cost = 0
             room.save()
@@ -489,7 +489,7 @@ def clear_player_stat(request):
         for player in players_cost:
             if player.history_cost == 0:
                 continue
-            pc = PlayerClearCost(player_id=player.id, history_cost=player.history_cost)
+            pc = PlayerClearCost(player=player, history_cost=player.history_cost)
             pc.save()
             player.history_cost = 0
             player.save()
@@ -1131,9 +1131,6 @@ def del_data(request):
         result["errmsg"] = "二级密码不正确"
     else:
         cursor=connection.cursor()
-        sql = " delete from DServerAPP_historygame"
-        sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
-        cursor.execute(sql)
         sql = " update DServerAPP_player"
         sql+= " set current_score=0,history_profit=0,today_hoster_number=0,history_cost=0"
         sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
@@ -1142,6 +1139,10 @@ def del_data(request):
         sql+= " where player_id in ("
         sql+= " select id from DServerAPP_player where club_id='" +str(club.uuid).replace('-','') + "'"
         sql+= ")"
+        cursor.execute(sql)
+        HistoryGameClearCost.objects.filter(history__club=club).delete()
+        sql = "delete from DServerAPP_historygame"
+        sql+= " where club_id='" +str(club.uuid).replace('-','') + "'"
         cursor.execute(sql)
     return HttpResponse(json.dumps(result), content_type="application/json")
 

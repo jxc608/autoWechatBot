@@ -97,8 +97,8 @@ class CaptainAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerClearCost)
 class PlayerClearCost(admin.ModelAdmin):
-    list_display = ["id", "player_id", "history_cost", "create_time"]
-    # search_fields = ["player__nick_name"]
+    list_display = ["id", "player", "history_cost", "create_time"]
+    search_fields = ["player__nick_name"]
     list_filter = ["create_time"]
 
 @admin.register(GameID)
@@ -113,7 +113,7 @@ class ScoreAdmin(admin.ModelAdmin):
     search_fields = ["player__nick_name", "room_id"]
     list_filter = ["is_host"]
     readonly_fields = ["player", "score", "cost", "is_host", "create_time", "room_id", "refresh_time"]
-    ordering = ["refresh_time"]
+    ordering = ["-create_time"]
 
 @admin.register(HistoryGame)
 class HistoryGameAdmin(admin.ModelAdmin):
@@ -124,8 +124,8 @@ class HistoryGameAdmin(admin.ModelAdmin):
 
 @admin.register(HistoryGameClearCost)
 class HistoryGameClearCostAdmin(admin.ModelAdmin):
-    list_display = ["id", "history_id", "cost", "create_time"]
-    # search_fields = ["history__room_id"]
+    list_display = ["id", "history", "cost", "create_time"]
+    search_fields = ["history__room_id"]
     list_filter = ["create_time"]
 
 @admin.register(Cdkey)

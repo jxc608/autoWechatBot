@@ -105,8 +105,8 @@ class Player(models.Model):
         verbose_name_plural = verbose_name
 
 class PlayerClearCost(models.Model):
-    player_id = models.IntegerField(default=0)
-    # player = models.ForeignKey(Player, verbose_name="玩家",on_delete=models.CASCADE, null=True)
+    player_id_orgin = models.IntegerField(default=0)
+    player = models.ForeignKey(Player, verbose_name="玩家",on_delete=models.CASCADE, null=True)
     history_cost = models.IntegerField(default=0, verbose_name="管理费")
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
@@ -158,9 +158,11 @@ class HistoryGame(models.Model):
         verbose_name = "游戏历史记录"
         verbose_name_plural = verbose_name
 
+        unique_together = ('club', 'room_id', 'start_time')
+
 class HistoryGameClearCost(models.Model):
-    history_id = models.IntegerField(default=0)
-    # history = models.ForeignKey(HistoryGame, verbose_name="历史记录", on_delete=models.CASCADE, null=True)
+    history_id_orgin = models.IntegerField(default=0)
+    history = models.ForeignKey(HistoryGame, verbose_name="历史记录", on_delete=models.CASCADE, null=True)
     cost = models.IntegerField(default=0, verbose_name="管理费")
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
