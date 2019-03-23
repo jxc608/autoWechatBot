@@ -131,7 +131,7 @@ class Score(models.Model):
     cost = models.IntegerField(default=0, verbose_name="管理费")
     is_host = models.IntegerField(default=0, choices=IS_HOST, verbose_name="是否是房主")
     create_time = models.DateTimeField(verbose_name="创建时间")
-    room_id = models.CharField(max_length=20, verbose_name="房间ID")
+    room_id = models.IntegerField(verbose_name="房间ID")
     refresh_time = models.DateTimeField(verbose_name="最近更新时间", default=timezone.now)
 
     class Meta:
@@ -140,7 +140,7 @@ class Score(models.Model):
 
 class HistoryGame(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
-    room_id = models.CharField(max_length=10, verbose_name="房间号")
+    room_id = models.IntegerField(verbose_name="房间号")
     hoster_name = models.CharField(max_length=20, verbose_name="主机名称", default='')
     hoster_id = models.IntegerField(default=0, verbose_name="主机ID")
     round_number = models.IntegerField(default=0, verbose_name="对局数，游戏几局几胜？")

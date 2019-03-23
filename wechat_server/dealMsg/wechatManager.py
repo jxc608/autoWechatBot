@@ -67,12 +67,16 @@ def get_aliyun_pic_info(content):
         if index < 7:
             if curKey["word"] in word:
                 if index < 4:
-                    pattern = "%s(.*)" % curKey["word"]
-                    r = re.search(pattern, word, re.M | re.I)
-                    ct = r.group(1)
-                    # 部分识别不出冒号的问题
-                    if ct[0] == ":" or ct[0] == "：":
-                        ct = ct[1:]
+                    if(curKey['key'] == 'room_id'):
+                        ct = re.sub(r'\D', "", word)
+                    else:
+                        pattern = "%s(.*)" % curKey["word"]
+                        r = re.search(pattern, word, re.M | re.I)
+                        ct = r.group(1)
+                        # 部分识别不出冒号的问题
+                        if ct[0] == ":" or ct[0] == "：":
+                            ct = ct[1:]
+
                     infoDic[curKey["key"]] = ct
                 else:
                     infoDic[curKey["key"]] = words["pos"][0]["x"]
@@ -102,7 +106,7 @@ def get_aliyun_pic_info(content):
                 data_list[playerIndex]["name"] = word
 
     room_data = playerResult.roomData()
-    room_data.roomId = infoDic["room_id"]
+    room_data.roomId = int(infoDic["room_id"])
     room_data.startTime = infoDic["start_time"]
     room_data.roomHoster = infoDic["hoster"].strip()
     room_data.roundCounter = infoDic["round_number"]
