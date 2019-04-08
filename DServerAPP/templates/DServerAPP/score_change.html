@@ -93,8 +93,10 @@
                                         </td>
                                         <td width="20%">
                                             {% for gameid in player.gameids %}
+                                                <div>
                                             {{gameid.gameid}}
-                                            <a href="javascrip:void(0);" onclick="del_gameid({{player.id}},{{gameid.gameid}})"><span style="font-size:20px">×</span></a>
+                                            <a href="javascrip:void(0);"><span  onclick="del_gameid({{player.id}},{{gameid.gameid}})" style="font-size:20px">×</span></a>
+                                                </div>
                                             <br/>
                                             {% endfor %}
                                             <button type="button" class="btn btn-default" onclick="show_modal({{player.id}})">添加小号</button>
@@ -263,23 +265,41 @@
             if(confirm('确定要删除吗？')==false)
                 return;
             var sp = prompt("请输入二级密码");
-            if(sp == "") {
+            if(sp == null || sp == "") {
                 alert("二级密码不能为空");
                 return;
             }
-            $.post("/del_gameid",{
-                id:player_id,
-                gameid:gameid,
-                second_password: sp,
-                //profit:$('#profit_'+player_id).val(),
-            },function(data){
-                if(data.result == 0){
-                    alert('删除成功！')
-                    window.location.reload();
+            var xmlHttp=null;
+            if (window.XMLHttpRequest) {// code for IE7, Firefox, Opera, etc.
+                xmlHttp=new XMLHttpRequest();
+            } else if (window.ActiveXObject) {// code for IE6, IE5
+              xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            if (xmlHttp!=null) {
+              xmlHttp.open("POST", "/del_gameid", false);
+              var xmlDoc = {
+                    id:player_id,
+                    gameid:gameid,
+                    second_password: sp,
+                    //profit:$('#profit_'+player_id).val(),
+                };
+              var xmlDoc = new FormData();
+              xmlDoc.append('id', player_id);
+              xmlDoc.append('gameid', gameid);
+              xmlDoc.append('second_password', sp);
+              xmlHttp.send(xmlDoc);
+              var result = xmlHttp.responseText;
+                result = JSON.parse(result);
+                if(result.result == 0) {
+                    alert("删除成功！");
+                    $(event.target).parent().parent().remove();
+                    //window.location.reload();
                 } else {
-                    alert(data.errmsg);
+                    alert(result.errmsg);
                 }
-            },"json");
+            } else {
+              alert("Your browser does not support XMLHTTP.");
+            }
         }
 
         function add_score(player_id){
@@ -303,7 +323,7 @@
             },function(data){
                 if(data.result == 0){
                     $('#current_score_'+player_id).html(data.current_score);
-                    alert('上分成功！')   
+                    alert('上分成功！')
                 }
             },"json");
         }
@@ -336,7 +356,7 @@
             },function(data){
                 if(data.result == 0){
                     $('#score_limit_'+player_id).html(data.score_limit);
-                    alert('授信成功！')   
+                    alert('授信成功！')
                     $('#scoreLimit').modal('hide');
                 }
             },"json");
@@ -362,7 +382,7 @@
             },function(data){
                 if(data.result == 0){
                     $('#current_score_'+player_id).html(data.current_score);
-                    alert('下分成功！')   
+                    alert('下分成功！')
                 }
             },"json");
         }
