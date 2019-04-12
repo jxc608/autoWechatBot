@@ -11,4 +11,8 @@ urlpatterns = [
     path('bot_wechat_bind', views.bot_wechat_bind, name='bot_wechat_bind'),
     path('bot_wechat_bind_manager', views.bot_wechat_bind_manager, name='bot_wechat_bind_manager'),
     path('bot_wechat_friends', views.bot_wechat_friends, name='bot_wechat_friends'),
+
+    path('check_club_status', views.check_club_status, name='check_club_status'),
+    path('orc_add_one', views.orc_add_one, name='orc_add_one'),
+    path('deal_img_data', views.deal_img_data, name='deal_img_data'),
 ]

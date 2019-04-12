@@ -140,3 +140,7 @@ LOGGING = {
     },
 }
 
+WECHAT_MODE_ONLINE = 'online'
+WECHAT_MODE_SERVICE = 'service'
+WECHAT_TEMPLATE_URL = ''
+

@@ -1,11 +1,14 @@
 #coding=utf-8
 from . import wechatManager
+from . import statistics
 import traceback
-from DServerAPP.models import Clubs, Manager, Player
+from DServerAPP.models import Clubs, Manager, Player, WxAccount
 from django.http import JsonResponse
+from django.conf import settings
 
 import time
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +163,55 @@ def bot_wechat_friends(request):
     except:
         traceback.print_exc()
         return JsonResponse({'result': 4})
+
+
+def check_club_status(request):
+    result = {'response': 'ok'}
+    appid = request.GET.get('appid', '')
+    if not appid:
+        result.update(response='fail', error='appid is empty: %s' % appid)
+    else:
+        try:
+            club = WxAccount.objects.get(appid=appid).club
+            if club.expired_time < time.time():
+                result.update(response='fail', error=u'您的cdkey已过期, appid: %s' % appid)
+        except:
+            error = u'俱乐部未绑定服务号： %s' % appid
+            logger.error(error)
+            result.update(response='fail', error=error)
+
+    return JsonResponse(result)
+
+def orc_add_one(request):
+    result = {'response': 'ok'}
+    appid = request.POST.get('appid', '')
+    if not appid:
+        result.update(response='fail', error='appid is empty: %s' % appid)
+    else:
+        try:
+            club = WxAccount.objects.get(appid=appid).club
+            statistics.addClubOrcCount(club)
+        except:
+            error = u'俱乐部未绑定服务号： %s' % appid
+            logger.error(error)
+            result.update(response='fail', error=error)
+
+    return JsonResponse(result)
+
+def deal_img_data(request):
+    result = {'response': 'ok'}
+    body = request.body
+    body = json.loads(body)
+    appid = body.get('appid', '')
+    content = body.get('content', '')
+    club = None
+    try:
+        club = WxAccount.objects.get(appid=appid).club
+    except:
+        error = u'俱乐部未绑定服务号： %s' % appid
+        logger.error(error)
+        result.update(response='fail', error=error)
+    if club:
+        wechatManager.wechatInstance.new_instance(club.user_name).deal_img_data(content, settings.SERVICE_WECHAT_MODE)
+
+    return JsonResponse(result)

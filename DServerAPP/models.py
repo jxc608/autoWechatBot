@@ -216,3 +216,14 @@ class Manager(models.Model):
         verbose_name = "管理员"
         verbose_name_plural = verbose_name
 
+
+class WxAccount(models.Model):
+    club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
+    appid = models.CharField(max_length=32, verbose_name="微信appid", unique=True)
+    desc = models.CharField(max_length=32, verbose_name="微信appid", blank=True, default="")
+    create_time = models.IntegerField(default=0, verbose_name="创建时间")
+
+    class Meta:
+        verbose_name = "俱乐部服务号"
+        verbose_name_plural = verbose_name
+
