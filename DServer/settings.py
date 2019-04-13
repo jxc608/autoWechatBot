@@ -31,7 +31,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'r62_a1o23l0j+-^u)q^37*t3e0sdltax5e11dv0vq)#jmha(3m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     SERVER_FILE_PATH = BASE_DIR
 else:
@@ -96,7 +96,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'auto_accounting',
         'USER': 'root',
-        'PASSWORD': 'autoAccounting1989',
+        'PASSWORD': '12345',
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {'charset':'utf8mb4'},

@@ -190,17 +190,21 @@ class wechatInstance():
             except:
                 addClubOrcFailCount(self.club)
                 erro_msg = '图片无法识别，请试着保存图片或上传原图重新发送，如有疑问请联系管理员'
-                self.itchat_instance.send(erro_msg, 'filehelper')
+                self.send_mode_msg(settings.WECHAT_MODE_ONLINE, content=erro_msg, usertag='filehelper')
+                # self.itchat_instance.send(erro_msg, 'filehelper')
                 return
+            self.deal_img_data(settings.WECHAT_MODE_ONLINE, result, fileName=msg.fileName, img_file=img_file)
 
 
-    def send_mode_msg(self, mode, content):
+    def send_mode_msg(self, mode, content='', usertag='', tm_param={}, mediaId=''):
+        # content为online模式的文字内容
+        # tm_param，内容为{'mediaId':'lastScore', 'roundScore', 'cost', 'currentScore'}
         if mode == settings.WECHAT_MODE_ONLINE:
-            self.itchat_instance.send(content, 'filehelper')
+            self.itchat_instance.send(content, usertag)
         elif mode == settings.WECHAT_MODE_SERVICE:
             requests.post(settings.WECHAT_TEMPLATE_URL, data=content)
 
-    def deal_img_data(self, aliyun_data, mode):
+    def deal_img_data(self, mode, aliyun_data, mediaId='', fromuser='', fileName='', img_file=''):
         try:
             room_data = get_aliyun_pic_info(aliyun_data)
         except:
@@ -210,10 +214,13 @@ class wechatInstance():
             erro_msg = self.scanError(room_data)
         if erro_msg != "":
             # 图片无法识别
-            wrong_image = WrongImage(club_name=self.club.user_name, image=msg.fileName, create_time=int(time.time()))
+            if mode == settings.WECHAT_MODE_SERVICE:
+                fileName = mediaId
+            wrong_image = WrongImage(club_name=self.club.user_name, image=fileName, create_time=int(time.time()))
             wrong_image.save()
-            self.itchat_instance.send(erro_msg, 'filehelper')
             logger.error("club: %s, %s" % (self.wid, "图片识别失败"))
+            self.send_mode_msg(mode, content=erro_msg, usertag=fromuser)
+            # self.itchat_instance.send(erro_msg, 'filehelper')
             return
 
         existCount = HistoryGame.objects.filter(club=self.club, room_id=room_data.roomId,
@@ -221,7 +228,8 @@ class wechatInstance():
         if existCount > 0:
             addClubOrcRepeatCount(self.club)
             logger.error("数据已入库: %s, room_id: %s, start_time: %s" % (self.wid, room_data.roomId, room_data.startTime))
-            self.itchat_instance.send('数据已入库！', 'filehelper')
+            self.send_mode_msg(mode, content="数据已入库！", usertag=fromuser)
+            # self.itchat_instance.send('数据已入库！', 'filehelper')
             return
 
         for num in range(0, len(room_data.playerData)):
@@ -231,7 +239,8 @@ class wechatInstance():
             if gi.count() > 1:
                 errmsg = '用户id：%s ， 账号名称：%s，匹配到 %s 条，请删除多余的数据后，再上传' % (roomPlayData.id, roomPlayData.name, gi.count())
                 logger.error(errmsg)
-                self.itchat_instance.send(errmsg, 'filehelper')
+                self.send_mode_msg(mode, content=errmsg, usertag=fromuser)
+                # self.itchat_instance.send(errmsg, 'filehelper')
                 return
 
         # 根据刷新时间设置，设置入库时间
@@ -274,15 +283,18 @@ class wechatInstance():
             if gi.count() == 1:
                 player = gi[0].player
             else:
-                self.itchat_instance.send('用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name),
-                                          'filehelper')
+                tm_msg = '用户id：%s 没有注册, 创建临时账号：%s' % (roomPlayData.id, roomPlayData.name)
+                self.send_mode_msg(mode, content=tm_msg, usertag=fromuser)
+                # self.itchat_instance.send(tm_msg, 'filehelper')
                 player = self.createTempPlayer(roomPlayData)
 
             if player.is_bind:
-                playerWechat = self.getWechatUserByRemarkName(player.nick_name)
-                if playerWechat:
-                    wechat_uuid = playerWechat['UserName']
-
+                if mode == settings.WECHAT_MODE_ONLINE:
+                    playerWechat = self.getWechatUserByRemarkName(player.nick_name)
+                    if playerWechat:
+                        wechat_uuid = playerWechat['UserName']
+                elif mode == settings.WECHAT_MODE_SERVICE:
+                    wechat_uuid = player.openid
             try:
                 is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
                 if is_host == 1:
@@ -300,10 +312,9 @@ class wechatInstance():
                 historyGame.cost += cost
                 historyGame.score += roomPlayData.score - cost
                 clubProfit += cost
-                costShow1 = "管理费： %s\n" % cost
+
                 costShow2 = "本局房费: %s" % cost
                 if cost == 0:
-                    costShow1 = ""
                     costShow2 = "本局房费: 无"
                 if not cost:
                     cost = 0
@@ -317,19 +328,26 @@ class wechatInstance():
                     num + 1, player.nick_name, roomPlayData.id, last_current_score, roomPlayData.score, cost,
                     player.current_score)
                 # pic_msg += str(num + 1) + '.ID' + str(roomPlayData.id) + '：' + player.nick_name + '  分数：' + str(roomPlayData.score) + costShow1 + '  总分数：' + str(player.current_score) + '\n'
-                if wechat_uuid != None:
-                    self.itchat_instance.send_image(img_file, wechat_uuid)
-                    alert_msg = '%s\n上次积分: %s\n本局积分: %s\n%s\n当前余分: %s\n' % (
-                    player.nick_name, last_current_score, roomPlayData.score, costShow2, player.current_score)
-                    self.itchat_instance.send(alert_msg, wechat_uuid)
+                if wechat_uuid:
+                    if mode == settings.WECHAT_MODE_ONLINE:
+                        self.itchat_instance.send_image(img_file, wechat_uuid)
+                        alert_msg = '%s\n上次积分: %s\n本局积分: %s\n%s\n当前余分: %s\n' % (
+                            player.nick_name, last_current_score, roomPlayData.score, costShow2, player.current_score)
+                        # self.itchat_instance.send(alert_msg, wechat_uuid)
+                        self.send_mode_msg(mode, content=alert_msg, usertag=wechat_uuid)
+                    elif mode == settings.WECHAT_MODE_SERVICE:
+                        tm_param = {'nick': player.nick_name, 'lastScore': last_current_score, 'templateid':settings.WECHAT_TEMPLATE_SCORE_CHANGE,
+                                    'roomScore': roomPlayData.score, 'cost': cost, 'currentScore': player.current_score}
+                        self.send_mode_msg(mode, mediaId=mediaId, tm_param=tm_param)
 
                 # 授信检测
-                self.scoreLimit(player, wechat_uuid)
+                self.scoreLimit(mode, player, wechat_uuid)
             except:
                 # traceback.logger.info_exc()
                 errmsg = "发生异常：\n姓名: %s\nid: %s\n分数: %s" % (roomPlayData.name, roomPlayData.id, roomPlayData.score)
                 logger.error(errmsg)
-                self.itchat_instance.send(errmsg, 'filehelper')
+                self.send_mode_msg(mode, content=erro_msg, usertag=fromuser)
+                # self.itchat_instance.send(errmsg, 'filehelper')
                 continue
         historyGame.save()
 
@@ -338,7 +356,8 @@ class wechatInstance():
         if self.club.msg_type == 0:
             pic_msg += '-----------------------------\n'
         # pic_msg+= '获得管理费：%s' % clubProfit
-        self.itchat_instance.send(pic_msg, 'filehelper')
+        self.send_mode_msg(mode, content=pic_msg, usertag=fromuser)
+        # self.itchat_instance.send(pic_msg, 'filehelper')
         # return '@%s@%s' % (typeSymbol, msg.fileName)
 
 
@@ -368,28 +387,39 @@ class wechatInstance():
         gameid.save()
         return player
 
-    def scoreLimit(self, player, wechat_uuid):
+    def scoreLimit(self, mode, player, wechat_uuid):
         if player.score_limit != 0 and player.current_score <= -player.score_limit:
-            alert_msg = player.nick_name + '\n'
-            alert_msg += '上分提醒\n'
-            alert_msg += '当前余分: %s\n' % player.current_score
-            alert_msg += player.score_limit_desc + '\n'
-            alert_msg += '本条消息来自傻瓜机器人自动回复\n'
+            if mode == settings.WECHAT_MODE_ONLINE:
+                alert_msg = player.nick_name + '\n'
+                alert_msg += '上分提醒\n'
+                alert_msg += '当前余分: %s\n' % player.current_score
+                alert_msg += player.score_limit_desc + '\n'
+                alert_msg += '本条消息来自傻瓜机器人自动回复\n'
+            elif mode == settings.WECHAT_MODE_SERVICE:
+                alert_msg = {'title': '', 'currentScore': player.current_score, 'limit': player.score_limit_desc,
+                             'remark': '本条消息来自傻瓜机器人自动回复', 'templateid': settings.WECHAT_TEMPLATE_SCORE_LIMIT}
 
             if player.is_bind and wechat_uuid:
-                self.itchat_instance.send(alert_msg, wechat_uuid)
+                self.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, usertag=wechat_uuid)
+                # self.itchat_instance.send(alert_msg, wechat_uuid)
 
             # 管理员
             manager_wechat_uuids = []
             for manager in Manager.objects.filter(club=self.club):
-                f = self.itchat_instance.search_friends(name=manager.nick_name)
-                if f:
-                    if isinstance(f, list):
-                        manager_wechat_uuids.append(f[0]['UserName'])
-                    elif isinstance(f, dict):
-                        manager_wechat_uuids.append(f['UserName'])
-            for manager_wechat_uuid in manager_wechat_uuids:
-                self.itchat_instance.send(alert_msg, manager_wechat_uuid)
+                if mode == settings.WECHAT_MODE_ONLINE:
+                    f = self.itchat_instance.search_friends(name=manager.nick_name)
+                    if f:
+                        if isinstance(f, list):
+                            manager_wechat_uuids.append(f[0]['UserName'])
+                        elif isinstance(f, dict):
+                            manager_wechat_uuids.append(f['UserName'])
+                    for manager_wechat_uuid in manager_wechat_uuids:
+                        self.send_mode_msg(mode, content=alert_msg, usertag=manager_wechat_uuid)
+
+                elif mode == settings.WECHAT_MODE_SERVICE and manager.openid:
+                    self.send_mode_msg(mode, tm_param=alert_msg, usertag=manager.openid)
+
+                # self.itchat_instance.send(alert_msg, manager_wechat_uuid)
 
     def calCostMode(self, rules, roomPlayData, num):
         cost = 0

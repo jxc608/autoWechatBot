@@ -96,6 +96,7 @@ class Player(models.Model):
     score_limit_desc = models.CharField(max_length=500, verbose_name="授信", default='')
     is_del = models.IntegerField(default=0, choices=YES_NO_GENERATE, verbose_name="是否删除")
     is_bind = models.IntegerField(default=0, choices=YES_NO_GENERATE, verbose_name="是否绑定")
+    openid = models.CharField(max_length=32, verbose_name="微信openid", default='')
 
     def __str__(self):
         return  self.nick_name
@@ -210,6 +211,7 @@ class Manager(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     wechat_nick_name = models.CharField(max_length=200, verbose_name="微信昵称")
     nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
+    openid = models.CharField(max_length=32, verbose_name="微信openid", default='')
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
 
     class Meta:
@@ -220,10 +222,11 @@ class Manager(models.Model):
 class WxAccount(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     appid = models.CharField(max_length=32, verbose_name="微信appid", unique=True)
-    desc = models.CharField(max_length=32, verbose_name="微信appid", blank=True, default="")
+    desc = models.CharField(max_length=32, verbose_name="描述", blank=True, default="")
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
 
     class Meta:
         verbose_name = "俱乐部服务号"
         verbose_name_plural = verbose_name
+
 
