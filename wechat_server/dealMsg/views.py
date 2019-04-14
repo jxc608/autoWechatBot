@@ -2,7 +2,7 @@
 from . import wechatManager
 from . import statistics
 import traceback
-from DServerAPP.models import Clubs, Manager, Player, WxAccount
+from DServerAPP.models import Clubs, Manager, Player
 from django.http import JsonResponse
 from django.conf import settings
 
@@ -42,30 +42,54 @@ def bot_refresh_uuid(request):
     return JsonResponse(result)
 
 def bot_notice(request):
-    if not able_dict[0]:
-        return JsonResponse({'result': 2})
     try:
         club_name = request.GET.get('name')
         to_manager = request.GET.get("manager", False)
-        msg = request.GET.get('msg')
+        lastScore = request.GET.get('lastScore')
+        chgScore = request.GET.get('chgScore')
+        op = request.GET.get('op')
         player_id = int(request.GET.get('player_id'))
-
+        player = Player.objects.get(id=player_id)
         club = Clubs.objects.get(user_name=club_name)
         wid = request.GET.get('wid')
+        mode = settings.WECHAT_MODE_ONLINE
         bot = wechatManager.wechatInstance.new_instance(wid)
-        wx_login, desc = bot.check_login_status()
-        if wx_login != '200':
-            return JsonResponse({'result': 2})
+        bot.club = club
+
+        if club.appid:
+            mode = settings.WECHAT_MODE_SERVICE
+            alert_msg = {'title': '%s %s' % (player.nick_name, op), 'currentScore': player.current_score,
+                         'lastScore': lastScore, 'chgScore': chgScore,
+                         'templateid': settings.WECHAT_TEMPLATE_SCORE_CHANGE}
+        else:
+            if not able_dict[0]:
+                return JsonResponse({'result': 2})
+
+            wx_login, desc = bot.check_login_status()
+            if wx_login != '200':
+                return JsonResponse({'result': 2})
+
+            alert_msg = '%s %s\n' % (player.nick_name, op)
+            alert_msg += '上次积分:%s\n' % lastScore
+            alert_msg += '本次%s:%s\n' % (op, chgScore)
+            alert_msg += '当前余分:%s\n' % player.current_score
 
         if to_manager:
             for manager in Manager.objects.filter(club=club):
-                bot.sendByRemarkName(msg=msg, remarkName=manager.nick_name)
+                online_user = ''
+                if mode == settings.WECHAT_MODE_ONLINE:
+                    f = bot.getWechatUserByRemarkName(remarkName=manager.nick_name)
+                    online_user = f['UserName']
+                bot.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, online_user=online_user, openid=manager.openid, is_template=True)
             return JsonResponse({'result': 0})
         else:
-            player = Player.objects.get(id=player_id)
             if not player.is_bind:
                 return JsonResponse({'result': 3})
-            bot.sendByRemarkName(msg=msg, remarkName=player.nick_name)
+            online_user = ''
+            if mode == settings.WECHAT_MODE_ONLINE:
+                f = bot.getWechatUserByRemarkName(remarkName=player.nick_name)
+                online_user = f['UserName']
+            bot.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, openid=player.openid, online_user=online_user, is_template=True)
             return JsonResponse({'result': 0})
     except:
         traceback.print_exc()
@@ -172,7 +196,7 @@ def check_club_status(request):
         result.update(response='fail', error='appid is empty: %s' % appid)
     else:
         try:
-            club = WxAccount.objects.get(appid=appid).club
+            club = Clubs.objects.get(appid=appid)
             if club.expired_time < time.time():
                 result.update(response='fail', error=u'您的cdkey已过期, appid: %s' % appid)
         except:
@@ -189,8 +213,13 @@ def orc_add_one(request):
         result.update(response='fail', error='appid is empty: %s' % appid)
     else:
         try:
-            club = WxAccount.objects.get(appid=appid).club
-            statistics.addClubOrcCount(club)
+            club = Clubs.objects.get(appid=appid)
+            if club.expired_time < time.time():
+                error = '俱乐部已过期： %s， 请与管理员确认' % club.user_name
+                logger.error(error)
+                result.update(response='fail', error=error)
+            else:
+                statistics.addClubOrcCount(club)
         except:
             error = u'俱乐部未绑定服务号： %s' % appid
             logger.error(error)
@@ -203,15 +232,29 @@ def deal_img_data(request):
     body = request.body
     body = json.loads(body)
     appid = body.get('appid', '')
+    mediaId = body.get('mediaid', '')
     content = body.get('content', '')
-    club = None
+    fromuser = body.get('fromuser', '')
     try:
-        club = WxAccount.objects.get(appid=appid).club
+        club = Clubs.objects.get(appid=appid)
+
     except:
         error = u'俱乐部未绑定服务号： %s' % appid
         logger.error(error)
         result.update(response='fail', error=error)
-    if club:
-        wechatManager.wechatInstance.new_instance(club.user_name).deal_img_data(content, settings.SERVICE_WECHAT_MODE)
+    try:
+        if club:
+            if club.expired_time < time.time():
+                error = '俱乐部已过期： %s， 请与管理员确认' % club.user_name
+                logger.error(error)
+                result.update(response='fail', error=error)
+            else:
+                bot = wechatManager.wechatInstance.new_instance(club.user_name)
+                bot.deal_img_data(settings.WECHAT_MODE_SERVICE, content, mediaId=mediaId, fromuser=fromuser, club=club)
+    except:
+        traceback.print_exc()
+        error = "发送微信消息出错"
+        result.update(response='fail', error=error)
 
     return JsonResponse(result)
+

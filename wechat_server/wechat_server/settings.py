@@ -25,7 +25,7 @@ SECRET_KEY = 'g&016+pc#vw3=nn@umrr6dx+bj+)=pvl09*7vvb2r8$ru&9&9-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ["127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -40,16 +40,6 @@ INSTALLED_APPS = [
 
     'dealMsg',
     'DServerAPP'
-]
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'wechat_server.urls'
@@ -143,7 +133,13 @@ LOGGING = {
 WECHAT_MODE_ONLINE = 'online'
 WECHAT_MODE_SERVICE = 'service'
 
-WECHAT_TEMPLATE_SCORE_CHANGE = ''
-WECHAT_TEMPLATE_SCORE_LIMIT = ''
+WECHAT_TEXT_URL = 'http://127.0.0.1:9000/'
+WECHAT_TEMPLATE_URL = 'http://127.0.0.1:9000/'
+# 正常通知
+WECHAT_TEMPLATE_SCORE_PLAY = '111'
+# 上下分
+WECHAT_TEMPLATE_SCORE_CHANGE = '222'
+# 授信
+WECHAT_TEMPLATE_SCORE_LIMIT = '333'
 
 

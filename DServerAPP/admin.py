@@ -62,9 +62,9 @@ class ChoiceAdmin(admin.ModelAdmin):
 
 @admin.register(Clubs)
 class ClubsAdmin(admin.ModelAdmin):
-    list_display = ["uuid", "user_name", "password", "password2", "show_expired_time", "cost_mode", "cost_param", "profit", "msg_type", "refresh_time"]
-    search_fields = ["uuid", "user_name", "cost_param", "msg_type"]
-    list_filter = ["cost_mode"]
+    list_display = ["uuid", "user_name", "password", "password2", "show_expired_time", "cost_mode", "cost_param", "profit", "msg_type", "appid"]
+    search_fields = ["uuid", "user_name", "cost_param", "appid"]
+    list_filter = ["cost_mode", "msg_type"]
     ordering = ["-expired_time"]
     readonly_fields = ["expired_time", "profit", "refresh_time"]
 
@@ -84,8 +84,8 @@ class ClubOrcCountAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ["id", "club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "score_limit", "score_limit_desc", "is_del", "is_bind"]
-    search_fields = ["club__user_name", "wechat_uuid", "wechat_nick_name", "nick_name", "score_limit_desc"]
+    list_display = ["id", "club", "wechat_id", "wechat_uuid", "openid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "score_limit", "score_limit_desc", "is_del", "is_bind"]
+    search_fields = ["club__user_name", "wechat_uuid", "openid", "wechat_nick_name", "nick_name", "score_limit_desc"]
     list_filter = ["is_del", "is_bind"]
     readonly_fields = ["club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "is_del"]
 
@@ -167,8 +167,8 @@ class ScoreChangeAdmin(admin.ModelAdmin):
 
 @admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
-    list_display = ["id", "club", "wechat_nick_name", "nick_name", "show_create_time"]
-    search_fields = ["club__user_name", "wechat_nick_name", "nick_name"]
+    list_display = ["id", "club", "wechat_nick_name", "nick_name", "openid", "show_create_time"]
+    search_fields = ["club__user_name", "wechat_nick_name", "nick_name", "openid"]
 
     readonly_fields = ["create_time"]
 

@@ -47,6 +47,7 @@ class Clubs(models.Model):
     msg_type = models.SmallIntegerField(default=0, choices=MSG_TYPE, verbose_name="消息格式", null=False)
     # 该字段暂时没用？
     refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据，暂时无用')
+    appid = models.CharField(max_length=32, verbose_name="微信appid", default="")
 
     def __str__(self):
         return self.user_name
@@ -218,15 +219,5 @@ class Manager(models.Model):
         verbose_name = "管理员"
         verbose_name_plural = verbose_name
 
-
-class WxAccount(models.Model):
-    club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
-    appid = models.CharField(max_length=32, verbose_name="微信appid", unique=True)
-    desc = models.CharField(max_length=32, verbose_name="描述", blank=True, default="")
-    create_time = models.IntegerField(default=0, verbose_name="创建时间")
-
-    class Meta:
-        verbose_name = "俱乐部服务号"
-        verbose_name_plural = verbose_name
 
 

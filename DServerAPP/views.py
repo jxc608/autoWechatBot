@@ -635,16 +635,14 @@ def add_score(request):
 
     score_change = ScoreChange(player=player, score=score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save()
-    msg = player.nick_name+' 上分\n'
-    msg+= '上次积分:%s\n' % current_score
-    msg+= '本次上分:%s\n' % score
-    msg+= '当前余分:%s\n' % player.current_score
 
     params = {
         'key': request.GET.get("key"),
         'name':club.user_name,
+        'op': '上分',
         'player_id':player_id,
-        'msg':msg,
+        'lastScore': current_score,
+        'chgScore': score,
         'wid': request.session['wid'],
     }
     if notice:
@@ -676,15 +674,13 @@ def minus_score(request):
 
     score_change = ScoreChange(player=player, score=-score, agent=agent, ip=ip, create_time=int(time.time()))
     score_change.save()
-    msg = player.nick_name+' 下分\n'
-    msg+= '上次积分:%s\n' % current_score
-    msg+= '本次下分:-%s\n' % score
-    msg+= '当前余分:%s\n' % player.current_score
     params = {
         'key': request.GET.get("key"),
-        'name': club.user_name,
-        'player_id': player_id,
-        'msg': msg,
+        'name':club.user_name,
+        'op': '下分',
+        'player_id':player_id,
+        'lastScore': current_score,
+        'chgScore': score,
         'wid': request.session['wid'],
     }
     if notice:
