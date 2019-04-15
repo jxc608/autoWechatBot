@@ -96,7 +96,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'auto_accounting',
         'USER': 'root',
-        'PASSWORD': '12345',
+        'PASSWORD': '38211108',
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {'charset':'utf8mb4'},

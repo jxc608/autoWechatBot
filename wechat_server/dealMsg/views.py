@@ -47,7 +47,6 @@ def bot_notice(request):
         to_manager = request.GET.get("manager", False)
         lastScore = request.GET.get('lastScore')
         chgScore = request.GET.get('chgScore')
-        op = request.GET.get('op')
         player_id = int(request.GET.get('player_id'))
         player = Player.objects.get(id=player_id)
         club = Clubs.objects.get(user_name=club_name)
@@ -58,9 +57,13 @@ def bot_notice(request):
 
         if club.appid:
             mode = settings.WECHAT_MODE_SERVICE
-            alert_msg = {'title': '%s %s' % (player.nick_name, op), 'currentScore': player.current_score,
-                         'lastScore': lastScore, 'chgScore': chgScore,
-                         'templateid': settings.WECHAT_TEMPLATE_SCORE_CHANGE}
+            tmid = settings.WECHAT_TEMPLATE_SCORE_ADD
+            keyword1 = '游戏上分'
+            if chgScore < 0:
+                keyword1 = '游戏下分'
+                tmid = settings.WECHAT_TEMPLATE_SCORE_MINUS
+            alert_msg = {'first': '%s，上次积分' % (player.nick_name, lastScore), 'keyword1': keyword1, 'keyword2': chgScore,
+                         'keyword3': player.current_score, 'remark': '感谢您的参与。', 'templateid': tmid}
         else:
             if not able_dict[0]:
                 return JsonResponse({'result': 2})

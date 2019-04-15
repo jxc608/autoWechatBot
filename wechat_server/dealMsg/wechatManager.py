@@ -196,25 +196,22 @@ class wechatInstance():
             self.deal_img_data(settings.WECHAT_MODE_ONLINE, result, fileName=msg.fileName, img_file=img_file)
 
 
-    def send_mode_msg(self, mode, content='', online_user='', openid='', tm_param={}, mediaId='', is_template=False):
+    def send_mode_msg(self, mode, content='', online_user='', openid='', tm_param={}, is_template=False):
         # content为online模式的文字内容
         # tm_param，内容为{'mediaId':'lastScore', 'roundScore', 'cost', 'currentScore'}
         if mode == settings.WECHAT_MODE_ONLINE:
             self.itchat_instance.send(content, online_user)
         elif mode == settings.WECHAT_MODE_SERVICE:
             if is_template:
-                postData = {'appid': self.club.appid}
+                postData = {'appid': self.club.appid, 'userid': openid}
                 ct = {}
-                if tm_param['templateid'] == settings.WECHAT_TEMPLATE_SCORE_PLAY:
-                    ct.update(title=tm_param['nick'], lastScore=tm_param['lastScore'],
-                        roomScore=tm_param['roomScore'], cost=tm_param['cost'], currentScore=tm_param['currentScore'])
-                elif tm_param['templateid'] == settings.WECHAT_TEMPLATE_SCORE_CHANGE:
-                    ct.update(title=tm_param['title'], lastScore=tm_param['lastScore'],
-                              currentScore=tm_param['currentScore'], chgScore=tm_param['chgScore'])
+                if tm_param['templateid'] in (settings.WECHAT_TEMPLATE_SCORE_ADD, settings.WECHAT_TEMPLATE_SCORE_MINUS):
+                    ct.update(first=tm_param['first'], keyword1=tm_param['keyword1'], keyword2=tm_param['keyword2'],
+                        keyword3=tm_param['keyword3'], remark=tm_param['remark'])
                 elif tm_param['templateid'] == settings.WECHAT_TEMPLATE_SCORE_LIMIT:
-                    ct.update(title=tm_param['title'], currentScore=tm_param['currentScore'],
-                              remark=tm_param['currentScore'])
-                postData['ct'] = ct
+                    ct.update(first=tm_param['first'], keyword1=tm_param['keyword1'], keyword2=tm_param['keyword2'],
+                              remark=tm_param['remark'])
+                postData['content'] = ct
                 requests.post(settings.WECHAT_TEMPLATE_URL, data=postData)
             else:
                 requests.post(settings.WECHAT_TEXT_URL, data={'appid': self.club.appid, 'text': content})
@@ -354,9 +351,15 @@ class wechatInstance():
                         # self.itchat_instance.send(alert_msg, wechat_uuid)
                         self.send_mode_msg(mode, content=alert_msg, online_user=wechat_uuid)
                     elif mode == settings.WECHAT_MODE_SERVICE:
-                        tm_param = {'nick': player.nick_name, 'lastScore': last_current_score, 'templateid':settings.WECHAT_TEMPLATE_SCORE_PLAY,
-                                    'roomScore': roomPlayData.score, 'cost': cost, 'currentScore': player.current_score}
-                        self.send_mode_msg(mode, mediaId=mediaId, tm_param=tm_param, openid=fromuser, is_template=True)
+                        tmid = settings.WECHAT_TEMPLATE_SCORE_ADD
+                        keyword1 = '游戏结算'
+                        if roomPlayData.score < 0:
+                            tmid = settings.WECHAT_TEMPLATE_SCORE_MINUS
+
+                        tm_param = {'first': '%s，%s，上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
+                                    'keyword1': keyword1, 'templateid':tmid, 'keyword2': roomPlayData.score,
+                                    'keyword3': player.current_score, 'remark': '本局房费：%s' % cost}
+                        self.send_mode_msg(mode, tm_param=tm_param, openid=fromuser, is_template=True)
 
                 # 授信检测
                 self.scoreLimit(mode, player, wechat_uuid)
@@ -414,8 +417,8 @@ class wechatInstance():
                 alert_msg += player.score_limit_desc + '\n'
                 alert_msg += '本条消息来自傻瓜机器人自动回复\n'
             elif mode == settings.WECHAT_MODE_SERVICE:
-                alert_msg = {'title': '%s 上分提醒' % player.nick_name, 'currentScore': player.current_score,
-                        'remark': '%s\n本条消息来自傻瓜机器人自动回复' % player.score_limit_desc,
+                alert_msg = {'first': '%s 上分提醒' % player.nick_name, 'keyword1': '当前余分: %s' % player.current_score,
+                    'keyword2': player.score_limit_desc, 'remark': '%s\n本条消息来自傻瓜机器人自动回复' % player.score_limit_desc,
                              'templateid': settings.WECHAT_TEMPLATE_SCORE_LIMIT}
 
             if player.is_bind and wechat_uuid:

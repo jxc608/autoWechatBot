@@ -639,7 +639,6 @@ def add_score(request):
     params = {
         'key': request.GET.get("key"),
         'name':club.user_name,
-        'op': '上分',
         'player_id':player_id,
         'lastScore': current_score,
         'chgScore': score,
@@ -677,10 +676,9 @@ def minus_score(request):
     params = {
         'key': request.GET.get("key"),
         'name':club.user_name,
-        'op': '下分',
         'player_id':player_id,
         'lastScore': current_score,
-        'chgScore': score,
+        'chgScore': -score,
         'wid': request.session['wid'],
     }
     if notice:
