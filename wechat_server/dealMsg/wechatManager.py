@@ -219,7 +219,7 @@ class wechatInstance():
             else:
                 requests.post(settings.WECHAT_TEXT_URL, data={'appid': self.club.appid, 'text': content})
 
-    def deal_img_data(self, mode, aliyun_data, mediaId='', fromuser='', fileName='', img_file='', club=None):
+    def deal_img_data(self, mode, aliyun_data, img_url='', fromuser='', fileName='', img_file='', club=None):
         if mode == settings.WECHAT_MODE_SERVICE:
             self.club = club
         erro_msg = ''
@@ -233,7 +233,7 @@ class wechatInstance():
         if erro_msg != "":
             # 图片无法识别
             if mode == settings.WECHAT_MODE_SERVICE:
-                fileName = mediaId
+                fileName = img_url
             wrong_image = WrongImage(club_name=self.club.user_name, image=fileName, create_time=int(time.time()))
             wrong_image.save()
             logger.error("club: %s, %s" % (self.wid, "图片识别失败"))
