@@ -47,7 +47,7 @@ class Clubs(models.Model):
     msg_type = models.SmallIntegerField(default=0, choices=MSG_TYPE, verbose_name="消息格式", null=False)
     # 该字段暂时没用？
     refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据，暂时无用')
-    appid = models.CharField(max_length=32, verbose_name="微信appid", default="")
+    appid = models.CharField(max_length=32, verbose_name="微信appid", blank=True, default="")
 
     def __str__(self):
         return self.user_name
@@ -84,7 +84,6 @@ class ClubOrcCount(models.Model):
 class Player(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     wechat_id = models.CharField(max_length=200, verbose_name="微信ID")
-    wechat_uuid = models.CharField(max_length=200, verbose_name="微信UUID", default='')
     wechat_nick_name = models.CharField(max_length=200, verbose_name="微信昵称")
     # 备注昵称，绑定时，会同时更新到微信的remarkName【微信昵称本身绑定时作为第一匹配条件，remarkName第二匹配】
     nick_name = models.CharField(max_length=200, verbose_name="备注昵称", default='')
@@ -97,7 +96,8 @@ class Player(models.Model):
     score_limit_desc = models.CharField(max_length=500, verbose_name="授信", default='')
     is_del = models.IntegerField(default=0, choices=YES_NO_GENERATE, verbose_name="是否删除")
     is_bind = models.IntegerField(default=0, choices=YES_NO_GENERATE, verbose_name="是否绑定")
-    openid = models.CharField(max_length=32, verbose_name="微信openid", default='')
+    openid = models.CharField(max_length=32, verbose_name="微信openid", blank=True, default='')
+    qrcode_url = models.URLField(verbose_name="二维码地址", null=True, blank=True, default=None)
 
     def __str__(self):
         return  self.nick_name
@@ -212,7 +212,7 @@ class Manager(models.Model):
     club = models.ForeignKey(Clubs, on_delete=models.CASCADE, verbose_name="俱乐部")
     wechat_nick_name = models.CharField(max_length=200, verbose_name="微信昵称")
     nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
-    openid = models.CharField(max_length=32, verbose_name="微信openid", default='')
+    openid = models.CharField(max_length=32, verbose_name="微信openid", blank=True, default='')
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
 
     class Meta:

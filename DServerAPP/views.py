@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from .models import *
 import uuid
 from . import messageType
@@ -14,6 +14,7 @@ import io, math
 from . import wechatDeal
 from functools import wraps
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -379,7 +380,7 @@ def player_data(request):
     if gameid_search:
         gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
         if gameids.count() == 0:
-            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+            return render(request, 'DServerAPP/player_data.html', {'appid':club.appid, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
     if gameid_search:
         for gameid in gameids:
             players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
@@ -399,7 +400,7 @@ def player_data(request):
         gameids = GameID.objects.filter(player_id=player.id)
         player.gameids = gameids
 
-    return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':players, 'total':total, 'totalPage': totalPage, 'pageSize': pageSize, 'pageIndex': pageIndex, 'nickname':nickname_search, 'gameid':gameid_search})
+    return render(request, 'DServerAPP/player_data.html', {'appid':club.appid, 'players':players, 'total':total, 'totalPage': totalPage, 'pageSize': pageSize, 'pageIndex': pageIndex, 'nickname':nickname_search, 'gameid':gameid_search})
 
 @check_sys_login
 def player_stat(request):
@@ -1108,6 +1109,33 @@ def update_cost_mode(request):
     club.msg_type = msg_type
     club.save()
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
+
+def generate_qrcode(request):
+    pid = request.POST.get('id')
+    resp = {'result': '0'}
+    club = Clubs.objects.get(user_name=request.session['club'])
+    response = requests.post(settings.WECHAT_QRCODE_ADD, data={'appid': club.appid, 'scene_str': 'CLUB:p=%s' % pid})
+    response.encoding = 'utf-8'
+    response = response.text
+    codeRes = json.loads(response)
+    if codeRes['response'] == 'ok':
+        player = Player.objects.get(pk=pid)
+        player.qrcode_url = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=%s' % codeRes['ticket']
+        player.save()
+        resp.update(url=player.qrcode_url)
+    else:
+        resp.update(result=1, error=codeRes['error'])
+    return JsonResponse(resp)
+
+def qrcode_bind(request):
+    pid = request.POST.get('id')
+    openid = request.POST.get('openid')
+    resp = {'response': 'ok'}
+    player = Player.objects.get(pk=pid)
+    player.openid = openid
+    player.save()
+
+    return JsonResponse(resp)
 
 def update_refresh_time(request):
     refresh_time = int(request.POST.get('refresh_time'))

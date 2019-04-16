@@ -133,8 +133,8 @@ LOGGING = {
 WECHAT_MODE_ONLINE = 'online'
 WECHAT_MODE_SERVICE = 'service'
 
-WECHAT_TEXT_URL = 'http://127.0.0.1:9000/send/text'
-WECHAT_TEMPLATE_URL = 'http://127.0.0.1:9000/send/template'
+WECHAT_TEXT_URL = '%s/send/text' % WECHAT_SERVER_URL
+WECHAT_TEMPLATE_URL = '%s/send/template' % WECHAT_SERVER_URL
 # 正常通知
 WECHAT_TEMPLATE_SCORE_ADD = 'GUhk3-jzV_OgCHckUVxYMKjUj0eXQSqsUnOQzgT6NwA'
 # 上下分

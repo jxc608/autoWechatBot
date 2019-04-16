@@ -5,7 +5,7 @@ import json
 # Register your models here.
 from .models import *
 from daterange_filter.filter import DateRangeForm, clean_input_prefix, FILTER_PREFIX, DateRangeFilter
-
+from django.utils.html import format_html
 
 class DateStampRangeFilter(DateRangeFilter):
     template = 'daterange_filter/filter.html'
@@ -81,13 +81,20 @@ class ClubOrcCountAdmin(admin.ModelAdmin):
 
     ordering = ["-use_date"]
 
-
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ["id", "club", "wechat_id", "wechat_uuid", "openid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "score_limit", "score_limit_desc", "is_del", "is_bind"]
-    search_fields = ["club__user_name", "wechat_uuid", "openid", "wechat_nick_name", "nick_name", "score_limit_desc"]
+    list_display = ["id", "club", "wechat_id", "openid", "nick_name", "qr_code", "current_score", "history_profit", "history_cost", "today_hoster_number", "score_limit", "score_limit_desc", "is_del", "is_bind"]
+    search_fields = ["club__user_name", "openid", "nick_name", "score_limit_desc"]
     list_filter = ["is_del", "is_bind"]
-    readonly_fields = ["club", "wechat_id", "wechat_uuid", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "is_del"]
+    readonly_fields = ["club", "wechat_id", "wechat_nick_name", "nick_name", "current_score", "history_profit", "history_cost", "today_hoster_number", "is_del"]
+
+    def qr_code(self, obj):
+        if obj.qrcode_url:
+            return format_html("<img width='120' src='%s'/>" % obj.qrcode_url)
+        else:
+            return ""
+    qr_code.short_description = '邀请二维码'
+    qr_code.allow_tags = True
 
 @admin.register(Captain)
 class CaptainAdmin(admin.ModelAdmin):
