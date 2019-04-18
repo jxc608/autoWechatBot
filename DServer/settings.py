@@ -245,3 +245,8 @@ else:
 
 BOT_RING = HashRing(BOT_SERVERS)
 BOT_KEY = 'We1kskbot2018'
+
+WECHAT_SERVER_URL = 'http://wechat.leafsnow.xyz'
+if DEBUG:
+    WECHAT_SERVER_URL = 'http://127.0.0.1:9000'
+WECHAT_QRCODE_ADD = '%s/qrcode/add' % WECHAT_SERVER_URL
