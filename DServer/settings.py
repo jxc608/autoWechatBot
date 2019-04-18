@@ -90,13 +90,15 @@ WSGI_APPLICATION = 'DServer.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
+DB_PWD = 'autoAccounting1989'
+if DEBUG:
+    DB_PWD = '38211108'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'auto_accounting',
         'USER': 'root',
-        'PASSWORD': '38211108',
+        'PASSWORD': DB_PWD,
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {'charset':'utf8mb4'},
@@ -241,7 +243,7 @@ GRAPPELLI_ADMIN_TITLE = "机器人后台管理系统"
 if DEBUG:
     BOT_SERVERS = ['http://127.0.0.1:8081']
 else:
-    BOT_SERVERS = ['http://127.0.0.1:8081']
+    BOT_SERVERS = ['http://wbot_server.leafsnow.xyz']
 
 BOT_RING = HashRing(BOT_SERVERS)
 BOT_KEY = 'We1kskbot2018'

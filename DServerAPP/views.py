@@ -380,7 +380,7 @@ def player_data(request):
     if gameid_search:
         gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
         if gameids.count() == 0:
-            return render(request, 'DServerAPP/player_data.html', {'appid':club.appid, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+            return render(request, 'DServerAPP/player_data.html', {'appid':club.appid, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search, 'totalPage': 0, 'pageSize': pageSize, 'pageIndex': pageIndex})
     if gameid_search:
         for gameid in gameids:
             players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
