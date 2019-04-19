@@ -1,34 +1,20 @@
 1.系统架构
   请将当前根目录，添加到PYTHONPATH中
-  mysql - django - uwsgi - nginx
-  请安装相关软件
-  nginx配置 - nginx.conf
-  uwsgi配置
-   - uwsgi.ini        - web 进程
-   - wechat_server/uwsgi8081.ini    - 机器人进程1
-   - wechat_server/uwsgi8082.ini    - 机器人进程2
+  mysql - django - uwsgi - nginx - supervisor
+  详细配置见conf下面
 
 2.数据库
-  auto_accounting.sql
+  migrations
 
 3.python 依赖包安装
   pip install -r requirements.txt
 
 4.启动服务
-  start.sh   - 启动服务
-  restart.sh - 刷新服务
-  stop.sh    - 停止服务
+  supervisorctl restart/start/stop wbot
+  supervisorctl restart/start/stop wbot_server
 
-  部署之后，确保三个脚本有可执行权限
-  chmod 755 start.sh
-  chmod 755 restart.sh
-  chmod 755 stop.sh
 
 5.扩展机器人服务
   机器人服务可根据情况添加
   1.重新定义一个uwsgi端口.ini文件，并把ini文件里的端口也进行修改
     并在/DServer/settings.py 中 BOT_SERVERS 列表中添加定义
-  2.在以下脚本中添加新增加的服务信息
-    start.sh   - 启动服务
-    stop.sh    - 停止服务
-  3.重启服务
