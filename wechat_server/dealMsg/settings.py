@@ -25,27 +25,11 @@ SECRET_KEY = 'g&016+pc#vw3=nn@umrr6dx+bj+)=pvl09*7vvb2r8$ru&9&9-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ["*"]
+
+ROOT_URLCONF = 'wechat_server.dealMsg.urls'
 
 
-# Application definition
-
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-    'dealMsg',
-    'DServerAPP'
-]
-
-ROOT_URLCONF = 'wechat_server.urls'
-
-
-WSGI_APPLICATION = 'wechat_server.wsgi.application'
+WSGI_APPLICATION = 'wechat_server.dealMsg.wsgi.application'
 
 
 BASE_LOG_DIR = os.path.join(SERVER_FILE_PATH, "wechat_logs")

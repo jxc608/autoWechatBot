@@ -1,6 +1,6 @@
 .idea/
 *.png
-migrations/
+/migrations/
 *.pyc
 !__init__.py
 *.log
