@@ -57,14 +57,14 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     #'django.middleware.csrf.CsrfViewMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # 'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    # 'uadetector.django.middleware.UADetectorMiddleware',
+    'uadetector.django.middleware.UADetectorMiddleware',
 ]
 
 ROOT_URLCONF = 'DServer.urls'
@@ -243,7 +243,7 @@ GRAPPELLI_ADMIN_TITLE = "机器人后台管理系统"
 if DEBUG:
     BOT_SERVERS = ['http://127.0.0.1:8081']
 else:
-    BOT_SERVERS = ['http://wbot_server.leafsnow.xyz']
+    BOT_SERVERS = ['http://wbot.calculate.leafsnow.xyz']
 
 BOT_RING = HashRing(BOT_SERVERS)
 BOT_KEY = 'We1kskbot2018'
