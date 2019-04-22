@@ -225,7 +225,7 @@ class wechatInstance():
                 postData = json.dumps(postData)
                 requests.post(settings.WECHAT_TEMPLATE_URL, data=postData, headers=headers)
             else:
-                data = {'appid': self.club.appid, 'text': content}
+                data = {'appid': self.club.appid, 'userid': openid, 'content': content}
                 data = json.dumps(data)
                 requests.post(settings.WECHAT_TEXT_URL, data=data, headers=headers)
 
