@@ -260,7 +260,7 @@ def deal_img_data(request):
                 result.update(response='fail', error=error)
             else:
                 bot = wechatManager.wechatInstance.new_instance(club.user_name)
-                bot.deal_img_data(settings.WECHAT_MODE_SERVICE, content, img_url=img_url, media_id=media_id, fromuser=fromuser, club=club)
+                bot.deal_img_data(settings.WECHAT_MODE_SERVICE, json.loads(content), img_url=img_url, media_id=media_id, fromuser=fromuser, club=club)
     except:
         traceback.print_exc()
         error = "发送微信消息出错"
