@@ -252,3 +252,6 @@ WECHAT_SERVER_URL = 'http://wechat.leafsnow.xyz'
 if DEBUG:
     WECHAT_SERVER_URL = 'http://127.0.0.1:9000'
 WECHAT_QRCODE_ADD = '%s/qrcode/add' % WECHAT_SERVER_URL
+
+WECHAT_TEXT_URL = '%s/send/text' % WECHAT_SERVER_URL
+WECHAT_TEMPLATE_URL = '%s/send/template' % WECHAT_SERVER_URL
