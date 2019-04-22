@@ -216,9 +216,12 @@ class wechatInstance():
                     ct.update(first=tm_param['first'], keyword1=tm_param['keyword1'], keyword2=tm_param['keyword2'],
                               remark=tm_param['remark'])
                 postData['content'] = ct
+                postData = json.dumps(postData)
                 requests.post(settings.WECHAT_TEMPLATE_URL, data=postData, headers=headers)
             else:
-                requests.post(settings.WECHAT_TEXT_URL, data={'appid': self.club.appid, 'text': content}, headers=headers)
+                data = {'appid': self.club.appid, 'text': content}
+                data = json.dumps(data)
+                requests.post(settings.WECHAT_TEXT_URL, data=data, headers=headers)
 
     def deal_img_data(self, mode, aliyun_data, img_url='', media_id='', fromuser='', fileName='', img_file='', club=None):
         if mode == settings.WECHAT_MODE_SERVICE:
