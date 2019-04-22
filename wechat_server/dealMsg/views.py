@@ -194,7 +194,7 @@ def bot_wechat_friends(request):
 
 def check_club_status(request):
     result = {'response': 'ok'}
-    appid = request.GET.get('appid', '')
+    appid = request.POST.get('appid', '')
     if not appid:
         result.update(response='fail', error='appid is empty: %s' % appid)
     else:
