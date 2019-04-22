@@ -237,7 +237,7 @@ class wechatInstance():
         if erro_msg != "":
             # 图片无法识别
             if mode == settings.WECHAT_MODE_SERVICE:
-                fileName = img_url
+                fileName = media_id
             wrong_image = WrongImage(club_name=self.club.user_name, image=fileName, create_time=int(time.time()))
             wrong_image.save()
             logger.error("club: %s, %s" % (self.wid, "图片识别失败"))
