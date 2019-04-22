@@ -108,7 +108,7 @@
                                             </td>
                                             <td width="30%" align="center" id="is_bind_{{ player.id }}">
                                                 {% if player.qrcode_url %}
-                                                    <img src="{{ player.qrcode_url }}" />
+                                                    <img width="100" src="{{ player.qrcode_url }}" />
                                                 {% else %}
                                                     <button type="button" class="btn btn-default" style="color: #337ab7" onclick="generate_qrcode({{player.id}})">生成</button>
                                                 {% endif %}
@@ -298,7 +298,7 @@
                 },function(data){
                     if(data.result == 0){
                         alert('生成成功！');
-                        $('#is_bind_' + player_id).html('<img src="' + data.url + '"/>');
+                        $('#is_bind_' + playerid).html('<img width="100" src="' + data.url + '"/>');
                     } else {
                         alert(data.error);
                     }
