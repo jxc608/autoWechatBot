@@ -206,16 +206,22 @@ class wechatInstance():
             if is_template:
                 postData = {'appid': self.club.appid, 'userid': openid}
                 ct = {}
+                url = tm_param.get('url', '')
+                postData['content'] = {}
                 if tm_param['template'] == settings.WECHAT_TEMPLATE_SCORE_ADD[0]:
+                    postData['content']['template_id'] = settings.WECHAT_TEMPLATE_SCORE_ADD[1]
                     ct.update(first=tm_param['first'], keyword1=tm_param['keyword1'], keyword2=tm_param['keyword2'],
                         keyword3=tm_param['keyword3'], remark=tm_param['remark'])
                 elif tm_param['template'] == settings.WECHAT_TEMPLATE_SCORE_MINUS[0]:
+                    postData['content']['template_id'] = settings.WECHAT_TEMPLATE_SCORE_MINUS[1]
                     ct.update(first=tm_param['first'], keyword1=tm_param['keyword1'], keyword2=tm_param['keyword2'],
                               keyword3=tm_param['keyword3'], remark=tm_param['remark'])
                 elif tm_param['template'] == settings.WECHAT_TEMPLATE_SCORE_LIMIT[0]:
+                    postData['content']['template_id'] = settings.WECHAT_TEMPLATE_SCORE_LIMIT[1]
                     ct.update(first=tm_param['first'], keyword1=tm_param['keyword1'], keyword2=tm_param['keyword2'],
                               remark=tm_param['remark'])
-                postData['content'] = ct
+                postData['content']['data'] = ct
+                postData['content']['url'] = url
                 postData = json.dumps(postData)
                 requests.post(settings.WECHAT_TEMPLATE_URL, data=postData, headers=headers)
             else:
@@ -226,6 +232,8 @@ class wechatInstance():
     def deal_img_data(self, mode, aliyun_data, img_url='', media_id='', fromuser='', fileName='', img_file='', club=None):
         if mode == settings.WECHAT_MODE_SERVICE:
             self.club = club
+            ct = "俱乐部：%s，开始识别..." %  club.user_name
+            self.send_mode_msg(mode, content=ct, online_user='filehelper', openid=fromuser)
         erro_msg = ''
         try:
             room_data = get_aliyun_pic_info(aliyun_data)
