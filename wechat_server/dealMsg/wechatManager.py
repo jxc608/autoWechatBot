@@ -374,7 +374,7 @@ class wechatInstance():
                             keyword2 = {'value': roomPlayData.score, 'color': '#ff0000'}
 
                         tm_param = {'first': '%s，%s，上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
-                                    'keyword1': keyword1, 'template':tp, 'keyword2': keyword2,
+                                    'keyword1': keyword1, 'template':tp, 'keyword2': keyword2, 'url': img_url,
                                     'keyword3': player.current_score, 'remark': '本局房费：%s' % cost}
                         self.send_mode_msg(mode, tm_param=tm_param, openid=fromuser, is_template=True)
 
