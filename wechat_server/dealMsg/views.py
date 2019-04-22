@@ -57,13 +57,15 @@ def bot_notice(request):
 
         if club.appid:
             mode = settings.WECHAT_MODE_SERVICE
-            tmid = settings.WECHAT_TEMPLATE_SCORE_ADD
+            tp = settings.WECHAT_TEMPLATE_SCORE_ADD[0]
             keyword1 = '游戏上分'
+            keyword2 = {'value': '+%s' % chgScore, 'color': '#00ff00'}
             if chgScore < 0:
                 keyword1 = '游戏下分'
-                tmid = settings.WECHAT_TEMPLATE_SCORE_MINUS
-            alert_msg = {'first': '%s，上次积分' % (player.nick_name, lastScore), 'keyword1': keyword1, 'keyword2': chgScore,
-                         'keyword3': player.current_score, 'remark': '感谢您的参与。', 'templateid': tmid}
+                tp = settings.WECHAT_TEMPLATE_SCORE_MINUS[0]
+                keyword2 = {'value': chgScore, 'color': '#ff0000'}
+            alert_msg = {'first': '%s，上次积分' % (player.nick_name, lastScore), 'keyword1': keyword1, 'keyword2': keyword2,
+                         'keyword3': player.current_score, 'remark': '感谢您的参与。', 'template': tp}
         else:
             if not able_dict[0]:
                 return JsonResponse({'result': 2})
@@ -235,7 +237,9 @@ def deal_img_data(request):
     body = request.body
     body = json.loads(body)
     appid = body.get('appid', '')
-    mediaId = body.get('mediaid', '')
+    media_id = body.get('media_id', '')
+    img_url = body.get('img_url', '')
+
     content = body.get('content', '')
     fromuser = body.get('fromuser', '')
     try:
@@ -253,7 +257,7 @@ def deal_img_data(request):
                 result.update(response='fail', error=error)
             else:
                 bot = wechatManager.wechatInstance.new_instance(club.user_name)
-                bot.deal_img_data(settings.WECHAT_MODE_SERVICE, content, mediaId=mediaId, fromuser=fromuser, club=club)
+                bot.deal_img_data(settings.WECHAT_MODE_SERVICE, content, img_url=img_url, media_id=media_id, fromuser=fromuser, club=club)
     except:
         traceback.print_exc()
         error = "发送微信消息出错"
