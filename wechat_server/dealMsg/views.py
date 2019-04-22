@@ -74,6 +74,9 @@ def bot_notice(request):
             if wx_login != '200':
                 return JsonResponse({'result': 2})
 
+            op = '上分'
+            if chgScore < 0:
+                op = '下分'
             alert_msg = '%s %s\n' % (player.nick_name, op)
             alert_msg += '上次积分:%s\n' % lastScore
             alert_msg += '本次%s:%s\n' % (op, chgScore)
