@@ -1134,6 +1134,10 @@ def qrcode_bind(request):
     player = Player.objects.get(pk=pid)
     player.openid = openid
     player.save()
+    content = '恭喜您绑定成功，玩家：%s，俱乐部：%s' % (player.nick_name, player.club.user_name)
+    data = {'appid': player.club.appid, 'userid': openid, 'content': content}
+    data = json.dumps(data)
+    requests.post(settings.WECHAT_TEXT_URL, data=data)
 
     return JsonResponse(resp)
 
