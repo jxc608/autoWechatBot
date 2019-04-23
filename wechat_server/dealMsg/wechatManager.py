@@ -204,6 +204,7 @@ class wechatInstance():
             self.itchat_instance.send(content, online_user)
         elif mode == settings.WECHAT_MODE_SERVICE:
             if is_template:
+                logger.info('template')
                 postData = {'appid': self.club.appid, 'userid': openid}
                 ct = {}
                 url = tm_param.get('url', '')
@@ -223,8 +224,10 @@ class wechatInstance():
                 postData['content']['data'] = ct
                 postData['content']['url'] = url
                 postData = json.dumps(postData)
+                logger.info(postData)
                 requests.post(settings.WECHAT_TEMPLATE_URL, data=postData, headers=headers)
             else:
+                logger.info('text')
                 data = {'appid': self.club.appid, 'userid': openid, 'content': content}
                 data = json.dumps(data)
                 requests.post(settings.WECHAT_TEXT_URL, data=data, headers=headers)
