@@ -204,7 +204,6 @@ class wechatInstance():
             self.itchat_instance.send(content, online_user)
         elif mode == settings.WECHAT_MODE_SERVICE:
             if is_template:
-                logger.info('template')
                 postData = {'appid': self.club.appid, 'userid': openid}
                 ct = {}
                 url = tm_param.get('url', '')
@@ -224,10 +223,8 @@ class wechatInstance():
                 postData['content']['data'] = ct
                 postData['content']['url'] = url
                 postData = json.dumps(postData)
-                logger.info(postData)
                 requests.post(settings.WECHAT_TEMPLATE_URL, data=postData, headers=headers)
             else:
-                logger.info('text')
                 data = {'appid': self.club.appid, 'userid': openid, 'content': content}
                 data = json.dumps(data)
                 requests.post(settings.WECHAT_TEXT_URL, data=data, headers=headers)
@@ -379,7 +376,7 @@ class wechatInstance():
                         tm_param = {'first': '%s，%s，上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
                                     'keyword1': keyword1, 'template':tp, 'keyword2': keyword2, 'url': img_url,
                                     'keyword3': player.current_score, 'remark': '本局房费：%s' % cost}
-                        self.send_mode_msg(mode, tm_param=tm_param, openid=fromuser, is_template=True)
+                        self.send_mode_msg(mode, tm_param=tm_param, openid=wechat_uuid, is_template=True)
 
                 # 授信检测
                 self.scoreLimit(mode, player, wechat_uuid)
