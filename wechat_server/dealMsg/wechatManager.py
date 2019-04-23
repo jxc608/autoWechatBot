@@ -318,13 +318,13 @@ class wechatInstance():
                 # self.itchat_instance.send(tm_msg, 'filehelper')
                 player = self.createTempPlayer(roomPlayData)
 
-            if player.is_bind:
-                if mode == settings.WECHAT_MODE_ONLINE:
+            if mode == settings.WECHAT_MODE_ONLINE:
+                if player.is_bind:
                     playerWechat = self.getWechatUserByRemarkName(player.nick_name)
                     if playerWechat:
                         wechat_uuid = playerWechat['UserName']
-                elif mode == settings.WECHAT_MODE_SERVICE:
-                    wechat_uuid = player.openid
+            elif mode == settings.WECHAT_MODE_SERVICE:
+                wechat_uuid = player.openid
             try:
                 is_host = 1 if roomPlayData.name == room_data.roomHoster else 0
                 if is_host == 1:
