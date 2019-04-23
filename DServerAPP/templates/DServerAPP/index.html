@@ -91,6 +91,7 @@
                                 </div>
                             </form>
                         </li>
+                    {% if not club.appid %}
                         <li class="list-group-item" style="background-color:#f5f5f5"><b>机器人状态</b></li>
                         <li class="list-group-item">
                             {% if club.expired == True %}
@@ -108,6 +109,7 @@
                                 已登录&nbsp;&nbsp;<a href="javascript:void(0)" onclick="wx_logout()">注销</a>
                             {% endif %}
                         </li>
+                    {% endif %}
                     </ul>
                 </div>
                 <div class="panel-footer text-right">
@@ -119,7 +121,7 @@
 </div>
 <script>
 
-    {% if club.expired == False and wx_login != '200' %}
+    {% if not club.appid and not club.expired and wx_login != '200' %}
 
         var qrcode = new QRCode('qrcode', {
             //text: 'https://login.weixin.qq.com/l/{{ uuid }}',
