@@ -433,13 +433,16 @@ class wechatInstance():
                 alert_msg += '当前余分: %s\n' % player.current_score
                 alert_msg += player.score_limit_desc + '\n'
                 alert_msg += '本条消息来自傻瓜机器人自动回复\n'
+                if player.is_bind and wechat_uuid:
+                    self.send_mode_msg(mode, content=alert_msg, online_user=wechat_uuid)
+                    # self.itchat_instance.send(alert_msg, wechat_uuid)
             elif mode == settings.WECHAT_MODE_SERVICE:
                 alert_msg = {'first': '%s 上分提醒' % player.nick_name, 'keyword1': '当前余分: %s' % player.current_score,
                     'keyword2': player.score_limit_desc, 'remark': '%s\n本条消息来自傻瓜机器人自动回复' % player.score_limit_desc,
                              'template': settings.WECHAT_TEMPLATE_SCORE_LIMIT[0]}
 
-            if player.is_bind and wechat_uuid:
-                self.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, online_user=wechat_uuid, openid=wechat_uuid, is_template=True)
+                if wechat_uuid:
+                    self.send_mode_msg(mode, tm_param=alert_msg, openid=wechat_uuid, is_template=True)
                 # self.itchat_instance.send(alert_msg, wechat_uuid)
 
             # 管理员
