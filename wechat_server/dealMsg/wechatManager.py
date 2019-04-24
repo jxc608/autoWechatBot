@@ -373,10 +373,10 @@ class wechatInstance():
                             tp = settings.WECHAT_TEMPLATE_SCORE_MINUS[0]
                             keyword2 = {'value': roomPlayData.score, 'color': '#ff0000'}
 
-                        tm_param = {'first': '游戏玩家：%s\n游戏ID：%s\n上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
+                        tm_param = {'first': '游戏玩家：%s，%s\n上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
                                     'keyword1': keyword1, 'template':tp, 'keyword2': keyword2, 'url': img_url,
                                     'keyword3': {'value': player.current_score, 'color': '#409EFF'},
-                                    'remark': '本局房费：%s\n%s' % (cost, '点击可查看图片')}
+                                    'remark': '本局房费：%s' % cost}
                         self.send_mode_msg(mode, tm_param=tm_param, openid=wechat_uuid, is_template=True)
 
                 # 授信检测
