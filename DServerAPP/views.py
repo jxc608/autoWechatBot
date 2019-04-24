@@ -1165,7 +1165,7 @@ def qrcode_bind_m(request):
     manager = Manager.objects.get(pk=mid)
     manager.openid = openid
     manager.save()
-    content = '恭喜您绑定成功，玩家：%s，俱乐部：%s' % (manager.nick_name, manager.club.user_name)
+    content = '恭喜您绑定成功，管理员：%s，俱乐部：%s' % (manager.nick_name, manager.club.user_name)
     data = {'appid': manager.club.appid, 'userid': openid, 'content': content}
     data = json.dumps(data)
     requests.post(settings.WECHAT_TEXT_URL, data=data)
