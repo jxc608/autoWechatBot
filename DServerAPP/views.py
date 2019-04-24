@@ -1110,7 +1110,7 @@ def update_cost_mode(request):
     club.save()
     return HttpResponse(json.dumps({'result': 0}), content_type="application/json")
 
-def generate_qrcode(request):
+def generate_qrcode_p(request):
     pid = request.POST.get('id')
     resp = {'result': '0'}
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -1127,7 +1127,24 @@ def generate_qrcode(request):
         resp.update(result=1, error=codeRes['error'])
     return JsonResponse(resp)
 
-def qrcode_bind(request):
+def generate_qrcode_m(request):
+    mid = request.POST.get('id')
+    resp = {'result': '0'}
+    club = Clubs.objects.get(user_name=request.session['club'])
+    response = requests.post(settings.WECHAT_QRCODE_ADD, data={'appid': club.appid, 'scene_str': 'CLUB:m=%s' % mid})
+    response.encoding = 'utf-8'
+    response = response.text
+    codeRes = json.loads(response)
+    if codeRes['response'] == 'ok':
+        manager = Manager.objects.get(pk=mid)
+        manager.qrcode_url = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=%s' % codeRes['ticket']
+        manager.save()
+        resp.update(url=manager.qrcode_url)
+    else:
+        resp.update(result=1, error=codeRes['error'])
+    return JsonResponse(resp)
+
+def qrcode_bind_p(request):
     pid = request.POST.get('id')
     openid = request.POST.get('openid')
     resp = {'response': 'ok'}
@@ -1136,6 +1153,20 @@ def qrcode_bind(request):
     player.save()
     content = '恭喜您绑定成功，玩家：%s，俱乐部：%s' % (player.nick_name, player.club.user_name)
     data = {'appid': player.club.appid, 'userid': openid, 'content': content}
+    data = json.dumps(data)
+    requests.post(settings.WECHAT_TEXT_URL, data=data)
+
+    return JsonResponse(resp)
+
+def qrcode_bind_m(request):
+    mid = request.POST.get('id')
+    openid = request.POST.get('openid')
+    resp = {'response': 'ok'}
+    manager = Manager.objects.get(pk=mid)
+    manager.openid = openid
+    manager.save()
+    content = '恭喜您绑定成功，玩家：%s，俱乐部：%s' % (manager.nick_name, manager.club.user_name)
+    data = {'appid': manager.club.appid, 'userid': openid, 'content': content}
     data = json.dumps(data)
     requests.post(settings.WECHAT_TEXT_URL, data=data)
 

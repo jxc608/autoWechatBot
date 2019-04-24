@@ -161,19 +161,25 @@ def bot_wechat_bind_manager(request):
         wechat_nick_name = request.GET.get('wechat_nick_name')
 
         club = Clubs.objects.get(user_name=club_name)
-        wid = request.GET.get('wid')
-        bot = wechatManager.wechatInstance.new_instance(wid)
-        wx_login, desc = bot.check_login_status()
-        if wx_login != '200':
-            return JsonResponse({'result': 2})
+        if not club.appid:
 
-        code, msg = bot.set_alias(user_name, nick_name)
-        if code == 0:
+            wid = request.GET.get('wid')
+            bot = wechatManager.wechatInstance.new_instance(wid)
+            wx_login, desc = bot.check_login_status()
+            if wx_login != '200':
+                return JsonResponse({'result': 2})
+
+            code, msg = bot.set_alias(user_name, nick_name)
+            if code == 0:
+                manager = Manager(wechat_nick_name=wechat_nick_name, nick_name=nick_name, club=club, create_time=int(time.time()))
+                manager.save()
+                return JsonResponse({'result': 0})
+            else:
+                return JsonResponse({'result': 3, 'msg': msg})
+        else:
             manager = Manager(wechat_nick_name=wechat_nick_name, nick_name=nick_name, club=club, create_time=int(time.time()))
             manager.save()
             return JsonResponse({'result': 0})
-        else:
-            return JsonResponse({'result': 3, 'msg':msg})
     except:
         traceback.print_exc()
         return JsonResponse({'result': 4})

@@ -48,7 +48,9 @@ urlpatterns = [
     path('add_manager', views.add_manager, name='add_manager'),
     path('del_manager', views.del_manager, name='del_manager'),
     path('update_refresh_time', views.update_refresh_time, name='update_refresh_time'),
-    path('generate_qrcode', views.generate_qrcode, name='generate_qrcode'),
-    path('qrcode_bind', views.qrcode_bind, name='qrcode_bind'),
+    path('generate_qrcode_p', views.generate_qrcode_p, name='generate_qrcode_p'),
+    path('generate_qrcode_m', views.generate_qrcode_m, name='generate_qrcode_m'),
+    path('qrcode_bind_p', views.qrcode_bind_p, name='qrcode_bind_['),
+    path('qrcode_bind_m', views.qrcode_bind_m, name='qrcode_bind_m'),
 
 ]

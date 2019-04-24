@@ -131,11 +131,43 @@
                             <b>管理员设置</b>
                         </li>
                         <li class="list-group-item">
+                        {% if club.appid %}
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>备注昵称</th>
+                                        <th>二维码</th>
+                                       <!-- <th>历史总盈亏</th>-->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for m in manager %}
+                                        <tr>
+                                        <td>{{ m.nick_name }}
+                                        {% if m.openid %}
+                                            <span style="color: green">已绑</span>
+                                        {% else %}
+                                            <span style="color: red">未绑</span>
+                                        {% endif %}
+                                        </td>
+                                            <td id="is_bind_{{ m.id }}">
+                                                {% if m.qrcode_url %}
+                                                    <img width="100" src="{{ m.qrcode_url }}" />
+                                                {% else %}
+                                                    <button type="button" class="btn btn-default" style="color: #337ab7" onclick="generate_qrcode({{m.id}})">生成</button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
                             {% for m in manager %}
                                 {{ m.wechat_nick_name }}({{ m.nick_name }})
                                 <a style="margin-left: 20px;color: red" href="javascript:void(0)"
                                    onclick="del_manager({{ m.id }})">×</a>&nbsp;&nbsp;&nbsp;&nbsp;
                             {% endfor %}
+                        {% endif %}
                         </li>
                         <li class="list-group-item">
                             <form class="form-inline">
@@ -217,6 +249,20 @@
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
+</div>
+
+    <!-- loading -->
+<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop='static'>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">提示</h4>
+      </div>
+      <div class="modal-body">
+        请稍候。。。<span id="result"></span>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
     change_mode();
@@ -338,6 +384,11 @@
     }
 
     function wechat_friends() {
+        if ($('#nick_name').val() == '') {
+            alert("请输入备注昵称。");
+            return;
+        }
+        {% if not club.appid %}
         var player_id = 0;
         /*
         if($('#wechat_nick_name').val()==''){
@@ -345,10 +396,6 @@
             return;
         }
         */
-        if ($('#nick_name').val() == '') {
-            alert("请输入备注昵称。");
-            return;
-        }
         /*if($('#profit_'+player_id).val()==''){
             alert("请输入盈利状况。");
             return;
@@ -389,6 +436,9 @@
             } else if (data.result == 3)
                 alert(data.msg);
         }, "json");
+        {% else %}
+            add_manager($('#nick_name').val(), $('#nick_name').val());
+        {% endif %}
     }
 
     function add_manager(user_name, nick_name) {
@@ -435,6 +485,28 @@
                 window.location.reload();
             }
         }, "json");
+    }
+
+    function generate_qrcode(mid) {
+            //显示
+        $('#loading').modal('show');
+        try {
+            $.post("/generate_qrcode_m",{
+            id: mid,
+            },function(data){
+                if(data.result == 0){
+                    alert('生成成功！');
+                    $('#is_bind_' + mid).html('<img width="100" src="' + data.url + '"/>');
+                } else {
+                    alert(data.error);
+                }
+            },"json");
+        } catch (e) {
+            alert("请求出现错误");
+        } finally {
+            //影藏
+            $('#loading').modal('hide');
+        }
     }
 </script>
 </body>

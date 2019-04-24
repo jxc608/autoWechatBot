@@ -103,7 +103,7 @@ class Player(models.Model):
     is_del = models.IntegerField(default=0, choices=YES_NO_GENERATE, verbose_name="是否删除")
     is_bind = models.IntegerField(default=0, choices=YES_NO_GENERATE, verbose_name="是否绑定")
     openid = models.CharField(max_length=32, verbose_name="微信openid", blank=True, default='')
-    qrcode_url = models.URLField(verbose_name="二维码地址", null=True, blank=True, default=None)
+    qrcode_url = models.URLField(verbose_name="权限二维码", null=True, blank=True, default=None)
 
     def __str__(self):
         return  self.nick_name
@@ -220,6 +220,7 @@ class Manager(models.Model):
     nick_name = models.CharField(max_length=200, verbose_name="备注昵称")
     openid = models.CharField(max_length=32, verbose_name="微信openid", blank=True, default='')
     create_time = models.IntegerField(default=0, verbose_name="创建时间")
+    qrcode_url = models.URLField(verbose_name="权限二维码", null=True, blank=True, default=None)
 
     class Meta:
         verbose_name = "管理员"

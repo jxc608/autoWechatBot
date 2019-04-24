@@ -293,7 +293,7 @@
             //显示
             $('#loading').modal('show');
             try {
-                $.post("/generate_qrcode",{
+                $.post("/generate_qrcode_p",{
                 id: playerid,
                 },function(data){
                     if(data.result == 0){
