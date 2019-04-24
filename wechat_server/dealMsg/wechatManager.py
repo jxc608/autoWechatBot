@@ -439,7 +439,7 @@ class wechatInstance():
                              'template': settings.WECHAT_TEMPLATE_SCORE_LIMIT[0]}
 
             if player.is_bind and wechat_uuid:
-                self.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, online_user=wechat_uuid, is_template=True)
+                self.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, online_user=wechat_uuid, openid=wechat_uuid, is_template=True)
                 # self.itchat_instance.send(alert_msg, wechat_uuid)
 
             # 管理员
