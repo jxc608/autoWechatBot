@@ -50,9 +50,8 @@ def bot_notice(request):
         player_id = int(request.GET.get('player_id'))
         player = Player.objects.get(id=player_id)
         club = Clubs.objects.get(user_name=club_name)
-        wid = request.GET.get('wid')
         mode = settings.WECHAT_MODE_ONLINE
-        bot = wechatManager.wechatInstance.new_instance(wid)
+        bot = wechatManager.wechatInstance.new_instance(club_name)
         bot.club = club
 
         if club.appid:
