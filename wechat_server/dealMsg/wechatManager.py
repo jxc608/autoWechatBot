@@ -368,14 +368,15 @@ class wechatInstance():
                     elif mode == settings.WECHAT_MODE_SERVICE:
                         tp = settings.WECHAT_TEMPLATE_SCORE_ADD[0]
                         keyword1 = '游戏结算'
-                        keyword2 = {'value': '+%s' % roomPlayData.score, 'color': '#00ff00'}
+                        keyword2 = {'value': '+%s' % roomPlayData.score, 'color': '#67C23A'}
                         if roomPlayData.score < 0:
                             tp = settings.WECHAT_TEMPLATE_SCORE_MINUS[0]
                             keyword2 = {'value': roomPlayData.score, 'color': '#ff0000'}
 
-                        tm_param = {'first': '%s，%s，上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
+                        tm_param = {'first': '游戏玩家：%s\n游戏ID：%s\n上次积分：%s' % (player.nick_name, roomPlayData.id, last_current_score),
                                     'keyword1': keyword1, 'template':tp, 'keyword2': keyword2, 'url': img_url,
-                                    'keyword3': player.current_score, 'remark': '本局房费：%s' % cost}
+                                    'keyword3': {'value': player.current_score, 'color': '#409EFF'},
+                                    'remark': '本局房费：%s\n%s' % (cost, '点击可查看图片')}
                         self.send_mode_msg(mode, tm_param=tm_param, openid=wechat_uuid, is_template=True)
 
                 # 授信检测
@@ -438,7 +439,8 @@ class wechatInstance():
                     # self.itchat_instance.send(alert_msg, wechat_uuid)
             elif mode == settings.WECHAT_MODE_SERVICE:
                 alert_msg = {'first': '%s 上分提醒' % player.nick_name, 'keyword1': '当前余分: %s' % player.current_score,
-                    'keyword2': player.score_limit_desc, 'remark': '%s\n本条消息来自傻瓜机器人自动回复' % player.score_limit_desc,
+                    'keyword2': {'value': player.score_limit_desc, 'color': '#ff0000'},
+                             'remark': '本条消息来自傻瓜机器人自动回复',
                              'template': settings.WECHAT_TEMPLATE_SCORE_LIMIT[0]}
 
                 if wechat_uuid:
