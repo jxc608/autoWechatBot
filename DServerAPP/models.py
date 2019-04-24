@@ -52,6 +52,9 @@ class Clubs(models.Model):
     def __str__(self):
         return self.user_name
 
+    def __unicode__(self):
+        return self.user_name.encode('utf8')
+
     class Meta:
         verbose_name = "俱乐部"
         verbose_name_plural = verbose_name
@@ -62,6 +65,9 @@ class Captain(models.Model):
 
     def __str__(self):
         return self.name
+
+    def __unicode__(self):
+        return self.name.encode('utf8')
 
     class Meta:
         verbose_name = "队长信息"

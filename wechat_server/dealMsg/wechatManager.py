@@ -381,10 +381,10 @@ class wechatInstance():
                 # 授信检测
                 self.scoreLimit(mode, player, wechat_uuid)
             except:
-                # traceback.logger.info_exc()
+                traceback.print_exc()
                 errmsg = "发生异常：\n姓名: %s\nid: %s\n分数: %s" % (roomPlayData.name, roomPlayData.id, roomPlayData.score)
                 logger.error(errmsg)
-                self.send_mode_msg(mode, content=erro_msg, online_user='filehelper',openid=fromuser)
+                self.send_mode_msg(mode, content=errmsg, online_user='filehelper',openid=fromuser)
                 # self.itchat_instance.send(errmsg, 'filehelper')
                 continue
         historyGame.save()

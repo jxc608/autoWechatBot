@@ -66,7 +66,7 @@ class ClubsAdmin(admin.ModelAdmin):
     search_fields = ["uuid", "user_name", "cost_param", "appid"]
     list_filter = ["cost_mode", "msg_type"]
     ordering = ["-expired_time"]
-    readonly_fields = ["expired_time", "profit", "refresh_time"]
+    readonly_fields = ["profit", "refresh_time"]
 
     def show_expired_time(self, obj):
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(obj.expired_time))
