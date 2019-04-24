@@ -46,7 +46,7 @@ def bot_notice(request):
         club_name = request.GET.get('name')
         to_manager = request.GET.get("manager", False)
         lastScore = request.GET.get('lastScore')
-        chgScore = request.GET.get('chgScore')
+        chgScore = int(request.GET.get('chgScore'))
         player_id = int(request.GET.get('player_id'))
         player = Player.objects.get(id=player_id)
         club = Clubs.objects.get(user_name=club_name)
@@ -63,7 +63,7 @@ def bot_notice(request):
                 keyword1 = '游戏下分'
                 tp = settings.WECHAT_TEMPLATE_SCORE_MINUS[0]
                 keyword2 = {'value': chgScore, 'color': '#ff0000'}
-            alert_msg = {'first': '%s，上次积分' % (player.nick_name, lastScore), 'keyword1': keyword1, 'keyword2': keyword2,
+            alert_msg = {'first': '%s，上次积分：%s' % (player.nick_name, lastScore), 'keyword1': keyword1, 'keyword2': keyword2,
                          'keyword3': player.current_score, 'remark': '感谢您的参与。', 'template': tp}
         else:
             if not able_dict[0]:
@@ -90,7 +90,7 @@ def bot_notice(request):
                 bot.send_mode_msg(mode, content=alert_msg, tm_param=alert_msg, online_user=online_user, openid=manager.openid, is_template=True)
             return JsonResponse({'result': 0})
         else:
-            if not player.is_bind:
+            if mode == settings.WECHAT_MODE_ONLINE and not player.is_bind:
                 return JsonResponse({'result': 3})
             online_user = ''
             if mode == settings.WECHAT_MODE_ONLINE:
