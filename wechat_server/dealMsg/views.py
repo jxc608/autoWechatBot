@@ -58,13 +58,15 @@ def bot_notice(request):
             mode = settings.WECHAT_MODE_SERVICE
             tp = settings.WECHAT_TEMPLATE_SCORE_ADD[0]
             keyword1 = '游戏上分'
-            keyword2 = {'value': '+%s' % chgScore, 'color': '#00ff00'}
+            keyword2 = {'value': '+%s' % chgScore, 'color': '#67C23A'}
             if chgScore < 0:
                 keyword1 = '游戏下分'
                 tp = settings.WECHAT_TEMPLATE_SCORE_MINUS[0]
                 keyword2 = {'value': chgScore, 'color': '#ff0000'}
-            alert_msg = {'first': '%s，上次积分：%s' % (player.nick_name, lastScore), 'keyword1': keyword1, 'keyword2': keyword2,
-                         'keyword3': player.current_score, 'remark': '感谢您的参与。', 'template': tp}
+            alert_msg = {'first': '%s，上次积分：%s' % (player.nick_name, lastScore),
+                         'keyword1': keyword1, 'keyword2': keyword2,
+                         'keyword3': {'value': player.current_score, 'color': '#409EFF'},
+                         'remark': '本条消息来自傻瓜机器人自动回复', 'template': tp}
         else:
             if not able_dict[0]:
                 return JsonResponse({'result': 2})
