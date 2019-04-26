@@ -114,7 +114,7 @@ def index(request):
             bot_info = {"login": '0', "uuid": ""}
 
     is_admin = False
-    if club.user_name == '18811333964':
+    if club.user_name in settings.MAIN_ACCOUNT:
         is_admin = True
     return render(request, 'DServerAPP/index.html', {'club':club, 'wx_login':bot_info['login'], 'is_admin':is_admin})
 
