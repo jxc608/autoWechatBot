@@ -120,4 +120,4 @@ WECHAT_TEMPLATE_SCORE_MINUS = ('minus', 'GUhk3-jzV_OgCHckUVxYMKjUj0eXQSqsUnOQzgT
 # 授信
 WECHAT_TEMPLATE_SCORE_LIMIT = ('limit', 'bNchIAQi4Voi2zNpbXUqXr9Q0beIzZucaVOjkjeX1rI')
 
-
+DEBUG = True
