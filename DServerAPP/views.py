@@ -255,7 +255,7 @@ def add_time(request):
         return HttpResponse(messageType.createMessage('success', messageType.CLUB_NOT_EXIST, 'the club not exist'))
 
 def create_cdkey(request):
-    if request.session['club'] != '18811333964':
+    if request.session['club'] not in settings.MAIN_ACCOUNT:
         return
 
     key_type = int(request.POST.get('key_type'))
