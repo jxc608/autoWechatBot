@@ -29,7 +29,7 @@ class roomData:
         print('局数：' + str(self.roundCounter))
         print('开始时间：' + self.startTime)
         for player in self.playerData:
-            print('玩家：' + str(player.id) + '---分数：' + str(player.score))
+            print('玩家：%s, id：%s, 分数：%s' % (player.name, player.id, player.score))
 
 class contentQuad:
     def __init__(self):

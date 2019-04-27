@@ -228,6 +228,8 @@ def add_time(request):
         if keyInstance.status == 1:
             return HttpResponse(messageType.createMessage('success', messageType.CDKEY_USED, 'the cdkey used'))
         time_add = 0
+        if keyInstance.key_type == 0:
+            time_add = 3600 * 5
         if keyInstance.key_type == 1:
             time_add = 3600 * 24
         elif keyInstance.key_type == 2:
@@ -799,7 +801,7 @@ def getDayGroup(club, date, captainName, pageSize, pageIndex):
             sc = Score.objects.filter(player=player)
             # scc = ScoreChange.objects.filter(player=player)
             if date:
-                sc = sc.filter(create_time__startswith=date)
+                sc = sc.filter(refresh_time__startswith=date)
                 # scc = scc.filter(create_time__startswith=date)
             cost = sc.aggregate(Sum('cost'))['cost__sum']
             cost = 0 if not cost else cost

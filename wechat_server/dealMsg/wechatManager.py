@@ -51,7 +51,7 @@ def get_aliyun_pic_info(content):
         {"word": "房号", "key": "room_id"},
         {"word": "房主", "key": "hoster"},
         {"word": "局数", "key": "round_number"},
-        {"word": "开始时间", "key": "start_time"},
+        {"word": "时间", "key": "start_time"},
         {"word": "玩家", "key": "name_pos"},
         {"word": "D", "key": "id_pos"},
         {"word": "积分", "key": "score_pos"},
@@ -69,10 +69,10 @@ def get_aliyun_pic_info(content):
         if index < 7:
             if curKey["word"] in word:
                 if index < 4:
-                    if(curKey['key'] == 'room_id'):
+                    if(curKey['key'] in ['room_id', 'round_number']):
                         ct = re.sub(r'\D', "", word)
                     else:
-                        pattern = "%s(.*)" % curKey["word"]
+                        pattern = "%s.(.*)" % curKey["word"]
                         r = re.search(pattern, word, re.M | re.I)
                         ct = r.group(1)
                         # 部分识别不出冒号的问题
