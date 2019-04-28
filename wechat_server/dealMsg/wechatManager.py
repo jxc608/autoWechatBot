@@ -75,9 +75,6 @@ def get_aliyun_pic_info(content):
                         pattern = "%s.(.*)" % curKey["word"]
                         r = re.search(pattern, word, re.M | re.I)
                         ct = r.group(1)
-                        # 部分识别不出冒号的问题
-                        if ct[0] == ":" or ct[0] == "：":
-                            ct = ct[1:]
 
                     infoDic[curKey["key"]] = ct
                 else:
