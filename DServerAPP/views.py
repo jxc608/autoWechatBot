@@ -70,6 +70,45 @@ def wechat_bind(request):
 
     return HttpResponse(json.dumps(bot_info), content_type="application/json")
 
+def unbind_player(request):
+    result = {'result': 0}
+    player_id = int(request.POST.get('id'))
+    try:
+        player = Player.objects.get(pk=player_id)
+        player.openid = ''
+        player.save()
+    except:
+        result.update(result='1', msg='找不到玩家，请刷新页面重试')
+
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+def unbind_manager(request):
+    result = {'result': 0}
+    m_id = int(request.POST.get('id'))
+    try:
+        manager = Manager.objects.get(pk=m_id)
+        manager.openid = ''
+        manager.save()
+    except:
+        result.update(result='1', msg='找不到玩家，请刷新页面重试')
+
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+def rename_manager(request):
+    result = {'result': 0}
+    m_id = int(request.POST.get('id'))
+    m_name = request.POST.get('name')
+    try:
+        manager = Manager.objects.get(pk=m_id)
+        manager.nick_name = m_name
+        manager.wechat_nick_name = m_name
+        manager.save()
+    except:
+        result.update(result='1', msg='找不到管理员，请刷新页面重试')
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
 
 def check_sys_login(f):
     wraps(f)

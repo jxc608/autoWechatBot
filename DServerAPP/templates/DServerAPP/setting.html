@@ -137,15 +137,19 @@
                                     <tr>
                                         <th>备注昵称</th>
                                         <th>二维码</th>
+                                        <th>操作</th>
                                        <!-- <th>历史总盈亏</th>-->
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for m in manager %}
                                         <tr>
-                                        <td>{{ m.nick_name }}
+                                        <td>
+                                            <span id="nick_{{ m.id }}">{{ m.nick_name }}</span>
                                         {% if m.openid %}
                                             <span style="color: green">已绑</span>
+                                            <a style="margin-left: 5px;color: red" href="javascript:void(0)"
+                                                        onclick="unbind_manager({{ m.id }})">×</a>
                                         {% else %}
                                             <span style="color: red">未绑</span>
                                         {% endif %}
@@ -157,6 +161,10 @@
                                                     <button type="button" class="btn btn-default" style="color: #337ab7" onclick="generate_qrcode({{m.id}})">生成</button>
                                                 {% endif %}
                                             </td>
+                                        <td>
+                                            <button style="width: 40%" type="button" class="btn btn-primary" onclick="rename_manager({{ m.id }})">编辑</button>
+                                            <button style="width: 40%" type="button" class="btn btn-danger" onclick="del_manager({{ m.id }})">删除</button>
+                                        </td>
                                         </tr>
                                 {% endfor %}
                                 </tbody>
@@ -368,7 +376,7 @@
         if (confirm("确定要清空吗？") == false)
             return;
         var sp = prompt("请输入二级密码");
-        if (sp == "") {
+        if (sp == null || sp == "") {
             alert("二级密码不能为空");
             return;
         }
@@ -507,6 +515,39 @@
             //影藏
             $('#loading').modal('hide');
         }
+    }
+    function unbind_manager(m_id) {
+            if(!confirm('确定解绑吗？扫码可再次绑定')) {
+                return;
+            }
+            var prev = $(event.target).prev();
+            var current = $(event.target);
+            $.post('/unbind_manager', {id: m_id}, function (data) {
+                if(data.result == 0) {
+                    alert("解绑成功");
+                    prev.css('color', 'red');
+                    prev.html('未绑');
+                    current.remove();
+                } else {
+                    alert(data.msg);
+                }
+            })
+        }
+
+    function rename_manager(m_id) {
+        var name = prompt("请输入新的昵称");
+        if (name == null || name == "") {
+            alert("昵称不能为空");
+            return;
+        }
+        $.post('/rename_manager', {id: m_id, name: name}, function (data) {
+            if(data.result == 0) {
+                alert("操作成功");
+                $('#nick_' + m_id).html(name);
+            } else {
+                alert(data.msg);
+            }
+        })
     }
 </script>
 </body>

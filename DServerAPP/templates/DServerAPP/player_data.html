@@ -102,6 +102,8 @@
                                                 <span>{{player.nick_name}}</span>
                                                 {% if player.openid %}
                                                     <span style="color: green">已绑</span>
+                                                    <a style="margin-left: 5px;color: red" href="javascript:void(0)"
+                                                        onclick="unbind_player({{ player.id }})">×</a>
                                                 {% else %}
                                                     <span style="color: red">未绑</span>
                                                 {% endif %}
@@ -212,6 +214,24 @@
                 }
         }
         $("#pagintor").bootstrapPaginator(options);
+
+        function unbind_player(player_id) {
+            if(!confirm('确定解绑吗？扫码可再次绑定')) {
+                return;
+            }
+            var prev = $(event.target).prev();
+            var current = $(event.target);
+            $.post('/unbind_player', {id: player_id}, function (data) {
+                if(data.result == 0) {
+                    alert("解绑成功");
+                    prev.css('color', 'red');
+                    prev.html('未绑');
+                    current.remove();
+                } else {
+                    alert(data.msg);
+                }
+            })
+        }
 
         function wechat_friends(player_id){
             /*
