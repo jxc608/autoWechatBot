@@ -56,5 +56,6 @@ urlpatterns = [
     path('unbind_player', views.unbind_player, name='unbind_player'),
     path('unbind_manager', views.unbind_manager, name='unbind_manager'),
     path('rename_manager', views.rename_manager, name='rename_manager'),
+    path('rename_player', views.rename_player, name='rename_player'),
 
 ]

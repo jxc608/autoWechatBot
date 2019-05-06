@@ -47,7 +47,7 @@ class Clubs(models.Model):
     msg_type = models.SmallIntegerField(default=0, choices=MSG_TYPE, verbose_name="消息格式", null=False)
     # 该字段暂时没用？
     refresh_time = models.IntegerField(default=0, verbose_name='每天几点刷新数据，暂时无用')
-    appid = models.CharField(max_length=32, verbose_name="微信appid", blank=True, default="", unique=True)
+    appid = models.CharField(max_length=32, verbose_name="微信appid", blank=True, default=None, unique=True)
 
     def __str__(self):
         return self.user_name

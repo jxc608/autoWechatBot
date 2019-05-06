@@ -99,7 +99,7 @@
                                                 {% endfor %}
                                             </td>
                                             <td width="40%">
-                                                <span>{{player.nick_name}}</span>
+                                                <span id="nick_{{ player.id }}">{{player.nick_name}}</span>
                                                 {% if player.openid %}
                                                     <span style="color: green">已绑</span>
                                                     <a style="margin-left: 5px;color: red" href="javascript:void(0)"
@@ -107,6 +107,7 @@
                                                 {% else %}
                                                     <span style="color: red">未绑</span>
                                                 {% endif %}
+                                                <button type="button" class="btn btn-default" onclick="rename_player({{player.id}})">改名</button>
                                             </td>
                                             <td width="30%" align="center" id="is_bind_{{ player.id }}">
                                                 {% if player.qrcode_url %}
@@ -329,6 +330,22 @@
                 //影藏
                 $('#loading').modal('hide');
             }
+        }
+
+        function rename_player(player_id) {
+            var name = prompt("请输入新的昵称");
+            if (name == null || name == "") {
+                alert("昵称不能为空");
+                return;
+            }
+            $.post('/rename_player', {id: player_id, name: name}, function (data) {
+                if(data.result == 0) {
+                    alert("操作成功");
+                    $('#nick_' + player_id).html(name);
+                } else {
+                    alert(data.msg);
+                }
+            })
         }
 
     </script>
