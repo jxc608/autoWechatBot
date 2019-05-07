@@ -1201,34 +1201,50 @@ def generate_qrcode_m(request):
 def qrcode_bind_p(request):
     resp = {'response': 'ok'}
     pid = request.POST.get('id')
+    openid = request.POST.get('openid')
+    appid = request.POST.get('appid')
     try:
         player = Player.objects.get(pk=pid)
-        openid = request.POST.get('openid')
-        player.openid = openid
-        player.save()
-        content = '恭喜您绑定成功，玩家：%s，俱乐部：%s' % (player.nick_name, player.club.user_name)
-        data = {'appid': player.club.appid, 'userid': openid, 'content': content}
+        if player.openid:
+            content = '绑定失败，玩家：%s 已被绑定，俱乐部：%s' % (player.nick_name, player.club.user_name)
+        else:
+            player.openid = openid
+            player.save()
+            content = '恭喜您绑定成功，玩家：%s，俱乐部：%s' % (player.nick_name, player.club.user_name)
+        data = {'appid': appid, 'userid': openid, 'content': content}
         data = json.dumps(data)
         requests.post(settings.WECHAT_TEXT_URL, data=data)
     except:
-        resp.update(response='fail', error='对应玩家未找到')
+        content = '绑定失败，对应玩家未找到：%s' % pid
+        data = {'appid': appid, 'userid': openid, 'content': content}
+        data = json.dumps(data)
+        requests.post(settings.WECHAT_TEXT_URL, data=data)
+        resp.update(response='fail', error=content)
 
     return JsonResponse(resp)
 
 def qrcode_bind_m(request):
     mid = request.POST.get('id')
+    openid = request.POST.get('openid')
+    appid = request.POST.get('appid')
     resp = {'response': 'ok'}
     try:
         manager = Manager.objects.get(pk=mid)
-        openid = request.POST.get('openid')
-        manager.openid = openid
-        manager.save()
-        content = '恭喜您绑定成功，管理员：%s，俱乐部：%s' % (manager.nick_name, manager.club.user_name)
-        data = {'appid': manager.club.appid, 'userid': openid, 'content': content}
+        if manager.openid:
+            content = '绑定失败，管理员：%s 已被绑定，俱乐部：%s' % (manager.nick_name, manager.club.user_name)
+        else:
+            manager.openid = openid
+            manager.save()
+            content = '恭喜您绑定成功，管理员：%s，俱乐部：%s' % (manager.nick_name, manager.club.user_name)
+        data = {'appid': appid, 'userid': openid, 'content': content}
         data = json.dumps(data)
         requests.post(settings.WECHAT_TEXT_URL, data=data)
     except:
-        resp.update(response='fail', error='对应管理员未找到')
+        content = '绑定失败，对应管理员未找到：%s' % mid
+        data = {'appid': appid, 'userid': openid, 'content': content}
+        data = json.dumps(data)
+        requests.post(settings.WECHAT_TEXT_URL, data=data)
+        resp.update(response='fail', error=content)
 
     return JsonResponse(resp)
 
