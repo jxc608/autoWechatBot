@@ -203,8 +203,16 @@
         }
         $("#pagintor").bootstrapPaginator(options);
 
+        var round_order = {{ round_order }};
+        var score_order = {{ score_order }};
         function order_by(order){
-            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&order="+order;
+            if(order == 'round') {
+                round_order++;
+            } else if(order == 'score') {
+                score_order++;
+            }
+            var orderStr ='round=' + round_order%2 + '&score=' + score_order%2;
+            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val()+"&"+orderStr+'&r='+Math.random();
         }
 
         function log(){

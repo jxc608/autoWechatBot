@@ -9,6 +9,7 @@ import time,datetime,json
 from django.db import connection
 from django.conf import settings
 from django.db.models import Sum
+from django.db.models.aggregates import Count
 import xlwt
 import io, math
 from . import wechatDeal
@@ -431,19 +432,27 @@ def player_data(request):
     pageIndex = int(request.GET.get('pageIndex', 1))
 
     club = Clubs.objects.get(user_name=request.session['club'])
+    players = Player.objects.filter(club=club)
     if gameid_search:
-        gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
-        if gameids.count() == 0:
-            return render(request, 'DServerAPP/player_data.html', {'appid':club.appid, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search, 'totalPage': 0, 'pageSize': pageSize, 'pageIndex': pageIndex})
-    if gameid_search:
-        for gameid in gameids:
-            players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
-            if players:
-                break
-    elif nickname_search:
-        players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
-    else:
-        players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
+        players = players.filter(gameid__gameid=gameid_search)
+    if nickname_search:
+        players = players.filter(is_del=0, nick_name__contains=nickname_search)
+
+    players = players.order_by('-current_score', '-history_profit')
+
+    # if gameid_search:
+    #     gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
+    #     if gameids.count() == 0:
+    #         return render(request, 'DServerAPP/player_data.html', {'appid':club.appid, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search, 'totalPage': 0, 'pageSize': pageSize, 'pageIndex': pageIndex})
+    # if gameid_search:
+    #     for gameid in gameids:
+    #         players = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-current_score')
+    #         if players:
+    #             break
+    # elif nickname_search:
+    #     players = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-current_score')
+    # else:
+    #     players = Player.objects.filter(club=club, is_del=0).order_by('-current_score', '-history_profit')
 
     total = players.count()
     start = (pageIndex - 1) * pageSize
@@ -767,33 +776,56 @@ def score_change(request):
     pageSize = int(request.GET.get('pageSize', 50))
     pageIndex = int(request.GET.get('pageIndex', 1))
 
-    orderby = request.GET.get('order', 'round')
+    round_order = int(request.GET.get('round', '1'))
+    score_order = int(request.GET.get('score', '1'))
+
+    print('*' * 10, round_order, score_order)
     club = Clubs.objects.get(user_name=request.session['club'])
 
-    players = Player.objects.filter(club=club, is_del=0)
-    if nickname_search:
-        players = players.filter(nick_name__contains=nickname_search)
+    players = Player.objects.filter(club=club)
     if gameid_search:
-        gamePlayers = GameID.objects.filter(gameid=gameid_search, club=club).values("player").distinct()
-        players = players.filter(id__in=gamePlayers)
+        players = players.filter(gameid__gameid=gameid_search)
+    if nickname_search:
+        players = players.filter(is_del=0, nick_name__contains=nickname_search)
+    players = players.annotate(total_round=Count('score'))
 
     total = players.count()
     start = (pageIndex - 1) * pageSize
     end = pageIndex * pageSize
     totalPage = math.ceil(float(total) / pageSize)
 
-    for player in players:
-        player.gameids = GameID.objects.filter(player_id=player.id)
-        player.gameids_count = len(player.gameids)
-        player.total_round = Score.objects.filter(player_id=player.id).count()
-    if orderby == 'round':
-        players = sorted(players, key=lambda players : players.total_round, reverse=True)
+    if round_order:
+        players = players.order_by('-total_round')
     else:
-        players = sorted(players, key=lambda players : players.current_score, reverse=True)
+        players = players.order_by('total_round')
+    if score_order:
+        players = players.order_by('-current_score')
+    else:
+        players = players.order_by('current_score')
+    # players = Player.objects.filter(club=club, is_del=0)
+    # if nickname_search:
+    #     players = players.filter(nick_name__contains=nickname_search)
+    # if gameid_search:
+    #     gamePlayers = GameID.objects.filter(gameid=gameid_search, club=club).values("player").distinct()
+    #     players = players.filter(id__in=gamePlayers)
+    #
+    # total = players.count()
+    # start = (pageIndex - 1) * pageSize
+    # end = pageIndex * pageSize
+    # totalPage = math.ceil(float(total) / pageSize)
+    #
+    # for player in players:
+    #     player.gameids = GameID.objects.filter(player_id=player.id)
+    #     player.gameids_count = len(player.gameids)
+    #     player.total_round = Score.objects.filter(player_id=player.id).count()
+    # if orderby == 'round':
+    #     players = sorted(players, key=lambda players : players.total_round, reverse=True)
+    # else:
+    #     players = sorted(players, key=lambda players : players.current_score, reverse=True)
 
     players = players[start:end]
 
-    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'pageSize': pageSize, 'pageIndex': pageIndex, 'totalPage': totalPage, 'gameid':gameid_search})
+    return render(request, 'DServerAPP/score_change.html', {'club':club, 'players':players, 'total':total, 'nickname':nickname_search, 'pageSize': pageSize, 'pageIndex': pageIndex, 'totalPage': totalPage, 'gameid':gameid_search, 'round_order': round_order, 'score_order': score_order})
 
 @check_sys_login
 def save_captain(request):
