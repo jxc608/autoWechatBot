@@ -474,52 +474,37 @@ def player_stat(request):
 
     club = Clubs.objects.get(user_name=request.session['club'])
 
+    players = Player.objects.filter(club=club)
     if gameid_search:
-        search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
-        if search_gameids.count() == 0:
-            return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
-    if gameid_search:
-        for gameid in search_gameids:
-            players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
-            if players_cost:
-                break
-    elif nickname_search:
-        players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
-    else:
-        players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
+        players = players.filter(gameid__gameid=gameid_search)
+    if nickname_search:
+        players = players.filter(is_del=0, nick_name__contains=nickname_search)
 
-    for player in players_cost:
-        gameids = GameID.objects.filter(player_id=player.id)
-        player.gameids = gameids
-
-    if gameid_search:
-        for gameid in search_gameids:
-            players_profit = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_profit')
-            if players_profit:
-                break
-    elif nickname_search:
-        players_profit = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_profit')
-    else:
-        players_profit = Player.objects.filter(club=club, is_del=0).order_by('-history_profit')
-
-    for player in players_profit:
-        gameids = GameID.objects.filter(player_id=player.id)
-        player.gameids = gameids
-    total = len(players_profit)
-
-
-    list_ = []
-    for index, player in enumerate(players_cost):
-        list_.append(
-            {
-                'cost':player,
-                'profit':players_profit[index]
-            }
-        )
-
+    total = players.count()
     start = (pageIndex - 1) * pageSize
     end = pageIndex * pageSize
     totalPage = math.ceil(float(total) / pageSize)
+
+    players_profit = players.order_by('-history_profit')[start:end]
+    players_cost = players.order_by('-history_cost')[start:end]
+
+    list_ = []
+    for index, player in enumerate(players_cost):
+        cost = player
+        gameids = GameID.objects.filter(player_id=player.id)
+        cost.gameids = gameids
+
+        profit = players_profit[index]
+        gameids = GameID.objects.filter(player_id=profit.id)
+        profit.gameids = gameids
+        list_.append(
+            {
+                'cost': cost,
+                'profit': profit
+            }
+        )
+
+
 
     list_ = list_[start:end]
 
@@ -779,7 +764,6 @@ def score_change(request):
     round_order = int(request.GET.get('round', '1'))
     score_order = int(request.GET.get('score', '1'))
 
-    print('*' * 10, round_order, score_order)
     club = Clubs.objects.get(user_name=request.session['club'])
 
     players = Player.objects.filter(club=club)
