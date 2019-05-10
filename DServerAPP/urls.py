@@ -57,5 +57,6 @@ urlpatterns = [
     path('unbind_manager', views.unbind_manager, name='unbind_manager'),
     path('rename_manager', views.rename_manager, name='rename_manager'),
     path('rename_player', views.rename_player, name='rename_player'),
+    path('group_stat_xls', views.group_stat_xls, name='group_stat_xls'),
 
 ]

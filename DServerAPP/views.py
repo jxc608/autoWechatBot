@@ -336,8 +336,7 @@ def get_cdkey(request):
 @check_sys_login
 def room_data(request):
     day = datetime.datetime.now().strftime('%Y-%m-%d')
-    if request.GET.get('date'):
-        day = request.GET.get('date')
+    day = request.GET.get('date', day)
     orderby = request.GET.get('order', 'round')
 
     club = Clubs.objects.get(user_name=request.session['club'])
@@ -346,6 +345,7 @@ def room_data(request):
     total_score = 0
     total_round = 0
     total_profit = 0
+
     for room in rooms:
         total_cost += room.cost
         # total_score += room.score
@@ -405,15 +405,16 @@ def player_room_data(request):
         if player.total_round == 0:
             continue
         player.total_cost = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('cost'))['cost__sum']
-        if player.total_cost == None:
+        if not player.total_cost:
             player.total_cost = 0
         player.total_score = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('score'))['score__sum']
-        if player.total_score == None:
+        if not player.total_score:
             player.total_score = 0
         player.total_host = Score.objects.filter(player_id=player.id, refresh_time__startswith=day).aggregate(Sum('is_host'))['is_host__sum']
-        if player.total_host == None:
+        if not player.total_host:
             player.total_host = 0
         list_.append(player)
+
     if orderby == 'round':
         list_ = sorted(list_, key=lambda list_ : list_.total_round, reverse=True)
     elif orderby == 'host':
@@ -521,21 +522,27 @@ def clear_player_stat(request):
         nickname_search = request.POST.get('nickname','')
         gameid_search = request.POST.get('gameid', '')
 
+        players = Player.objects.filter(club=club)
         if gameid_search:
-            search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
-            if search_gameids.count() == 0:
-                return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
-        if gameid_search:
-            for gameid in search_gameids:
-                players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
-                if players_cost:
-                    break
-        elif nickname_search:
-            players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
-        else:
-            players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
+            players = players.filter(gameid__gameid=gameid_search)
+        if nickname_search:
+            players = players.filter(is_del=0, nick_name__contains=nickname_search)
 
-        for player in players_cost:
+        # if gameid_search:
+        #     search_gameids = GameID.objects.filter(gameid=gameid_search, club=club).values("player_id").distinct()
+        #     if search_gameids.count() == 0:
+        #         return render(request, 'DServerAPP/player_data.html', {'club':club, 'players':[], 'total':0, 'nickname':nickname_search, 'gameid':gameid_search})
+        # if gameid_search:
+        #     for gameid in search_gameids:
+        #         players_cost = Player.objects.filter(club=club, is_del=0, id=gameid['player_id']).order_by('-history_cost')
+        #         if players_cost:
+        #             break
+        # elif nickname_search:
+        #     players_cost = Player.objects.filter(club=club, is_del=0, nick_name__contains=nickname_search).order_by('-history_cost')
+        # else:
+        #     players_cost = Player.objects.filter(club=club, is_del=0).order_by('-history_cost')
+
+        for player in players:
             if player.history_cost == 0:
                 continue
             pc = PlayerClearCost(player=player, history_cost=player.history_cost)
@@ -1390,4 +1397,78 @@ def stat_xls_style(bg_color, name, height, color, bold=False):
 
     return style
 
+def group_stat_xls(request):
+    cid = request.GET.get('cid', None)
+    if not cid:
+        return HttpResponse("参数无效，请返回重试")
+
+    club = Clubs.objects.get(user_name=cid)
+    wb = xlwt.Workbook()
+    wb.encoding = 'utf-8'
+    ws = wb.add_sheet('总账单')
+
+    plus_row1 = 1
+    plus_row2 = 2
+    minus_row1 = 5
+    minus_row2 = 6
+    title_style_captain = stat_xls_style(2, 'SimSun', 400, 0, True)
+    title_style1 = stat_xls_style(3, 'SimSun', 400, 0, True)
+    title_style2 = stat_xls_style(7, 'SimSun', 400, 0, True)
+    text_style = stat_xls_style(1, 'SimSun', 300, 0, False)
+    num_style = stat_xls_style(1, 'Arial', 300, 0, False)
+
+    ws.col(plus_row1).width = 256 * 30
+    ws.col(plus_row2).width = 256 * 20
+
+    ws.col(minus_row1).width = 256 * 30
+    ws.col(minus_row2).width = 256 * 20
+
+    ws.write(0, 1, '名字', title_style1)  #如果要写中文请使用UNICODE
+    ws.write(0, 2, '正数', title_style2)  #如果要写中文请使用UNICODE
+
+    ws.write(0, 5, '名字', title_style1)  # 如果要写中文请使用UNICODE
+    ws.write(0, 6, '负数', title_style2)  # 如果要写中文请使用UNICODE
+
+    introducers = Captain.objects.filter(club=club)
+    all_index = 2
+    for introducer in introducers:
+        total_plus = 0
+        total_minus = 0
+
+        index = all_index
+        ws.write(index, 1, '队长：%s' % introducer.name, title_style_captain)
+        for cc in range(2, 7):
+            ws.write(index, cc, '', title_style_captain)
+        players = Player.objects.filter(introducer=introducer, is_del=0).order_by('-current_score')
+        for player in players:
+            if player.current_score < 0:
+                continue
+            ws.write(index + 1, plus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
+            ws.write(index + 1, plus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
+            total_plus += player.current_score
+            index += 1
+
+        ws.write(index + 1, plus_row1, '总数', title_style1)  #如果要写中文请使用UNICODE
+        ws.write(index + 1, plus_row2, total_plus, title_style2)  #如果要写中文请使用UNICODE
+
+        index = all_index
+        for player in players:
+            if player.current_score >= 0:
+                continue
+            ws.write(index + 1, minus_row1, player.nick_name, text_style)  #如果要写中文请使用UNICODE
+            ws.write(index + 1, minus_row2, player.current_score, num_style)  #如果要写中文请使用UNICODE
+            total_minus += player.current_score
+            index += 1
+        ws.write(index + 1, minus_row1, '总数', title_style1)  #如果要写中文请使用UNICODE
+        ws.write(index + 1, minus_row2, total_minus, title_style2)  #如果要写中文请使用UNICODE
+        all_index = index + 5
+
+    sio = io.BytesIO()
+    wb.save(sio)   #这点很重要，传给save函数的不是保存文件名，而是一个StringIO流
+    sio.seek(0)
+    res = HttpResponse()
+    res["Content-Type"] = "application/vnd.ms-excel"
+    res["Content-Disposition"] = 'filename="总账单.xls"'
+    res.write(sio.getvalue())
+    return res
 

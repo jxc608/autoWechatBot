@@ -56,6 +56,9 @@
                               <div class="form-group">
                                 <button type="button" class="btn btn-danger" onclick="addCaptain()">新增队长</button>
                               </div>
+                              <div class="form-group">
+                                <button type="button" class="btn btn-warning" onclick="stat()">导出全员总账单</button>
+                              </div>
                             </form>
                         </li>
                         <li class="list-group-item">
@@ -328,8 +331,9 @@
         }
 
         function stat(){
-            window.location.href = "/stat_xls";
+            window.location.href = "/group_stat_xls?cid={{ club.user_name }}&r="+Math.random();
         }
+
 
     </script>
 </body>

@@ -186,7 +186,7 @@
         }
 
         function search(){
-            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val() + "&pageSize={{ pageSize }}&pageIndex={{ pageIndex }}";
+            window.location.href = "/score_change?nickname="+$('#nickname').val()+"&gameid="+$('#gameid').val();
         }
 
         var options = {
@@ -220,7 +220,7 @@
         }
 
         function stat(){
-            window.location.href = "/stat_xls?cid={{ club.user_name }}";
+            window.location.href = "/stat_xls?cid={{ club.user_name }}&r="+Math.random();
         }
 
         function add(){
