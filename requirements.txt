@@ -3,7 +3,7 @@ baidu-aip==2.2.7.0
 certifi==2018.8.24
 chardet==3.0.4
 decorator==4.3.0
-Django==2.1.1
+Django==2.2.10
 django-crontab==0.7.1
 hashring==1.5.1
 idna==2.7
